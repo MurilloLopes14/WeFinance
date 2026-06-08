@@ -36,6 +36,13 @@
       "when": 1780362970984,
       "tag": "0004_worthless_black_cat",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1780937099829,
+      "tag": "0005_smart_carmella_unuscione",
+      "breakpoints": true
     }
   ]
 }

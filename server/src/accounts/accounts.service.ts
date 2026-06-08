@@ -43,6 +43,7 @@ export class AccountsService {
         type: dto.type,
         institution: dto.institution ?? null,
         balanceManual: String(dto.balanceManual ?? 0),
+        color: dto.color ?? null,
       })
       .returning();
 
@@ -97,6 +98,7 @@ export class AccountsService {
     if (dto.balanceManual !== undefined) {
       updateData.balanceManual = String(dto.balanceManual);
     }
+    if (dto.color !== undefined) updateData.color = dto.color;
 
     const [updated] = await this.db
       .update(accounts)
@@ -185,6 +187,7 @@ export class AccountsService {
       type: account.type,
       institution: account.institution ?? null,
       balanceManual: parseFloat(account.balanceManual),
+      color: account.color ?? null,
       createdAt: account.createdAt,
       updatedAt: account.updatedAt,
     };

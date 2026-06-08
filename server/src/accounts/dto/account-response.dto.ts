@@ -22,6 +22,9 @@ export class AccountResponseDto {
   @ApiProperty({ example: 1500.0 })
   balanceManual: number;
 
+  @ApiPropertyOptional({ nullable: true })
+  color: string | null;
+
   @ApiProperty()
   createdAt: Date;
 

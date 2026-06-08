@@ -6,6 +6,7 @@ import {
   IsString,
   IsUUID,
   Length,
+  MaxLength,
 } from 'class-validator';
 
 export class UpdateCategoryDto {
@@ -29,4 +30,10 @@ export class UpdateCategoryDto {
   @IsOptional()
   @IsBoolean()
   isFixed?: boolean;
+
+  @ApiPropertyOptional({ example: '#FF5733', nullable: true })
+  @IsOptional()
+  @IsString()
+  @MaxLength(20)
+  color?: string | null;
 }

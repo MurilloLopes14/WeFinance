@@ -47,6 +47,9 @@ export class HouseholdResponseDto {
   @ApiProperty({ enum: ['equal', 'percent', 'fixed'] })
   defaultSplitType: 'equal' | 'percent' | 'fixed';
 
+  @ApiPropertyOptional({ nullable: true })
+  color: string | null;
+
   @ApiProperty()
   createdAt: Date;
 

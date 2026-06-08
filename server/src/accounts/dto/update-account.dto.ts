@@ -6,6 +6,7 @@ import {
   IsString,
   IsUUID,
   Length,
+  MaxLength,
   Min,
 } from 'class-validator';
 
@@ -37,4 +38,10 @@ export class UpdateAccountDto {
   @IsNumber()
   @Min(0)
   balanceManual?: number;
+
+  @ApiPropertyOptional({ example: '#10B981', nullable: true })
+  @IsOptional()
+  @IsString()
+  @MaxLength(20)
+  color?: string | null;
 }

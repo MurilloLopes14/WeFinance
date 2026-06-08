@@ -19,6 +19,11 @@ export class UpdateSubscriptionDto {
   @Length(1, 100)
   name?: string;
 
+  @ApiPropertyOptional({ enum: ['expense', 'income'] })
+  @IsOptional()
+  @IsEnum(['expense', 'income'])
+  type?: 'expense' | 'income';
+
   @ApiPropertyOptional()
   @IsOptional()
   @IsNumber()

@@ -42,6 +42,7 @@ export class CategoriesService {
         name: dto.name,
         kind: dto.kind,
         isFixed: dto.isFixed ?? false,
+        color: dto.color ?? null,
       })
       .returning();
 
@@ -97,6 +98,7 @@ export class CategoriesService {
     if (dto.kind !== undefined) updateData.kind = dto.kind;
     if (dto.isFixed !== undefined) updateData.isFixed = dto.isFixed;
     if (dto.parentId !== undefined) updateData.parentId = dto.parentId;
+    if (dto.color !== undefined) updateData.color = dto.color;
 
     const [updated] = await this.db
       .update(categories)
@@ -204,6 +206,7 @@ export class CategoriesService {
       name: category.name,
       kind: category.kind,
       isFixed: category.isFixed,
+      color: category.color ?? null,
       createdAt: category.createdAt,
       updatedAt: category.updatedAt,
     };

@@ -1,5 +1,5 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsEnum, IsOptional, IsString, Length } from 'class-validator';
+import { IsEnum, IsOptional, IsString, Length, MaxLength } from 'class-validator';
 
 export class UpdateHouseholdDto {
   @ApiPropertyOptional({ example: 'Murillo & Partner' })
@@ -18,4 +18,10 @@ export class UpdateHouseholdDto {
   @IsOptional()
   @IsEnum(['equal', 'percent', 'fixed'])
   defaultSplitType?: 'equal' | 'percent' | 'fixed';
+
+  @ApiPropertyOptional({ example: '#4F46E5', nullable: true })
+  @IsOptional()
+  @IsString()
+  @MaxLength(20)
+  color?: string | null;
 }

@@ -11,6 +11,12 @@ node_modules
 dist
 dist-ssr
 *.local
+.env
+.env.local
+
+# Generated API client (regenerate with npm run api:update)
+src/api/generated
+openapi.json
 
 # Editor directories and files
 .vscode/*

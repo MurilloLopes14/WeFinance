@@ -19,6 +19,9 @@ export class CategoryResponseDto {
   @ApiProperty()
   isFixed: boolean;
 
+  @ApiPropertyOptional({ nullable: true })
+  color: string | null;
+
   @ApiProperty()
   createdAt: Date;
 

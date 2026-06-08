@@ -85,6 +85,7 @@ export class HouseholdsService {
     if (dto.name !== undefined) updateData.name = dto.name;
     if (dto.currency !== undefined) updateData.currency = dto.currency.toUpperCase();
     if (dto.defaultSplitType !== undefined) updateData.defaultSplitType = dto.defaultSplitType;
+    if (dto.color !== undefined) updateData.color = dto.color;
 
     const [updated] = await this.db
       .update(households)

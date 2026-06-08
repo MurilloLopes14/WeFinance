@@ -18,12 +18,16 @@ export class CreateSubscriptionDto {
   @Length(1, 100)
   name: string;
 
+  @ApiProperty({ enum: ['expense', 'income'], default: 'expense' })
+  @IsEnum(['expense', 'income'])
+  type: 'expense' | 'income';
+
   @ApiProperty({ example: 39.9 })
   @IsNumber()
   @Min(0.01)
   amount: number;
 
-  @ApiProperty({ description: 'UUID of the account to debit' })
+  @ApiProperty({ description: 'UUID of the account to debit/credit' })
   @IsUUID()
   accountId: string;
 

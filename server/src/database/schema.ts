@@ -37,6 +37,10 @@ export const cadenceUnitEnum = pgEnum('cadence_unit', [
   'month',
   'year',
 ]);
+export const subscriptionTypeEnum = pgEnum('subscription_type', [
+  'expense',
+  'income',
+]);
 export const eventActionEnum = pgEnum('event_action', [
   'create',
   'update',
@@ -76,6 +80,7 @@ export const households = pgTable('households', {
   name: varchar('name', { length: 100 }).notNull(),
   currency: varchar('currency', { length: 3 }).default('BRL').notNull(),
   defaultSplitType: splitTypeEnum('default_split_type').default('equal').notNull(),
+  color: varchar('color', { length: 20 }),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
@@ -111,6 +116,7 @@ export const accounts = pgTable('accounts', {
   balanceManual: decimal('balance_manual', { precision: 12, scale: 2 })
     .default('0')
     .notNull(),
+  color: varchar('color', { length: 20 }),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
@@ -128,6 +134,7 @@ export const categories = pgTable('categories', {
   name: varchar('name', { length: 100 }).notNull(),
   kind: categoryKindEnum('kind').notNull(),
   isFixed: boolean('is_fixed').default(false).notNull(),
+  color: varchar('color', { length: 20 }),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
@@ -210,6 +217,7 @@ export const subscriptions = pgTable('subscriptions', {
   }),
   name: varchar('name', { length: 100 }).notNull(),
   amount: decimal('amount', { precision: 12, scale: 2 }).notNull(),
+  type: subscriptionTypeEnum('type').default('expense').notNull(),
   cadenceUnit: cadenceUnitEnum('cadence_unit').notNull(),
   cadenceEvery: integer('cadence_every').default(1).notNull(),
   nextRunAt: dateColumn('next_run_at').notNull(),

@@ -6,6 +6,7 @@ import {
   IsString,
   IsUUID,
   Length,
+  MaxLength,
   Min,
 } from 'class-validator';
 
@@ -37,4 +38,10 @@ export class CreateAccountDto {
   @IsNumber()
   @Min(0)
   balanceManual?: number = 0;
+
+  @ApiPropertyOptional({ example: '#10B981', description: 'CSS color for UI display' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(20)
+  color?: string;
 }

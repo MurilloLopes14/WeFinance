@@ -56,6 +56,7 @@ export class SubscriptionsService {
         categoryId: dto.categoryId ?? null,
         name: dto.name,
         amount: String(dto.amount),
+        type: dto.type,
         cadenceUnit: dto.cadenceUnit,
         cadenceEvery: dto.cadenceEvery ?? 1,
         nextRunAt: dto.nextRunAt,
@@ -120,6 +121,7 @@ export class SubscriptionsService {
     };
 
     if (dto.name !== undefined) updateData.name = dto.name;
+    if (dto.type !== undefined) updateData.type = dto.type;
     if (dto.amount !== undefined) updateData.amount = String(dto.amount);
     if (dto.accountId !== undefined) updateData.accountId = dto.accountId;
     if (dto.categoryId !== undefined) updateData.categoryId = dto.categoryId;
@@ -234,7 +236,7 @@ export class SubscriptionsService {
           householdId: sub.householdId,
           accountId: sub.accountId,
           categoryId: sub.categoryId ?? null,
-          type: 'expense',
+          type: sub.type,
           amount: sub.amount,
           description: sub.name,
           date: sub.nextRunAt,
@@ -346,6 +348,7 @@ export class SubscriptionsService {
       accountId: sub.accountId,
       categoryId: sub.categoryId ?? null,
       name: sub.name,
+      type: sub.type,
       amount: parseFloat(sub.amount),
       cadenceUnit: sub.cadenceUnit,
       cadenceEvery: sub.cadenceEvery,

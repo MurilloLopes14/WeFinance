@@ -16,6 +16,9 @@ export class SubscriptionResponseDto {
   @ApiProperty()
   name: string;
 
+  @ApiProperty({ enum: ['expense', 'income'] })
+  type: 'expense' | 'income';
+
   @ApiProperty()
   amount: number;
 

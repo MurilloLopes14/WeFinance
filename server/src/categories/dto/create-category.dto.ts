@@ -6,6 +6,7 @@ import {
   IsString,
   IsUUID,
   Length,
+  MaxLength,
 } from 'class-validator';
 
 export class CreateCategoryDto {
@@ -27,4 +28,10 @@ export class CreateCategoryDto {
   @IsOptional()
   @IsBoolean()
   isFixed?: boolean = false;
+
+  @ApiPropertyOptional({ example: '#FF5733', description: 'CSS color for UI display' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(20)
+  color?: string;
 }

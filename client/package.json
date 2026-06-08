@@ -7,7 +7,11 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "api:sync": "node scripts/sync-openapi.mjs",
+    "api:generate": "orval --config orval.config.ts",
+    "api:watch": "orval --config orval.config.ts --watch",
+    "api:update": "npm run api:sync && npm run api:generate"
   },
   "dependencies": {
     "@base-ui/react": "^1.5.0",
@@ -30,7 +34,7 @@
     "react-dom": "^19.2.6",
     "react-hook-form": "^7.77.0",
     "react-router-dom": "^7.16.0",
-    "recharts": "^3.8.1",
+    "recharts": "^3.8.0",
     "shadcn": "^4.10.0",
     "sonner": "^2.0.7",
     "tailwind-merge": "^3.6.0",
@@ -54,6 +58,7 @@
     "eslint-plugin-react-hooks": "^7.1.1",
     "eslint-plugin-react-refresh": "^0.5.2",
     "globals": "^17.6.0",
+    "orval": "^7.21.0",
     "typescript": "~6.0.2",
     "typescript-eslint": "^8.59.2",
     "vite": "^8.0.12"
