@@ -33,6 +33,11 @@ export class FilterTransactionsDto {
   @IsEnum(['draft', 'cleared', 'reconciled'])
   status?: 'draft' | 'cleared' | 'reconciled';
 
+  @ApiPropertyOptional({ enum: ['asc', 'desc'], default: 'desc', description: 'Ordenação por data' })
+  @IsOptional()
+  @IsEnum(['asc', 'desc'])
+  order?: 'asc' | 'desc' = 'desc';
+
   @ApiPropertyOptional({ default: 1, minimum: 1 })
   @IsOptional()
   @Type(() => Number)

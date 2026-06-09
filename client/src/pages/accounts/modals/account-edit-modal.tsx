@@ -1,10 +1,9 @@
-import type { CategoryResponseDto } from '@/api/generated/models/categoryResponseDto'
+import type { AccountResponseDto } from '@/api/generated/models/accountResponseDto'
 import {
-  getCategoriesControllerFindAllQueryKey,
-  useCategoriesControllerFindAll,
-  useCategoriesControllerRemove,
-  useCategoriesControllerUpdate,
-} from '@/api/generated/categories/categories'
+  getAccountsControllerFindAllQueryKey,
+  useAccountsControllerRemove,
+  useAccountsControllerUpdate,
+} from '@/api/generated/accounts/accounts'
 import { ObjectDeleteConfirmDialog } from '@/components/object/object-delete-confirm-dialog'
 import { Button } from '@/components/ui/button'
 import {
@@ -16,45 +15,44 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { getApiErrorMessage } from '@/lib/get-api-error-message'
-import { getEditableParentCategoryOptions } from '@/lib/category-helpers'
-import { CategoryFormFields } from '@/pages/categories/category-form-fields'
+import { AccountFormFields } from '@/pages/accounts/account-form-fields'
 import {
-  defaultCategoryFormValues,
-  categoryFormSchema,
-  type CategoryFormValues,
-} from '@/pages/categories/category-form-schema'
+  defaultAccountFormValues,
+  accountFormSchema,
+  type AccountFormValues,
+} from '@/pages/accounts/account-form-schema'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Loader2, Trash2 } from 'lucide-react'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { toast } from 'sonner'
 import { useQueryClient } from '@tanstack/react-query'
 
-type CategoryEditModalProps = {
-  category: CategoryResponseDto | null
+type AccountEditModalProps = {
+  account: AccountResponseDto | null
   open: boolean
   onOpenChange: (open: boolean) => void
 }
 
-function toFormValues(category: CategoryResponseDto): CategoryFormValues {
+function toFormValues(account: AccountResponseDto): AccountFormValues {
   return {
-    householdId: category.householdId,
-    name: category.name,
-    kind: category.kind,
-    parentId: category.parentId ?? '',
-    isFixed: category.isFixed,
-    color: category.color ?? defaultCategoryFormValues.color,
+    householdId: account.householdId,
+    name: account.name,
+    type: account.type,
+    institution: account.institution ?? '',
+    balanceManual: account.balanceManual,
+    color: account.color ?? defaultAccountFormValues.color,
   }
 }
 
-export function CategoryEditModal({
-  category,
+export function AccountEditModal({
+  account,
   open,
   onOpenChange,
-}: CategoryEditModalProps) {
+}: AccountEditModalProps) {
   const queryClient = useQueryClient()
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
-  const householdId = category?.householdId ?? ''
+  const householdId = account?.householdId ?? ''
 
   const {
     register,
@@ -63,60 +61,48 @@ export function CategoryEditModal({
     setValue,
     watch,
     formState: { errors },
-  } = useForm<CategoryFormValues>({
-    resolver: zodResolver(categoryFormSchema),
-    defaultValues: defaultCategoryFormValues,
+  } = useForm<AccountFormValues>({
+    resolver: zodResolver(accountFormSchema),
+    defaultValues: defaultAccountFormValues,
   })
 
   useEffect(() => {
-    if (category && open) {
-      reset(toFormValues(category))
+    if (account && open) {
+      reset(toFormValues(account))
     }
-  }, [category, open, reset])
+  }, [account, open, reset])
 
-  const { data: householdCategories } = useCategoriesControllerFindAll(householdId, {
-    query: { enabled: open && Boolean(householdId) },
-  })
-
-  const parentOptions = useMemo(
-    () =>
-      category
-        ? getEditableParentCategoryOptions(householdCategories, category.id)
-        : [],
-    [category, householdCategories],
-  )
-
-  const updateMutation = useCategoriesControllerUpdate({
+  const updateMutation = useAccountsControllerUpdate({
     mutation: {
       onSuccess: async () => {
         if (!householdId) return
 
         await queryClient.invalidateQueries({
-          queryKey: getCategoriesControllerFindAllQueryKey(householdId),
+          queryKey: getAccountsControllerFindAllQueryKey(householdId),
         })
-        toast.success('Categoria atualizada com sucesso')
+        toast.success('Conta atualizada com sucesso')
         onOpenChange(false)
       },
       onError: (error) => {
-        toast.error(getApiErrorMessage(error, 'Não foi possível atualizar a categoria'))
+        toast.error(getApiErrorMessage(error, 'Não foi possível atualizar a conta'))
       },
     },
   })
 
-  const deleteMutation = useCategoriesControllerRemove({
+  const deleteMutation = useAccountsControllerRemove({
     mutation: {
       onSuccess: async () => {
         if (!householdId) return
 
         await queryClient.invalidateQueries({
-          queryKey: getCategoriesControllerFindAllQueryKey(householdId),
+          queryKey: getAccountsControllerFindAllQueryKey(householdId),
         })
-        toast.success('Categoria excluída com sucesso')
+        toast.success('Conta excluída com sucesso')
         setDeleteConfirmOpen(false)
         onOpenChange(false)
       },
       onError: (error) => {
-        toast.error(getApiErrorMessage(error, 'Não foi possível excluir a categoria'))
+        toast.error(getApiErrorMessage(error, 'Não foi possível excluir a conta'))
       },
     },
   })
@@ -124,16 +110,16 @@ export function CategoryEditModal({
   const isBusy = updateMutation.isPending || deleteMutation.isPending
 
   const onSubmit = handleSubmit((values) => {
-    if (!category || !values.householdId) return
+    if (!account || !values.householdId) return
 
     updateMutation.mutate({
       householdId: values.householdId,
-      categoryId: category.id,
+      accountId: account.id,
       data: {
         name: values.name,
-        kind: values.kind,
-        parentId: values.parentId ? values.parentId : null,
-        isFixed: values.isFixed,
+        type: values.type,
+        institution: values.institution || null,
+        balanceManual: values.balanceManual,
         color: values.color || undefined,
       },
     })
@@ -143,19 +129,18 @@ export function CategoryEditModal({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="glass-strong">
         <DialogHeader>
-          <DialogTitle>Editar categoria</DialogTitle>
+          <DialogTitle>Editar conta</DialogTitle>
           <DialogDescription>
-            Atualize as informações da categoria {category?.name ?? ''}.
+            Atualize as informações da conta {account?.name ?? ''}.
           </DialogDescription>
         </DialogHeader>
 
-        <form id="category-edit-form" onSubmit={onSubmit} className="space-y-1">
-          <CategoryFormFields
+        <form id="account-edit-form" onSubmit={onSubmit} className="space-y-1">
+          <AccountFormFields
             register={register}
             errors={errors}
             setValue={setValue}
             watch={watch}
-            parentOptions={parentOptions}
             householdDisabled
           />
         </form>
@@ -166,7 +151,7 @@ export function CategoryEditModal({
             variant="ghost"
             className="rounded-xl text-destructive hover:text-destructive sm:mr-auto"
             onClick={() => setDeleteConfirmOpen(true)}
-            disabled={isBusy || !category}
+            disabled={isBusy || !account}
           >
             <Trash2 className="size-4" />
             Excluir
@@ -183,9 +168,9 @@ export function CategoryEditModal({
             </Button>
             <Button
               type="submit"
-              form="category-edit-form"
+              form="account-edit-form"
               className="glow-primary rounded-xl"
-              disabled={isBusy || !category}
+              disabled={isBusy || !account}
             >
               {updateMutation.isPending && <Loader2 className="size-4 animate-spin" />}
               Salvar alterações
@@ -197,13 +182,13 @@ export function CategoryEditModal({
       <ObjectDeleteConfirmDialog
         open={deleteConfirmOpen}
         onOpenChange={setDeleteConfirmOpen}
-        title="Excluir categoria"
-        description={`Tem certeza que deseja excluir "${category?.name}"? Esta ação não pode ser desfeita.`}
+        title="Excluir conta"
+        description={`Tem certeza que deseja excluir "${account?.name}"? Esta ação não pode ser desfeita.`}
         onConfirm={() => {
-          if (!category) return
+          if (!account) return
           deleteMutation.mutate({
-            householdId: category.householdId,
-            categoryId: category.id,
+            householdId: account.householdId,
+            accountId: account.id,
           })
         }}
         isPending={deleteMutation.isPending}

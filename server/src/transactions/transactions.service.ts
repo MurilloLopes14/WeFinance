@@ -5,7 +5,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { and, count, eq, gte, inArray, lt, ne, SQL, sum } from 'drizzle-orm';
+import { and, asc, count, desc, eq, gte, inArray, lt, ne, SQL, sum } from 'drizzle-orm';
 import { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import { DRIZZLE } from '../database/database.constants';
 import * as schema from '../database/schema';
@@ -119,7 +119,7 @@ export class TransactionsService {
         .where(where)
         .limit(limit)
         .offset(offset)
-        .orderBy(transactions.date),
+        .orderBy(filters.order === 'asc' ? asc(transactions.date) : desc(transactions.date)),
       this.db.select({ total: count() }).from(transactions).where(where),
     ]);
 

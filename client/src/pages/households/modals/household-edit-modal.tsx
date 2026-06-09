@@ -1,8 +1,10 @@
 import type { HouseholdResponseDto } from '@/api/generated/models/householdResponseDto'
 import {
   getHouseholdsControllerFindAllQueryKey,
+  useHouseholdsControllerRemove,
   useHouseholdsControllerUpdate,
 } from '@/api/generated/households/households'
+import { ObjectDeleteConfirmDialog } from '@/components/object/object-delete-confirm-dialog'
 import { householdsListParams } from '@/lib/household-api-helpers'
 import { Button } from '@/components/ui/button'
 import {
@@ -21,8 +23,8 @@ import {
   type HouseholdFormValues,
 } from '@/pages/households/household-form-schema'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Loader2 } from 'lucide-react'
-import { useEffect } from 'react'
+import { Loader2, Trash2 } from 'lucide-react'
+import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { toast } from 'sonner'
 import { useQueryClient } from '@tanstack/react-query'
@@ -48,6 +50,7 @@ export function HouseholdEditModal({
   onOpenChange,
 }: HouseholdEditModalProps) {
   const queryClient = useQueryClient()
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
 
   const {
     register,
@@ -82,6 +85,24 @@ export function HouseholdEditModal({
     },
   })
 
+  const deleteMutation = useHouseholdsControllerRemove({
+    mutation: {
+      onSuccess: async () => {
+        await queryClient.invalidateQueries({
+          queryKey: getHouseholdsControllerFindAllQueryKey(householdsListParams),
+        })
+        toast.success('Grupo excluído com sucesso')
+        setDeleteConfirmOpen(false)
+        onOpenChange(false)
+      },
+      onError: (error) => {
+        toast.error(getApiErrorMessage(error, 'Não foi possível excluir o grupo'))
+      },
+    },
+  })
+
+  const isBusy = updateMutation.isPending || deleteMutation.isPending
+
   const onSubmit = handleSubmit((values) => {
     if (!household) return
 
@@ -115,27 +136,51 @@ export function HouseholdEditModal({
           />
         </form>
 
-        <DialogFooter className="gap-2 sm:gap-0">
+        <DialogFooter className="flex-col gap-2 sm:flex-row sm:justify-between">
           <Button
             type="button"
             variant="ghost"
-            className="rounded-xl"
-            onClick={() => onOpenChange(false)}
-            disabled={updateMutation.isPending}
+            className="rounded-xl text-destructive hover:text-destructive sm:mr-auto"
+            onClick={() => setDeleteConfirmOpen(true)}
+            disabled={isBusy || !household}
           >
-            Cancelar
+            <Trash2 className="size-4" />
+            Excluir
           </Button>
-          <Button
-            type="submit"
-            form="household-edit-form"
-            className="glow-primary rounded-xl"
-            disabled={updateMutation.isPending || !household}
-          >
-            {updateMutation.isPending && <Loader2 className="size-4 animate-spin" />}
-            Salvar alterações
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              type="button"
+              variant="ghost"
+              className="rounded-xl"
+              onClick={() => onOpenChange(false)}
+              disabled={isBusy}
+            >
+              Cancelar
+            </Button>
+            <Button
+              type="submit"
+              form="household-edit-form"
+              className="glow-primary rounded-xl"
+              disabled={isBusy || !household}
+            >
+              {updateMutation.isPending && <Loader2 className="size-4 animate-spin" />}
+              Salvar alterações
+            </Button>
+          </div>
         </DialogFooter>
       </DialogContent>
+
+      <ObjectDeleteConfirmDialog
+        open={deleteConfirmOpen}
+        onOpenChange={setDeleteConfirmOpen}
+        title="Excluir grupo"
+        description={`Tem certeza que deseja excluir "${household?.name}"? Todas as categorias, contas e transações vinculadas serão removidas. Esta ação não pode ser desfeita.`}
+        onConfirm={() => {
+          if (!household) return
+          deleteMutation.mutate({ id: household.id })
+        }}
+        isPending={deleteMutation.isPending}
+      />
     </Dialog>
   )
 }

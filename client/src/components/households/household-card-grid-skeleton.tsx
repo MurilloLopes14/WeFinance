@@ -24,6 +24,7 @@ export function HouseholdCardGridSkeleton() {
             <div className="flex shrink-0 gap-0.5">
               <Skeleton className="size-7 rounded-md" />
               <Skeleton className="size-7 rounded-md" />
+              <Skeleton className="size-7 rounded-md" />
             </div>
           </div>
         </div>

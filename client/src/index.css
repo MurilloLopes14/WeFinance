@@ -500,6 +500,27 @@
     transform: translateY(0);
   }
 
+  .account-card-glow {
+    transition:
+      border-color 0.3s ease,
+      box-shadow 0.3s ease,
+      transform 0.25s ease,
+      background 0.25s ease;
+  }
+
+  .account-card-glow:hover {
+    border-color: color-mix(in oklch, var(--account-color) 42%, transparent);
+    box-shadow:
+      var(--shadow-inset-reflect),
+      0 0 0 1px color-mix(in oklch, var(--account-color) 22%, transparent),
+      0 12px 32px color-mix(in oklch, var(--account-color) 32%, transparent);
+    transform: translateY(-2px);
+  }
+
+  .account-card-glow:active {
+    transform: translateY(0);
+  }
+
   /* semantic aliases for shadcn Card-like usage */
   .surface-glass {
     border-radius: var(--radius-2xl);

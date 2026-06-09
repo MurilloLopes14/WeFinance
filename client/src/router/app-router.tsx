@@ -3,8 +3,10 @@ import { RegisterPage } from '@/pages/auth/register-page'
 import { AuthPlaceholderPage } from '@/pages/auth/auth-placeholder-page'
 import { DashboardHomePage } from '@/pages/dashboard/dashboard-home-page'
 import { DashboardPlaceholderPage } from '@/pages/dashboard/dashboard-placeholder-page'
+import { AccountPage } from '@/pages/accounts/account-page'
 import { CategoryPage } from '@/pages/categories/category-page'
 import { HouseholdPage } from '@/pages/households/household-page'
+import { TransactionPage } from '@/pages/transactions/transaction-page'
 import {
   dashboardGroupsNav,
   dashboardMainNav,
@@ -45,10 +47,14 @@ export function AppRouter() {
                 key={item.url}
                 path={item.url.replace('/dashboard/', '')}
                 element={
-                  <DashboardPlaceholderPage
-                    title={item.title}
-                    icon={item.icon}
-                  />
+                  item.url === '/dashboard/transacoes' ? (
+                    <TransactionPage />
+                  ) : (
+                    <DashboardPlaceholderPage
+                      title={item.title}
+                      icon={item.icon}
+                    />
+                  )
                 }
               />
             ))}
@@ -62,6 +68,8 @@ export function AppRouter() {
                     <HouseholdPage />
                   ) : item.url === '/dashboard/categorias' ? (
                     <CategoryPage />
+                  ) : item.url === '/dashboard/contas' ? (
+                    <AccountPage />
                   ) : (
                     <DashboardPlaceholderPage
                       title={item.title}

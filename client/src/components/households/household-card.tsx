@@ -6,7 +6,7 @@ import type { HouseholdResponseDto } from '@/api/generated/models/householdRespo
 import { ColoredObjectIcon } from '@/components/object/colored-object-icon'
 import { DEFAULT_PRESET_COLOR } from '@/lib/color-helpers'
 import { cn } from '@/lib/utils'
-import { Pencil, UserRoundPlus, UsersRound } from 'lucide-react'
+import { Pencil, Trash2, UserRoundPlus, UsersRound } from 'lucide-react'
 import type { CSSProperties } from 'react'
 
 export const householdCardGridClassName =
@@ -17,6 +17,7 @@ type HouseholdCardProps = {
   onView: (household: HouseholdResponseDto) => void
   onEdit: (household: HouseholdResponseDto) => void
   onManageMembers: (household: HouseholdResponseDto) => void
+  onDelete?: (household: HouseholdResponseDto) => void
   className?: string
 }
 
@@ -25,6 +26,7 @@ export function HouseholdCard({
   onView,
   onEdit,
   onManageMembers,
+  onDelete,
   className,
 }: HouseholdCardProps) {
   const memberCount = household.members?.length ?? 0
@@ -88,6 +90,21 @@ export function HouseholdCard({
           >
             <Pencil className="size-3.5" />
           </Button>
+          {onDelete && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon-sm"
+              className="size-7 text-destructive hover:text-destructive"
+              aria-label={`Excluir ${household.name}`}
+              onClick={(event) => {
+                event.stopPropagation()
+                onDelete(household)
+              }}
+            >
+              <Trash2 className="size-3.5" />
+            </Button>
+          )}
         </div>
       </div>
     </Card>

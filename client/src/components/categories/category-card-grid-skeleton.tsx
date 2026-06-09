@@ -22,7 +22,10 @@ export function CategoryCardGridSkeleton() {
                 <Skeleton className="h-3.5 w-16" />
               </div>
             </div>
-            <Skeleton className="size-7 shrink-0 rounded-md" />
+            <div className="flex shrink-0 gap-0.5">
+              <Skeleton className="size-7 rounded-md" />
+              <Skeleton className="size-7 rounded-md" />
+            </div>
           </div>
         </div>
       )}

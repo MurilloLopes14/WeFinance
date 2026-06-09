@@ -1,6 +1,7 @@
 import {
   categoriesControllerFindAll,
   getCategoriesControllerFindAllQueryKey,
+  useCategoriesControllerRemove,
 } from '@/api/generated/categories/categories'
 import { useHouseholdsControllerFindAll } from '@/api/generated/households/households'
 import type { CategoryResponseDto } from '@/api/generated/models/categoryResponseDto'
@@ -13,6 +14,7 @@ import {
   CategoryHeader,
   type CategoryFilters,
 } from '@/components/categories/category-header'
+import { ObjectDeleteConfirmDialog } from '@/components/object/object-delete-confirm-dialog'
 import { ObjectCollectionState } from '@/components/object/object-collection-state'
 import { ObjectEmptyState } from '@/components/object/object-empty-state'
 import { ObjectPageContent, ObjectPageLayout } from '@/components/object/object-page-layout'
@@ -27,10 +29,12 @@ import {
 } from '@/lib/household-helpers'
 import { CategoryCreateModal } from '@/pages/categories/modals/category-create-modal'
 import { CategoryEditModal } from '@/pages/categories/modals/category-edit-modal'
-import { useQueries } from '@tanstack/react-query'
+import { getApiErrorMessage } from '@/lib/get-api-error-message'
+import { useQueries, useQueryClient } from '@tanstack/react-query'
 import { SearchX, Tags, Users } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { toast } from 'sonner'
 
 const defaultFilters: CategoryFilters = {
   householdId: 'all',
@@ -39,10 +43,12 @@ const defaultFilters: CategoryFilters = {
 
 export function CategoryPage() {
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
   const [search, setSearch] = useState('')
   const [filters, setFilters] = useState<CategoryFilters>(defaultFilters)
   const [createOpen, setCreateOpen] = useState(false)
   const [editCategory, setEditCategory] = useState<CategoryResponseDto | null>(null)
+  const [deleteCategory, setDeleteCategory] = useState<CategoryResponseDto | null>(null)
 
   const { data: currentUser } = useAuthSession()
   const {
@@ -116,6 +122,21 @@ export function CategoryPage() {
     const household = findHouseholdInList(households, category.householdId)
     return isHouseholdOwner(household?.members, currentUser?.id)
   }
+
+  const deleteMutation = useCategoriesControllerRemove({
+    mutation: {
+      onSuccess: async (_, variables) => {
+        await queryClient.invalidateQueries({
+          queryKey: getCategoriesControllerFindAllQueryKey(variables.householdId),
+        })
+        toast.success('Categoria excluída com sucesso')
+        setDeleteCategory(null)
+      },
+      onError: (error) => {
+        toast.error(getApiErrorMessage(error, 'Não foi possível excluir a categoria'))
+      },
+    },
+  })
 
   const refetch = () => {
     void refetchHouseholds()
@@ -222,6 +243,7 @@ export function CategoryPage() {
                     householdName={householdNameById[category.householdId]}
                     parentName={parent?.name}
                     onEdit={canEditCategory(category) ? setEditCategory : undefined}
+                    onDelete={canEditCategory(category) ? setDeleteCategory : undefined}
                   />
                 )
               })}
@@ -240,6 +262,23 @@ export function CategoryPage() {
             onOpenChange={(open) => {
               if (!open) setEditCategory(null)
             }}
+          />
+
+          <ObjectDeleteConfirmDialog
+            open={deleteCategory !== null}
+            onOpenChange={(open) => {
+              if (!open) setDeleteCategory(null)
+            }}
+            title="Excluir categoria"
+            description={`Tem certeza que deseja excluir "${deleteCategory?.name}"? Esta ação não pode ser desfeita.`}
+            onConfirm={() => {
+              if (!deleteCategory) return
+              deleteMutation.mutate({
+                householdId: deleteCategory.householdId,
+                categoryId: deleteCategory.id,
+              })
+            }}
+            isPending={deleteMutation.isPending}
           />
         </>
       )}
