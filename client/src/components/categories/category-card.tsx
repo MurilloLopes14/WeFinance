@@ -39,7 +39,7 @@ export function CategoryCard({
       style={{ '--category-color': categoryColor } as CSSProperties}
     >
       <div className="flex min-w-0 items-center gap-2.5 px-3">
-        <ColoredObjectIcon color={category.color} icon={Tags} />
+        <ColoredObjectIcon color={category.color as unknown as string} icon={Tags} />
 
         <div className="min-w-0 flex-1">
           <CardTitle className="line-clamp-1 text-sm leading-snug font-medium">
@@ -49,7 +49,7 @@ export function CategoryCard({
             {householdName && (
               <Badge
                 variant="outline"
-                className="h-5 max-w-[8rem] shrink-0 truncate rounded-md px-1.5 py-0 text-[11px] leading-none"
+                className="h-5 max-w-32 shrink-0 truncate rounded-md px-1.5 py-0 text-[11px] leading-none"
               >
                 {householdName}
               </Badge>
