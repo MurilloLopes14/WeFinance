@@ -9,6 +9,7 @@ import {
   ParseUUIDPipe,
   Patch,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import {
@@ -22,10 +23,12 @@ import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import type { AuthenticatedUser } from '../common/types/jwt-payload.type';
 import { AddMemberDto } from './dto/add-member.dto';
 import { CreateHouseholdDto } from './dto/create-household.dto';
+import { SearchInvitableUsersQueryDto } from './dto/search-invitable-users-query.dto';
 import { UpdateHouseholdDto } from './dto/update-household.dto';
 import {
   HouseholdMemberResponseDto,
   HouseholdResponseDto,
+  MemberUserDto,
 } from './dto/household-response.dto';
 import { HouseholdsService } from './households.service';
 
@@ -51,8 +54,11 @@ export class HouseholdsController {
   @Get()
   @ApiOperation({ summary: 'List all households the current user belongs to' })
   @ApiResponse({ status: 200, type: [HouseholdResponseDto] })
-  findAll(@CurrentUser() user: AuthenticatedUser) {
-    return this.householdsService.findAllForUser(user.id);
+  findAll(
+    @CurrentUser() user: AuthenticatedUser,
+    @Query('name') name?: string,
+  ) {
+    return this.householdsService.findAllForUser(user.id, name);
   }
 
   @Get(':id')
@@ -97,6 +103,17 @@ export class HouseholdsController {
     @CurrentUser() user: AuthenticatedUser,
   ) {
     return this.householdsService.findMembers(id, user.id);
+  }
+
+  @Get(':id/invitable-users')
+  @ApiOperation({ summary: 'Search users that can be invited to the household (owner only)' })
+  @ApiResponse({ status: 200, type: [MemberUserDto] })
+  searchInvitableUsers(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Query() query: SearchInvitableUsersQueryDto,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    return this.householdsService.searchInvitableUsers(id, user.id, query.q);
   }
 
   @Post(':id/members')

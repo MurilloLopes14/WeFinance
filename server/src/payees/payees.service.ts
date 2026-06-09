@@ -147,7 +147,7 @@ export class PayeesService {
       .limit(1);
 
     if (!payee) {
-      throw new NotFoundException(`Payee "${payeeId}" not found in this household`);
+      throw new NotFoundException(`Beneficiário "${payeeId}" não encontrado neste grupo familiar`);
     }
 
     return payee;
@@ -170,7 +170,7 @@ export class PayeesService {
 
     if (!category) {
       throw new NotFoundException(
-        `Category "${categoryId}" not found in this household`,
+        `Categoria "${categoryId}" não encontrada neste grupo familiar`,
       );
     }
   }
@@ -192,6 +192,6 @@ function assertValidRegex(pattern: string): void {
   try {
     new RegExp(pattern);
   } catch {
-    throw new BadRequestException(`Invalid regex pattern: "${pattern}"`);
+    throw new BadRequestException(`Padrão regex inválido: "${pattern}"`);
   }
 }

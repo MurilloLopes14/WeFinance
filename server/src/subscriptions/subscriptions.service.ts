@@ -285,7 +285,7 @@ export class SubscriptionsService {
 
     if (!sub) {
       throw new NotFoundException(
-        `Subscription "${subId}" not found in this household`,
+        `Assinatura "${subId}" não encontrada neste grupo familiar`,
       );
     }
 
@@ -318,7 +318,7 @@ export class SubscriptionsService {
       .limit(1);
 
     if (!row) {
-      throw new NotFoundException(`Account "${accountId}" not found in this household`);
+      throw new NotFoundException(`Conta "${accountId}" não encontrada neste grupo familiar`);
     }
   }
 
@@ -336,7 +336,7 @@ export class SubscriptionsService {
 
     if (!row) {
       throw new NotFoundException(
-        `Category "${categoryId}" not found in this household`,
+        `Categoria "${categoryId}" não encontrada neste grupo familiar`,
       );
     }
   }

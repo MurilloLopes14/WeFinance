@@ -164,12 +164,12 @@ export class TransactionsService {
     const existing = await this.findTransaction(txId, householdId);
 
     if (existing.status === 'reconciled') {
-      throw new ForbiddenException('Reconciled transactions cannot be edited');
+      throw new ForbiddenException('Transações conciliadas não podem ser editadas');
     }
 
     if (dto.accountId && existing.transferLinkId) {
       throw new BadRequestException(
-        'Cannot change the account of a transfer transaction',
+        'Não é possível alterar a conta de uma transação de transferência',
       );
     }
 
@@ -254,7 +254,7 @@ export class TransactionsService {
     const existing = await this.findTransaction(txId, householdId);
 
     if (existing.status === 'reconciled') {
-      throw new ForbiddenException('Reconciled transactions cannot be deleted');
+      throw new ForbiddenException('Transações conciliadas não podem ser excluídas');
     }
 
     await this.db.transaction(async (trx) => {
@@ -278,11 +278,11 @@ export class TransactionsService {
     const existing = await this.findTransaction(txId, householdId);
 
     if (existing.status === 'reconciled') {
-      throw new BadRequestException('Transaction is already reconciled');
+      throw new BadRequestException('Transação já está conciliada');
     }
     if (existing.status === 'draft') {
       throw new BadRequestException(
-        'Cannot reconcile a draft transaction. Clear it first.',
+        'Não é possível conciliar uma transação em rascunho. Altere o status para liquidada primeiro.',
       );
     }
 
@@ -355,11 +355,11 @@ export class TransactionsService {
   ): Promise<TransactionResponseDto> {
     if (!dto.transfer?.toAccountId) {
       throw new BadRequestException(
-        'transfer.toAccountId is required for transfer transactions',
+        'transfer.toAccountId é obrigatório para transações de transferência',
       );
     }
     if (dto.transfer.toAccountId === dto.accountId) {
-      throw new BadRequestException('Source and destination accounts must be different');
+      throw new BadRequestException('As contas de origem e destino devem ser diferentes');
     }
 
     await this.assertAccountBelongsToHousehold(householdId, dto.transfer.toAccountId);
@@ -422,7 +422,7 @@ export class TransactionsService {
       .limit(1);
 
     if (!tx) {
-      throw new NotFoundException(`Transaction "${txId}" not found in this household`);
+      throw new NotFoundException(`Transação "${txId}" não encontrada neste grupo familiar`);
     }
 
     return tx;
@@ -442,7 +442,7 @@ export class TransactionsService {
       .limit(1);
 
     if (!tx) {
-      throw new NotFoundException(`Transaction "${txId}" not found`);
+      throw new NotFoundException(`Transação "${txId}" não encontrada`);
     }
 
     const splits = await this.db
@@ -461,13 +461,13 @@ export class TransactionsService {
     const userIds = splits.map((s) => s.userId);
 
     if (new Set(userIds).size !== userIds.length) {
-      throw new BadRequestException('Duplicate users in split');
+      throw new BadRequestException('Usuários duplicados na divisão');
     }
 
     for (const userId of userIds) {
       await this.householdsService.assertMember(householdId, userId).catch(() => {
         throw new BadRequestException(
-          `User "${userId}" is not a member of this household`,
+          `Usuário "${userId}" não é membro deste grupo familiar`,
         );
       });
     }
@@ -477,7 +477,7 @@ export class TransactionsService {
 
     if (Math.abs(diff) > 1) {
       throw new BadRequestException(
-        `Split total (${splitTotal}) must equal transaction amount (${amount})`,
+        `Total da divisão (${splitTotal}) deve ser igual ao valor da transação (${amount})`,
       );
     }
 
@@ -505,7 +505,7 @@ export class TransactionsService {
 
     if (!row) {
       throw new NotFoundException(
-        `Account "${accountId}" not found in this household`,
+        `Conta "${accountId}" não encontrada neste grupo familiar`,
       );
     }
   }
@@ -524,7 +524,7 @@ export class TransactionsService {
 
     if (!row) {
       throw new NotFoundException(
-        `Category "${categoryId}" not found in this household`,
+        `Categoria "${categoryId}" não encontrada neste grupo familiar`,
       );
     }
   }
@@ -541,7 +541,7 @@ export class TransactionsService {
 
     if (!row) {
       throw new NotFoundException(
-        `Payee "${payeeId}" not found in this household`,
+        `Beneficiário "${payeeId}" não encontrado neste grupo familiar`,
       );
     }
   }

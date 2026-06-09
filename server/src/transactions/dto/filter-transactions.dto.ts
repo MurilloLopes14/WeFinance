@@ -15,7 +15,7 @@ export class FilterTransactionsDto {
   @ApiPropertyOptional({ example: '2025-10', description: 'Filter by month (YYYY-MM)' })
   @IsOptional()
   @IsString()
-  @Matches(/^\d{4}-(0[1-9]|1[0-2])$/, { message: 'month must be in YYYY-MM format' })
+  @Matches(/^\d{4}-(0[1-9]|1[0-2])$/, { message: 'mês deve estar no formato AAAA-MM' })
   month?: string;
 
   @ApiPropertyOptional({ enum: ['expense', 'income', 'transfer'] })

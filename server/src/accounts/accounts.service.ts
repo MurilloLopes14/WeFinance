@@ -150,7 +150,7 @@ export class AccountsService {
       .limit(1);
 
     if (!account) {
-      throw new NotFoundException(`Account "${accountId}" not found in this household`);
+      throw new NotFoundException(`Conta "${accountId}" não encontrada neste grupo familiar`);
     }
 
     return account;
@@ -167,13 +167,13 @@ export class AccountsService {
       .limit(1);
 
     if (!user) {
-      throw new NotFoundException(`User "${userId}" not found`);
+      throw new NotFoundException(`Usuário "${userId}" não encontrado`);
     }
 
     // Delegates membership check — throws ForbiddenException if not a member
     await this.householdsService.assertMember(householdId, userId).catch(() => {
       throw new BadRequestException(
-        `User "${userId}" is not a member of this household`,
+        `Usuário "${userId}" não é membro deste grupo familiar`,
       );
     });
   }

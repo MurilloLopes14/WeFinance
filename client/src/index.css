@@ -1,4 +1,4 @@
-@import "tailwindcss";
+﻿@import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 @import "@fontsource-variable/geist";
@@ -220,9 +220,9 @@
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.78 0.16 195 / 40%);
 
-  --mesh-1: oklch(0.45 0.18 250 / 35%);
-  --mesh-2: oklch(0.42 0.2 285 / 28%);
-  --mesh-3: oklch(0.4 0.14 195 / 25%);
+  --mesh-1: oklch(0.45 0.18 250 / 28%);
+  --mesh-2: oklch(0.42 0.2 285 / 16%);
+  --mesh-3: oklch(0.4 0.14 195 / 12%);
   --mesh-base: oklch(0.11 0.028 265);
 
   --shadow-glass: 0 8px 32px oklch(0 0 0 / 35%),
@@ -232,8 +232,8 @@
     0 0 12px oklch(0.72 0.22 285 / 18%);
   --shadow-glow-lg: 0 0 64px oklch(0.78 0.16 195 / 32%),
     0 0 24px oklch(0.72 0.22 285 / 22%);
-  --shadow-glow-primary: 0 0 28px oklch(0.78 0.16 195 / 38%),
-    0 4px 20px oklch(0.78 0.16 195 / 18%);
+  --shadow-glow-primary: 0 0 20px oklch(0.78 0.16 195 / 24%),
+    0 4px 16px oklch(0.78 0.16 195 / 12%);
   --shadow-inset-reflect: inset 0 1px 0 oklch(1 0 0 / 12%),
     inset 0 -1px 0 oklch(1 0 0 / 4%);
 }
@@ -283,10 +283,18 @@
 
   html {
     @apply scroll-smooth antialiased;
+    scroll-padding-top: 5.5rem;
+    overflow-x: hidden;
+  }
+
+  @media (min-width: 640px) {
+    html {
+      scroll-padding-top: 6.5rem;
+    }
   }
 
   body {
-    @apply min-h-dvh bg-background font-sans text-foreground;
+    @apply min-h-dvh overflow-x-hidden bg-background font-sans text-foreground;
     font-feature-settings: "rlig" 1, "calt" 1;
   }
 
@@ -318,19 +326,19 @@
     pointer-events: none;
     background:
       radial-gradient(
-        ellipse 80% 60% at 15% 10%,
+        ellipse 75% 55% at 15% 10%,
         var(--mesh-1),
         transparent 55%
       ),
       radial-gradient(
-        ellipse 70% 55% at 85% 20%,
+        ellipse 60% 45% at 82% 18%,
         var(--mesh-2),
-        transparent 50%
+        transparent 48%
       ),
       radial-gradient(
-        ellipse 65% 50% at 50% 90%,
+        ellipse 50% 38% at 38% 88%,
         var(--mesh-3),
-        transparent 55%
+        transparent 50%
       );
     animation: var(--animate-mesh-drift);
   }
@@ -344,7 +352,7 @@
     content: "";
     position: fixed;
     inset: 0;
-    z-index: 9999;
+    z-index: 0;
     pointer-events: none;
     opacity: 0.028;
     background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
@@ -353,7 +361,42 @@
   }
 
   .dark #root::before {
-    opacity: 0.045;
+    opacity: 0.035;
+  }
+
+  /* App shell: block animated body mesh from bleeding through transparent surfaces */
+  .dashboard-shell {
+    --sidebar: oklch(0.14 0.028 265 / 96%);
+    --sidebar-accent: oklch(1 0 0 / 7%);
+    --sidebar-border: oklch(1 0 0 / 12%);
+    position: relative;
+    isolation: isolate;
+    min-height: 100svh;
+    background: var(--background);
+  }
+
+  .dashboard-shell::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background: var(--background);
+  }
+
+  .dashboard-shell > * {
+    position: relative;
+    z-index: 1;
+  }
+
+  .dashboard-shell [data-sidebar="sidebar"] {
+    background: var(--sidebar);
+    backdrop-filter: blur(16px) saturate(1.2);
+    -webkit-backdrop-filter: blur(16px) saturate(1.2);
+  }
+
+  .dashboard-shell [data-slot="sidebar-inset"] {
+    background: var(--background);
   }
 
   ::selection {
@@ -415,6 +458,48 @@
     transform: translateY(1px);
   }
 
+  .household-card-glow {
+    transition:
+      border-color 0.3s ease,
+      box-shadow 0.3s ease,
+      transform 0.25s ease,
+      background 0.25s ease;
+  }
+
+  .household-card-glow:hover {
+    border-color: color-mix(in oklch, var(--household-color) 42%, transparent);
+    box-shadow:
+      var(--shadow-inset-reflect),
+      0 0 0 1px color-mix(in oklch, var(--household-color) 22%, transparent),
+      0 10px 28px color-mix(in oklch, var(--household-color) 32%, transparent);
+    transform: translateY(-2px);
+  }
+
+  .household-card-glow:active {
+    transform: translateY(0);
+  }
+
+  .category-card-glow {
+    transition:
+      border-color 0.3s ease,
+      box-shadow 0.3s ease,
+      transform 0.25s ease,
+      background 0.25s ease;
+  }
+
+  .category-card-glow:hover {
+    border-color: color-mix(in oklch, var(--category-color) 42%, transparent);
+    box-shadow:
+      var(--shadow-inset-reflect),
+      0 0 0 1px color-mix(in oklch, var(--category-color) 22%, transparent),
+      0 10px 28px color-mix(in oklch, var(--category-color) 32%, transparent);
+    transform: translateY(-2px);
+  }
+
+  .category-card-glow:active {
+    transform: translateY(0);
+  }
+
   /* semantic aliases for shadcn Card-like usage */
   .surface-glass {
     border-radius: var(--radius-2xl);
@@ -452,6 +537,7 @@
 
   .glow-border {
     position: relative;
+    isolation: isolate;
     border: 1px solid transparent;
     background-clip: padding-box;
   }
@@ -460,13 +546,13 @@
     content: "";
     position: absolute;
     inset: -1px;
-    z-index: -1;
+    z-index: 0;
     border-radius: inherit;
     background: linear-gradient(
       135deg,
-      oklch(from var(--glow-primary) l c h / 55%),
-      oklch(from var(--glow-accent) l c h / 35%),
-      oklch(from var(--glow-primary) l c h / 20%)
+      oklch(from var(--glow-primary) l c h / 35%),
+      oklch(from var(--glow-accent) l c h / 22%),
+      oklch(from var(--glow-primary) l c h / 12%)
     );
     mask:
       linear-gradient(#fff 0 0) content-box,

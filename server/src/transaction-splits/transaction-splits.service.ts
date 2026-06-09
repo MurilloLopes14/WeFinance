@@ -52,7 +52,7 @@ export class TransactionSplitsService {
     this.assertEditable(tx);
 
     if (tx.type === 'transfer') {
-      throw new BadRequestException('Transfer transactions do not support splits');
+      throw new BadRequestException('Transações de transferência não suportam divisões');
     }
 
     const amount = parseFloat(tx.amount);
@@ -118,7 +118,7 @@ export class TransactionSplitsService {
 
       if (Math.abs(newTotal - txAmount) > 0.01) {
         throw new BadRequestException(
-          `Updated split total (${newTotal}) must equal transaction amount (${txAmount})`,
+          `Total atualizado da divisão (${newTotal}) deve ser igual ao valor da transação (${txAmount})`,
         );
       }
     }
@@ -165,7 +165,7 @@ export class TransactionSplitsService {
 
     if (!tx) {
       throw new NotFoundException(
-        `Transaction "${txId}" not found in this household`,
+        `Transação "${txId}" não encontrada neste grupo familiar`,
       );
     }
 
@@ -188,7 +188,7 @@ export class TransactionSplitsService {
       .limit(1);
 
     if (!split) {
-      throw new NotFoundException(`Split "${splitId}" not found on this transaction`);
+      throw new NotFoundException(`Divisão "${splitId}" não encontrada nesta transação`);
     }
 
     return split;
@@ -197,7 +197,7 @@ export class TransactionSplitsService {
   private assertEditable(tx: typeof transactions.$inferSelect): void {
     if (tx.status === 'reconciled') {
       throw new ForbiddenException(
-        'Cannot modify splits of a reconciled transaction',
+        'Não é possível modificar divisões de uma transação conciliada',
       );
     }
   }
@@ -208,18 +208,18 @@ export class TransactionSplitsService {
     householdId: string,
   ): Promise<SplitInputDto[]> {
     if (splits.length === 0) {
-      throw new BadRequestException('Splits array cannot be empty');
+      throw new BadRequestException('A lista de divisões não pode estar vazia');
     }
 
     const userIds = splits.map((s) => s.userId);
     if (new Set(userIds).size !== userIds.length) {
-      throw new BadRequestException('Duplicate users in split');
+      throw new BadRequestException('Usuários duplicados na divisão');
     }
 
     for (const userId of userIds) {
       await this.householdsService.assertMember(householdId, userId).catch(() => {
         throw new BadRequestException(
-          `User "${userId}" is not a member of this household`,
+          `Usuário "${userId}" não é membro deste grupo familiar`,
         );
       });
     }
@@ -229,7 +229,7 @@ export class TransactionSplitsService {
 
     if (Math.abs(diff) > 1) {
       throw new BadRequestException(
-        `Split total (${splitTotal}) must equal transaction amount (${amount})`,
+        `Total da divisão (${splitTotal}) deve ser igual ao valor da transação (${amount})`,
       );
     }
 
@@ -258,7 +258,7 @@ export class TransactionSplitsService {
 
     if (!row) {
       throw new NotFoundException(
-        `Category "${categoryId}" not found in this household`,
+        `Categoria "${categoryId}" não encontrada neste grupo familiar`,
       );
     }
   }

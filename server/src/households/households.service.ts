@@ -5,7 +5,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { and, eq } from 'drizzle-orm';
+import { and, eq, ilike, notInArray, or } from 'drizzle-orm';
 import { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import { DRIZZLE } from '../database/database.constants';
 import * as schema from '../database/schema';
@@ -13,7 +13,7 @@ import { householdMembers, households, users } from '../database/schema';
 import { AddMemberDto } from './dto/add-member.dto';
 import { CreateHouseholdDto } from './dto/create-household.dto';
 import { UpdateHouseholdDto } from './dto/update-household.dto';
-import { HouseholdMemberResponseDto, HouseholdResponseDto } from './dto/household-response.dto';
+import { HouseholdMemberResponseDto, HouseholdResponseDto, MemberUserDto } from './dto/household-response.dto';
 
 type Household = typeof households.$inferSelect;
 type HouseholdMember = typeof householdMembers.$inferSelect;
@@ -48,7 +48,10 @@ export class HouseholdsService {
     return this.findOne(created.id, userId);
   }
 
-  async findAllForUser(userId: string): Promise<HouseholdResponseDto[]> {
+  async findAllForUser(userId: string, name?: string): Promise<HouseholdResponseDto[]> {
+    const conditions = [eq(householdMembers.userId, userId)];
+    if (name) conditions.push(ilike(households.name, `%${name}%`));
+
     const rows = await this.db
       .select({ household: households })
       .from(households)
@@ -56,7 +59,7 @@ export class HouseholdsService {
         householdMembers,
         eq(householdMembers.householdId, households.id),
       )
-      .where(eq(householdMembers.userId, userId));
+      .where(and(...conditions));
 
     const householdList = rows.map((r) => r.household);
 
@@ -109,6 +112,41 @@ export class HouseholdsService {
     return this.fetchMembers(householdId);
   }
 
+  async searchInvitableUsers(
+    householdId: string,
+    requesterId: string,
+    query: string,
+  ): Promise<MemberUserDto[]> {
+    await this.assertOwner(householdId, requesterId);
+
+    const memberRows = await this.db
+      .select({ userId: householdMembers.userId })
+      .from(householdMembers)
+      .where(eq(householdMembers.householdId, householdId));
+
+    const excludedUserIds = memberRows.map((row) => row.userId);
+    const term = `%${query.trim()}%`;
+
+    const conditions = [
+      eq(users.isActive, true),
+      or(ilike(users.email, term), ilike(users.name, term)),
+    ];
+
+    if (excludedUserIds.length > 0) {
+      conditions.push(notInArray(users.id, excludedUserIds));
+    }
+
+    return this.db
+      .select({
+        id: users.id,
+        name: users.name,
+        email: users.email,
+      })
+      .from(users)
+      .where(and(...conditions))
+      .limit(8);
+  }
+
   async addMember(
     householdId: string,
     requesterId: string,
@@ -123,12 +161,12 @@ export class HouseholdsService {
       .limit(1);
 
     if (!targetUser) {
-      throw new NotFoundException(`No user found with email "${dto.email}"`);
+      throw new NotFoundException(`Nenhum usuário encontrado com o e-mail "${dto.email}"`);
     }
 
     const existing = await this.findMemberRecord(householdId, targetUser.id);
     if (existing) {
-      throw new ConflictException('User is already a member of this household');
+      throw new ConflictException('Usuário já é membro deste grupo familiar');
     }
 
     const [member] = await this.db
@@ -163,11 +201,11 @@ export class HouseholdsService {
       .limit(1);
 
     if (!target) {
-      throw new NotFoundException(`Member "${memberId}" not found in this household`);
+      throw new NotFoundException(`Membro "${memberId}" não encontrado neste grupo familiar`);
     }
 
     if (target.role === 'owner') {
-      throw new ForbiddenException('Cannot remove the household owner');
+      throw new ForbiddenException('Não é possível remover o proprietário do grupo familiar');
     }
 
     await this.db
@@ -180,7 +218,7 @@ export class HouseholdsService {
   async assertMember(householdId: string, userId: string): Promise<void> {
     const record = await this.findMemberRecord(householdId, userId);
     if (!record) {
-      throw new ForbiddenException('You are not a member of this household');
+      throw new ForbiddenException('Você não é membro deste grupo familiar');
     }
   }
 
@@ -189,7 +227,7 @@ export class HouseholdsService {
     const record = await this.findMemberRecord(householdId, userId);
 
     if (!record || record.role !== 'owner') {
-      throw new ForbiddenException('Only the household owner can perform this action');
+      throw new ForbiddenException('Apenas o proprietário do grupo familiar pode realizar esta ação');
     }
   }
 
@@ -203,7 +241,7 @@ export class HouseholdsService {
       .limit(1);
 
     if (!household) {
-      throw new NotFoundException(`Household "${id}" not found`);
+      throw new NotFoundException(`Grupo familiar "${id}" não encontrado`);
     }
 
     return household;

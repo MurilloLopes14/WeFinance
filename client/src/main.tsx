@@ -1,8 +1,11 @@
-import { StrictMode } from 'react'
+﻿import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
+import { configureAxiosBaseUrl } from '@/api/axios-instance'
 import { AppProviders } from '@/providers/app-providers'
 import './index.css'
 import App from './App.tsx'
+
+configureAxiosBaseUrl(import.meta.env.VITE_API_URL)
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

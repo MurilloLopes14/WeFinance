@@ -41,7 +41,7 @@ export class ImportsController {
       limits: { fileSize: 5 * 1024 * 1024 }, // 5 MB
       fileFilter: (_req, file, cb) => {
         if (!file.originalname.match(/\.(csv|txt)$/i)) {
-          return cb(new BadRequestException('Only CSV files are accepted'), false);
+          return cb(new BadRequestException('Apenas arquivos CSV são aceitos'), false);
         }
         cb(null, true);
       },
@@ -66,8 +66,8 @@ export class ImportsController {
     @Body('accountId') accountId: string,
     @CurrentUser() user: AuthenticatedUser,
   ) {
-    if (!file) throw new BadRequestException('No file uploaded');
-    if (!accountId) throw new BadRequestException('accountId is required');
+    if (!file) throw new BadRequestException('Nenhum arquivo enviado');
+    if (!accountId) throw new BadRequestException('accountId é obrigatório');
 
     return this.importsService.importCsv(householdId, user.id, file, accountId);
   }

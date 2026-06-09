@@ -84,7 +84,7 @@ export class CategoriesService {
 
     if (dto.parentId) {
       if (dto.parentId === categoryId) {
-        throw new BadRequestException('A category cannot be its own parent');
+        throw new BadRequestException('Uma categoria não pode ser seu próprio pai');
       }
       await this.findCategory(householdId, dto.parentId);
       await this.assertNoCyclicParent(categoryId, dto.parentId);
@@ -130,7 +130,7 @@ export class CategoriesService {
 
     if (child) {
       throw new BadRequestException(
-        'Cannot delete a category that has subcategories. Remove them first.',
+        'Não é possível excluir uma categoria que possui subcategorias. Remova-as primeiro.',
       );
     }
 
@@ -163,7 +163,7 @@ export class CategoriesService {
 
     if (!category) {
       throw new NotFoundException(
-        `Category "${categoryId}" not found in this household`,
+        `Categoria "${categoryId}" não encontrada neste grupo familiar`,
       );
     }
 
@@ -190,7 +190,7 @@ export class CategoriesService {
       if (!row) break;
       if (row.id === categoryId) {
         throw new BadRequestException(
-          'Setting this parent would create a circular category reference',
+          'Definir este pai criaria uma referência circular de categorias',
         );
       }
 

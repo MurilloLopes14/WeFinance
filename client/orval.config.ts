@@ -1,10 +1,9 @@
-import { existsSync } from 'node:fs'
+/// <reference types="node" />
+
 import { defineConfig } from 'orval'
 
-const localSpec = './openapi.json'
-const swaggerUrl =
-  process.env.SWAGGER_URL ??
-  (existsSync(localSpec) ? localSpec : 'http://localhost:3000/docs-json')
+/** Local spec from `npm run api:sync`, or live Swagger via SWAGGER_URL. */
+const swaggerUrl = process.env.SWAGGER_URL ?? './openapi.json'
 
 export default defineConfig({
   wefinance: {
@@ -27,10 +26,9 @@ export default defineConfig({
           useMutation: true,
           signal: true,
           version: 5,
-          options: {
-            staleTime: 60_000,
-            gcTime: 300_000,
-            retry: 1,
+          queryOptions: {
+            path: './src/api/default-query-options.ts',
+            name: 'defaultQueryOptions',
           },
         },
       },

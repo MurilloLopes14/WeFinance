@@ -1,4 +1,4 @@
-﻿import { ApiProperty } from '@nestjs/swagger';
+﻿import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class UserResponseDto {
   @ApiProperty()
@@ -12,6 +12,12 @@ export class UserResponseDto {
 
   @ApiProperty({ enum: ['admin', 'member'] })
   role: 'admin' | 'member';
+
+  @ApiPropertyOptional({ example: '1995-06-15', nullable: true })
+  birthDate: string | null;
+
+  @ApiPropertyOptional({ example: '+55 11 91234-5678', nullable: true })
+  phoneNumber: string | null;
 
   @ApiProperty()
   isActive: boolean;

@@ -5,17 +5,26 @@ import axios, {
 } from 'axios'
 import { clearAccessToken, getAccessToken } from './auth-storage'
 
-export const API_BASE_URL =
-  import.meta.env.VITE_API_URL ?? 'http://localhost:3000/api/v1'
+const DEFAULT_API_BASE_URL = 'http://localhost:2950/api/v1'
 
 export const axiosInstance = axios.create({
-  baseURL: API_BASE_URL,
+  baseURL: DEFAULT_API_BASE_URL,
   headers: {
     'Content-Type': 'application/json',
     Accept: 'application/json',
   },
   withCredentials: true,
 })
+
+/** Called from main.tsx — keeps import.meta out of this file (Orval bundles it). */
+export function configureAxiosBaseUrl(baseUrl?: string) {
+  const normalized = baseUrl?.replace(/\/$/, '')
+  axiosInstance.defaults.baseURL = normalized || DEFAULT_API_BASE_URL
+}
+
+export function getApiBaseUrl(): string {
+  return axiosInstance.defaults.baseURL ?? DEFAULT_API_BASE_URL
+}
 
 axiosInstance.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {

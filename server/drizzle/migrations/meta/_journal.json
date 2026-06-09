@@ -43,6 +43,13 @@
       "when": 1780937099829,
       "tag": "0005_smart_carmella_unuscione",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1780961807572,
+      "tag": "0006_regular_deathstrike",
+      "breakpoints": true
     }
   ]
 }

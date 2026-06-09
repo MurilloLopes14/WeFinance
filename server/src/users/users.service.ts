@@ -39,6 +39,8 @@ export class UsersService {
         password: passwordHash,
         role: dto.role ?? 'member',
         isActive: dto.isActive ?? true,
+        birthDate: dto.birthDate,
+        phoneNumber: dto.phoneNumber,
       })
       .returning();
 
@@ -106,6 +108,8 @@ export class UsersService {
     if (dto.email !== undefined) updateData.email = dto.email.toLowerCase();
     if (dto.name !== undefined) updateData.name = dto.name;
     if (dto.role !== undefined) updateData.role = dto.role;
+    if (dto.birthDate !== undefined) updateData.birthDate = dto.birthDate;
+    if (dto.phoneNumber !== undefined) updateData.phoneNumber = dto.phoneNumber;
     if (dto.isActive !== undefined) updateData.isActive = dto.isActive;
     if (dto.password !== undefined) {
       updateData.password = await this.hashPassword(dto.password);
@@ -153,7 +157,7 @@ export class UsersService {
       .limit(1);
 
     if (!user) {
-      throw new NotFoundException(`User with id "${id}" not found`);
+      throw new NotFoundException(`Usuário com id "${id}" não encontrado`);
     }
 
     return user;
@@ -188,7 +192,7 @@ export class UsersService {
     const existing = await this.findByEmail(email);
 
     if (existing && existing.id !== excludeUserId) {
-      throw new ConflictException('Email is already in use');
+      throw new ConflictException('E-mail já está em uso');
     }
   }
 

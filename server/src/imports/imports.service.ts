@@ -217,7 +217,7 @@ export class ImportsService {
       .limit(1);
 
     if (!row) {
-      throw new NotFoundException(`Account "${accountId}" not found in this household`);
+      throw new NotFoundException(`Conta "${accountId}" não encontrada neste grupo familiar`);
     }
   }
 }

@@ -33,7 +33,7 @@ export class AuthService {
     );
 
     if (!user) {
-      throw new UnauthorizedException('Invalid email or password');
+      throw new UnauthorizedException('E-mail ou senha inválidos');
     }
 
     const accessToken = await this.generateAccessToken(user);

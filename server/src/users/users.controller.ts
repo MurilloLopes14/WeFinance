@@ -102,13 +102,13 @@ export class UsersController {
 
   private assertAdminOrOwner(user: AuthenticatedUser, targetId: string): void {
     if (user.role !== 'admin' && user.id !== targetId) {
-      throw new ForbiddenException('You can only access your own user data');
+      throw new ForbiddenException('Você só pode acessar seus próprios dados');
     }
   }
 
   private assertMemberUpdateFields(dto: UpdateUserDto): void {
     if (dto.role !== undefined || dto.isActive !== undefined) {
-      throw new ForbiddenException('You cannot update role or active status');
+      throw new ForbiddenException('Você não pode alterar a função ou o status de ativo');
     }
   }
 }

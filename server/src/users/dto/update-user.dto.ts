@@ -1,10 +1,12 @@
 ﻿import { ApiPropertyOptional } from '@nestjs/swagger';
 import {
   IsBoolean,
+  IsDateString,
   IsEmail,
   IsEnum,
   IsOptional,
   IsString,
+  Length,
   MinLength,
 } from 'class-validator';
 
@@ -30,6 +32,17 @@ export class UpdateUserDto {
   @IsOptional()
   @IsEnum(['admin', 'member'])
   role?: 'admin' | 'member';
+
+  @ApiPropertyOptional({ example: '1995-06-15' })
+  @IsOptional()
+  @IsDateString()
+  birthDate?: string;
+
+  @ApiPropertyOptional({ example: '+55 11 91234-5678' })
+  @IsOptional()
+  @IsString()
+  @Length(1, 30)
+  phoneNumber?: string;
 
   @ApiPropertyOptional()
   @IsOptional()

@@ -1,16 +1,91 @@
-"use client"
+﻿"use client"
 
 import * as React from "react"
 import {
   DayPicker,
   getDefaultClassNames,
   type DayButton,
+  type DropdownProps,
   type Locale,
 } from "react-day-picker"
 
 import { cn } from "@/lib/utils"
 import { Button, buttonVariants } from "@/components/ui/button"
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { ChevronLeftIcon, ChevronRightIcon, ChevronDownIcon } from "lucide-react"
+
+function CalendarDropdown({
+  options,
+  value,
+  onChange,
+  disabled,
+  className,
+  "aria-label": ariaLabel,
+}: DropdownProps) {
+  const selectedValue = value === undefined ? undefined : String(value)
+
+  const items = React.useMemo(
+    () =>
+      options?.map((option) => ({
+        value: String(option.value),
+        label: option.label,
+      })),
+    [options],
+  )
+
+  const handleValueChange = (newValue: string | null) => {
+    if (!onChange || newValue === null) return
+
+    onChange({
+      target: { value: newValue },
+    } as React.ChangeEvent<HTMLSelectElement>)
+  }
+
+  return (
+    <Select
+      value={selectedValue}
+      onValueChange={handleValueChange}
+      disabled={disabled}
+      modal={false}
+      items={items}
+    >
+      <SelectTrigger
+        aria-label={ariaLabel}
+        size="sm"
+        className={cn(
+          "glass-subtle h-8 min-w-[5.25rem] cursor-pointer rounded-lg border-input/70 px-2 font-medium shadow-none focus-visible:glow-sm",
+          className,
+        )}
+      >
+        <SelectValue />
+      </SelectTrigger>
+      <SelectContent
+        className="glass-strong glow-border z-[100] max-h-60 border-border/60"
+        alignItemWithTrigger={false}
+      >
+        <SelectGroup>
+          {options?.map((option) => (
+            <SelectItem
+              key={option.value}
+              value={String(option.value)}
+              disabled={option.disabled}
+              className="cursor-pointer"
+            >
+              {option.label}
+            </SelectItem>
+          ))}
+        </SelectGroup>
+      </SelectContent>
+    </Select>
+  )
+}
 
 function Calendar({
   className,
@@ -69,22 +144,19 @@ function Calendar({
           defaultClassNames.month_caption
         ),
         dropdowns: cn(
-          "flex h-(--cell-size) w-full items-center justify-center gap-1.5 text-sm font-medium",
+          "flex h-(--cell-size) w-full items-center justify-center gap-2 text-sm font-medium",
           defaultClassNames.dropdowns
         ),
         dropdown_root: cn(
           "relative rounded-(--cell-radius)",
           defaultClassNames.dropdown_root
         ),
-        dropdown: cn(
-          "absolute inset-0 bg-popover opacity-0",
-          defaultClassNames.dropdown
-        ),
+        dropdown: cn("hidden", defaultClassNames.dropdown),
         caption_label: cn(
           "font-medium select-none",
           captionLayout === "label"
             ? "text-sm"
-            : "flex items-center gap-1 rounded-(--cell-radius) text-sm [&>svg]:size-3.5 [&>svg]:text-muted-foreground",
+            : "sr-only",
           defaultClassNames.caption_label
         ),
         table: "w-full border-collapse",
@@ -144,6 +216,7 @@ function Calendar({
             />
           )
         },
+        Dropdown: CalendarDropdown,
         Chevron: ({ className, orientation, ...props }) => {
           if (orientation === "left") {
             return (
