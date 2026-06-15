@@ -18,7 +18,7 @@ import { relations } from 'drizzle-orm';
 
 export const userRoleEnum = pgEnum('user_role', ['admin', 'member']);
 export const householdRoleEnum = pgEnum('household_role', ['owner', 'member']);
-export const splitTypeEnum = pgEnum('split_type', ['equal', 'percent', 'fixed']);
+export const splitTypeEnum = pgEnum('split_type', ['equal', 'percent']);
 export const accountTypeEnum = pgEnum('account_type', [
   'checking',
   'savings',
@@ -83,6 +83,7 @@ export const households = pgTable('households', {
   currency: varchar('currency', { length: 3 }).default('BRL').notNull(),
   defaultSplitType: splitTypeEnum('default_split_type').default('equal').notNull(),
   color: varchar('color', { length: 20 }),
+  inviteCode: varchar('invite_code', { length: 12 }).unique(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });

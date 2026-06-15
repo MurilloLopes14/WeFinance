@@ -21,14 +21,13 @@ import {
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import type { AuthenticatedUser } from '../common/types/jwt-payload.type';
-import { AddMemberDto } from './dto/add-member.dto';
 import { CreateHouseholdDto } from './dto/create-household.dto';
-import { SearchInvitableUsersQueryDto } from './dto/search-invitable-users-query.dto';
 import { UpdateHouseholdDto } from './dto/update-household.dto';
+import { JoinHouseholdDto } from './dto/join-household.dto';
+import { InviteCodeResponseDto } from './dto/invite-code-response.dto';
 import {
   HouseholdMemberResponseDto,
   HouseholdResponseDto,
-  MemberUserDto,
 } from './dto/household-response.dto';
 import { HouseholdsService } from './households.service';
 
@@ -42,7 +41,7 @@ export class HouseholdsController {
   // ─── Households ────────────────────────────────────────────────────────────
 
   @Post()
-  @ApiOperation({ summary: 'Create a new household' })
+  @ApiOperation({ summary: 'Criar um novo grupo familiar' })
   @ApiResponse({ status: 201, type: HouseholdResponseDto })
   create(
     @Body() dto: CreateHouseholdDto,
@@ -52,7 +51,7 @@ export class HouseholdsController {
   }
 
   @Get()
-  @ApiOperation({ summary: 'List all households the current user belongs to' })
+  @ApiOperation({ summary: 'Listar grupos familiares do usuário autenticado' })
   @ApiResponse({ status: 200, type: [HouseholdResponseDto] })
   findAll(
     @CurrentUser() user: AuthenticatedUser,
@@ -61,8 +60,18 @@ export class HouseholdsController {
     return this.householdsService.findAllForUser(user.id, name);
   }
 
+  @Post('join')
+  @ApiOperation({ summary: 'Entrar em um grupo familiar via código de convite' })
+  @ApiResponse({ status: 201, type: HouseholdResponseDto })
+  joinByCode(
+    @Body() dto: JoinHouseholdDto,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    return this.householdsService.joinByCode(user.id, dto.inviteCode);
+  }
+
   @Get(':id')
-  @ApiOperation({ summary: 'Get household details' })
+  @ApiOperation({ summary: 'Obter detalhes de um grupo familiar' })
   @ApiResponse({ status: 200, type: HouseholdResponseDto })
   findOne(
     @Param('id', ParseUUIDPipe) id: string,
@@ -72,7 +81,7 @@ export class HouseholdsController {
   }
 
   @Patch(':id')
-  @ApiOperation({ summary: 'Update household (owner only)' })
+  @ApiOperation({ summary: 'Atualizar grupo familiar (somente proprietário)' })
   @ApiResponse({ status: 200, type: HouseholdResponseDto })
   update(
     @Param('id', ParseUUIDPipe) id: string,
@@ -84,7 +93,7 @@ export class HouseholdsController {
 
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
-  @ApiOperation({ summary: 'Delete household (owner only)' })
+  @ApiOperation({ summary: 'Excluir grupo familiar (somente proprietário)' })
   @ApiResponse({ status: 204 })
   async remove(
     @Param('id', ParseUUIDPipe) id: string,
@@ -93,10 +102,32 @@ export class HouseholdsController {
     await this.householdsService.remove(id, user.id);
   }
 
+  // ─── Invite code ───────────────────────────────────────────────────────────
+
+  @Get(':id/invite-code')
+  @ApiOperation({ summary: 'Obter código de convite do grupo (somente proprietário)' })
+  @ApiResponse({ status: 200, type: InviteCodeResponseDto })
+  getInviteCode(
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    return this.householdsService.getInviteCode(id, user.id);
+  }
+
+  @Post(':id/invite-code/regenerate')
+  @ApiOperation({ summary: 'Regenerar código de convite (somente proprietário)' })
+  @ApiResponse({ status: 201, type: InviteCodeResponseDto })
+  regenerateInviteCode(
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    return this.householdsService.regenerateInviteCode(id, user.id);
+  }
+
   // ─── Members ───────────────────────────────────────────────────────────────
 
   @Get(':id/members')
-  @ApiOperation({ summary: 'List household members' })
+  @ApiOperation({ summary: 'Listar membros do grupo familiar' })
   @ApiResponse({ status: 200, type: [HouseholdMemberResponseDto] })
   findMembers(
     @Param('id', ParseUUIDPipe) id: string,
@@ -105,31 +136,9 @@ export class HouseholdsController {
     return this.householdsService.findMembers(id, user.id);
   }
 
-  @Get(':id/invitable-users')
-  @ApiOperation({ summary: 'Search users that can be invited to the household (owner only)' })
-  @ApiResponse({ status: 200, type: [MemberUserDto] })
-  searchInvitableUsers(
-    @Param('id', ParseUUIDPipe) id: string,
-    @Query() query: SearchInvitableUsersQueryDto,
-    @CurrentUser() user: AuthenticatedUser,
-  ) {
-    return this.householdsService.searchInvitableUsers(id, user.id, query.q);
-  }
-
-  @Post(':id/members')
-  @ApiOperation({ summary: 'Add a member to the household (owner only)' })
-  @ApiResponse({ status: 201, type: HouseholdMemberResponseDto })
-  addMember(
-    @Param('id', ParseUUIDPipe) id: string,
-    @Body() dto: AddMemberDto,
-    @CurrentUser() user: AuthenticatedUser,
-  ) {
-    return this.householdsService.addMember(id, user.id, dto);
-  }
-
   @Delete(':id/members/:memberId')
   @HttpCode(HttpStatus.NO_CONTENT)
-  @ApiOperation({ summary: 'Remove a member from the household (owner only)' })
+  @ApiOperation({ summary: 'Remover membro do grupo familiar (somente proprietário)' })
   @ApiResponse({ status: 204 })
   async removeMember(
     @Param('id', ParseUUIDPipe) id: string,

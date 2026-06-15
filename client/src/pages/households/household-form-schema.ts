@@ -12,7 +12,6 @@ export const householdFormSchema = z.object({
   defaultSplitType: z.enum([
     HouseholdResponseDtoDefaultSplitType.equal,
     HouseholdResponseDtoDefaultSplitType.percent,
-    HouseholdResponseDtoDefaultSplitType.fixed,
   ]),
   color: z
     .string()
@@ -40,5 +39,4 @@ export const currencyFormOptions = [
 export const splitTypeFormOptions = [
   { value: HouseholdResponseDtoDefaultSplitType.equal, label: 'Igualitário' },
   { value: HouseholdResponseDtoDefaultSplitType.percent, label: 'Percentual' },
-  { value: HouseholdResponseDtoDefaultSplitType.fixed, label: 'Fixo' },
 ] as const

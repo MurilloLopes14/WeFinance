@@ -1,6 +1,5 @@
 import type { AccountResponseDto } from '@/api/generated/models/accountResponseDto'
 import type { HouseholdResponseDto } from '@/api/generated/models/householdResponseDto'
-import type { TransactionsControllerFindAllStatus } from '@/api/generated/models/transactionsControllerFindAllStatus'
 import type { TransactionsControllerFindAllType } from '@/api/generated/models/transactionsControllerFindAllType'
 import { ObjectHeader, type ObjectHeaderCreateAction } from '@/components/object/object-header'
 import { Input } from '@/components/ui/input'
@@ -13,14 +12,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { getTransactionStatusLabel, getTransactionTypeLabel } from '@/lib/transaction-helpers'
+import { getTransactionTypeLabel } from '@/lib/transaction-helpers'
 
 export type TransactionFilters = {
   householdId: string
   month: string
   type: TransactionsControllerFindAllType | 'all'
   accountId: string | 'all'
-  status: TransactionsControllerFindAllStatus | 'all'
 }
 
 type TransactionHeaderProps = {
@@ -44,16 +42,6 @@ const transactionTypeOptions: Array<{
   { value: 'transfer', label: getTransactionTypeLabel('transfer') },
 ]
 
-const transactionStatusOptions: Array<{
-  value: TransactionFilters['status']
-  label: string
-}> = [
-  { value: 'all', label: 'Todos os status' },
-  { value: 'draft', label: getTransactionStatusLabel('draft') },
-  { value: 'cleared', label: getTransactionStatusLabel('cleared') },
-  { value: 'reconciled', label: getTransactionStatusLabel('reconciled') },
-]
-
 export function TransactionHeader({
   searchValue,
   onSearchChange,
@@ -67,8 +55,7 @@ export function TransactionHeader({
   const totalActiveFilters =
     (filters.month ? 1 : 0) +
     (filters.type === 'all' ? 0 : 1) +
-    (filters.accountId === 'all' ? 0 : 1) +
-    (filters.status === 'all' ? 0 : 1)
+    (filters.accountId === 'all' ? 0 : 1)
 
   return (
     <ObjectHeader
@@ -78,7 +65,7 @@ export function TransactionHeader({
       onSearchChange={showToolbar ? onSearchChange : undefined}
       searchPlaceholder="Buscar por descrição..."
       filtersTitle="Filtrar transações"
-      filtersDescription="Refine por grupo, mês, tipo, conta e status."
+      filtersDescription="Refine por grupo, mês, tipo e conta."
       activeFiltersCount={totalActiveFilters}
       onClearFilters={() =>
         onFiltersChange({
@@ -86,7 +73,6 @@ export function TransactionHeader({
           month: '',
           type: 'all',
           accountId: 'all',
-          status: 'all',
         })
       }
       createAction={createAction}
@@ -205,37 +191,6 @@ export function TransactionHeader({
                     {accounts.map((account) => (
                       <SelectItem key={account.id} value={account.id}>
                         {account.name}
-                      </SelectItem>
-                    ))}
-                  </SelectGroup>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="transaction-filter-status">Status</Label>
-              <Select
-                value={filters.status}
-                onValueChange={(value) => {
-                  if (!value) return
-                  onFiltersChange({
-                    ...filters,
-                    status: value as TransactionFilters['status'],
-                  })
-                }}
-                items={transactionStatusOptions.map((option) => ({
-                  value: option.value,
-                  label: option.label,
-                }))}
-              >
-                <SelectTrigger id="transaction-filter-status" className="w-full rounded-xl">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent className="glass-strong glow-border">
-                  <SelectGroup>
-                    {transactionStatusOptions.map((option) => (
-                      <SelectItem key={option.value} value={option.value}>
-                        {option.label}
                       </SelectItem>
                     ))}
                   </SelectGroup>

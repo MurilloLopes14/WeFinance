@@ -21,7 +21,6 @@ function createDefaultFilters(householdId: string): TransactionFilters {
     month: '',
     type: 'all',
     accountId: 'all',
-    status: 'all',
   }
 }
 
@@ -62,15 +61,15 @@ export function TransactionPage() {
 
   useEffect(() => {
     setPage(1)
-  }, [filters.householdId, filters.month, filters.type, filters.accountId, filters.status, search])
+  }, [filters.householdId, filters.month, filters.type, filters.accountId, search])
 
   useEffect(() => {
     const state = location.state as { openCreate?: boolean } | null
     if (state?.openCreate) {
-      openCreate()
+      openCreate(selectedHouseholdId || undefined)
       navigate(location.pathname, { replace: true, state: null })
     }
-  }, [location.pathname, location.state, navigate, openCreate])
+  }, [location.pathname, location.state, navigate, openCreate, selectedHouseholdId])
 
   const listParams = useMemo(
     () => buildTransactionListParams(filters, page),
@@ -147,7 +146,7 @@ export function TransactionPage() {
         showToolbar={hasAnyHousehold}
         createAction={{
           label: 'Nova transação',
-          onClick: openCreate,
+          onClick: () => openCreate(selectedHouseholdId),
         }}
       />
 
@@ -180,7 +179,7 @@ export function TransactionPage() {
               actions={[
                 {
                   label: 'Nova transação',
-                  onClick: openCreate,
+                  onClick: () => openCreate(selectedHouseholdId),
                 },
               ]}
             />
@@ -197,7 +196,7 @@ export function TransactionPage() {
                 },
                 {
                   label: 'Nova transação',
-                  onClick: openCreate,
+                  onClick: () => openCreate(selectedHouseholdId),
                 },
               ]}
             />

@@ -5,15 +5,16 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { and, eq, ilike, notInArray, or } from 'drizzle-orm';
+import { randomBytes } from 'crypto';
+import { and, eq, ilike } from 'drizzle-orm';
 import { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import { DRIZZLE } from '../database/database.constants';
 import * as schema from '../database/schema';
 import { householdMembers, households, users } from '../database/schema';
-import { AddMemberDto } from './dto/add-member.dto';
 import { CreateHouseholdDto } from './dto/create-household.dto';
 import { UpdateHouseholdDto } from './dto/update-household.dto';
-import { HouseholdMemberResponseDto, HouseholdResponseDto, MemberUserDto } from './dto/household-response.dto';
+import { HouseholdMemberResponseDto, HouseholdResponseDto } from './dto/household-response.dto';
+import { InviteCodeResponseDto } from './dto/invite-code-response.dto';
 
 type Household = typeof households.$inferSelect;
 type HouseholdMember = typeof householdMembers.$inferSelect;
@@ -32,6 +33,7 @@ export class HouseholdsService {
           name: dto.name,
           currency: dto.currency ?? 'BRL',
           defaultSplitType: dto.defaultSplitType ?? 'equal',
+          inviteCode: generateInviteCode(),
         })
         .returning();
 
@@ -112,74 +114,60 @@ export class HouseholdsService {
     return this.fetchMembers(householdId);
   }
 
-  async searchInvitableUsers(
+  async getInviteCode(
     householdId: string,
     requesterId: string,
-    query: string,
-  ): Promise<MemberUserDto[]> {
+  ): Promise<InviteCodeResponseDto> {
     await this.assertOwner(householdId, requesterId);
+    const household = await this.findHousehold(householdId);
 
-    const memberRows = await this.db
-      .select({ userId: householdMembers.userId })
-      .from(householdMembers)
-      .where(eq(householdMembers.householdId, householdId));
-
-    const excludedUserIds = memberRows.map((row) => row.userId);
-    const term = `%${query.trim()}%`;
-
-    const conditions = [
-      eq(users.isActive, true),
-      or(ilike(users.email, term), ilike(users.name, term)),
-    ];
-
-    if (excludedUserIds.length > 0) {
-      conditions.push(notInArray(users.id, excludedUserIds));
+    // Auto-generate for legacy households that predate this feature
+    if (!household.inviteCode) {
+      return this.regenerateInviteCode(householdId, requesterId);
     }
 
-    return this.db
-      .select({
-        id: users.id,
-        name: users.name,
-        email: users.email,
-      })
-      .from(users)
-      .where(and(...conditions))
-      .limit(8);
+    return { inviteCode: household.inviteCode };
   }
 
-  async addMember(
+  async regenerateInviteCode(
     householdId: string,
     requesterId: string,
-    dto: AddMemberDto,
-  ): Promise<HouseholdMemberResponseDto> {
+  ): Promise<InviteCodeResponseDto> {
     await this.assertOwner(householdId, requesterId);
 
-    const [targetUser] = await this.db
+    const [updated] = await this.db
+      .update(households)
+      .set({ inviteCode: generateInviteCode(), updatedAt: new Date() })
+      .where(eq(households.id, householdId))
+      .returning({ inviteCode: households.inviteCode });
+
+    return { inviteCode: updated.inviteCode! };
+  }
+
+  async joinByCode(userId: string, inviteCode: string): Promise<HouseholdResponseDto> {
+    const [household] = await this.db
       .select()
-      .from(users)
-      .where(eq(users.email, dto.email.toLowerCase()))
+      .from(households)
+      .where(eq(households.inviteCode, inviteCode.toUpperCase()))
       .limit(1);
 
-    if (!targetUser) {
-      throw new NotFoundException(`Nenhum usuário encontrado com o e-mail "${dto.email}"`);
+    if (!household) {
+      throw new NotFoundException('Código de convite inválido');
     }
 
-    const existing = await this.findMemberRecord(householdId, targetUser.id);
+    const existing = await this.findMemberRecord(household.id, userId);
     if (existing) {
-      throw new ConflictException('Usuário já é membro deste grupo familiar');
+      throw new ConflictException('Você já é membro deste grupo familiar');
     }
 
-    const [member] = await this.db
-      .insert(householdMembers)
-      .values({
-        householdId,
-        userId: targetUser.id,
-        role: dto.role ?? 'member',
-        splitValue: String(dto.splitValue ?? 0),
-      })
-      .returning();
+    await this.db.insert(householdMembers).values({
+      householdId: household.id,
+      userId,
+      role: 'member',
+      splitValue: '0',
+    });
 
-    return this.formatMember(member, targetUser);
+    return this.fetchWithMembers(household);
   }
 
   async removeMember(
@@ -301,4 +289,8 @@ export class HouseholdsService {
       user,
     };
   }
+}
+
+function generateInviteCode(): string {
+  return randomBytes(4).toString('hex').toUpperCase();
 }

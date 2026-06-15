@@ -30,7 +30,6 @@ const splitTypeOptions: Array<{
   { value: 'all', label: 'Todos os rateios' },
   { value: 'equal', label: 'Igualitário' },
   { value: 'percent', label: 'Percentual' },
-  { value: 'fixed', label: 'Fixo' },
 ]
 
 export function HouseholdHeader({
@@ -100,8 +99,6 @@ export function getHouseholdSplitTypeLabel(
       return 'Igualitário'
     case 'percent':
       return 'Percentual'
-    case 'fixed':
-      return 'Fixo'
     default:
       return splitType
   }

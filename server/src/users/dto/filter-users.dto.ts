@@ -5,6 +5,7 @@ import {
   IsInt,
   IsOptional,
   IsString,
+  IsUUID,
   Max,
   Min,
 } from 'class-validator';
@@ -30,6 +31,11 @@ export class FilterUsersDto {
   })
   @IsBoolean()
   isActive?: boolean;
+
+  @ApiPropertyOptional({ description: 'Filter by household membership (UUID)' })
+  @IsOptional()
+  @IsUUID()
+  householdId?: string;
 
   @ApiPropertyOptional({ enum: ['admin', 'member'] })
   @IsOptional()

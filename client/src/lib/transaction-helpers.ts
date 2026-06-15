@@ -1,5 +1,4 @@
 import type { TransactionResponseDtoType } from '@/api/generated/models/transactionResponseDtoType'
-import type { TransactionResponseDtoStatus } from '@/api/generated/models/transactionResponseDtoStatus'
 import { formatAccountBalance } from '@/lib/account-helpers'
 
 export function getTransactionTypeLabel(type: TransactionResponseDtoType): string {
@@ -12,19 +11,6 @@ export function getTransactionTypeLabel(type: TransactionResponseDtoType): strin
       return 'Transferência'
     default:
       return type
-  }
-}
-
-export function getTransactionStatusLabel(status: TransactionResponseDtoStatus): string {
-  switch (status) {
-    case 'draft':
-      return 'Rascunho'
-    case 'cleared':
-      return 'Confirmada'
-    case 'reconciled':
-      return 'Conciliada'
-    default:
-      return status
   }
 }
 

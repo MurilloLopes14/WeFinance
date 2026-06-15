@@ -22,10 +22,12 @@ import { HouseholdView } from '@/pages/households/modals/household-view'
 import { useAuthSession } from '@/hooks/use-auth-session'
 import { getApiErrorMessage } from '@/lib/get-api-error-message'
 import { isHouseholdOwner } from '@/lib/household-helpers'
+import { HOUSEHOLD_INVITE_QUERY_PARAM, normalizeInviteCode } from '@/lib/household-invite-helpers'
 import { SearchX, Users } from 'lucide-react'
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
 import { useQueryClient } from '@tanstack/react-query'
+import { useSearchParams } from 'react-router-dom'
 
 const defaultFilters: HouseholdFilters = {
   splitType: 'all',
@@ -33,10 +35,12 @@ const defaultFilters: HouseholdFilters = {
 
 export function HouseholdPage() {
   const queryClient = useQueryClient()
+  const [searchParams, setSearchParams] = useSearchParams()
   const { data: currentUser } = useAuthSession()
   const [search, setSearch] = useState('')
   const [filters, setFilters] = useState<HouseholdFilters>(defaultFilters)
   const [createOpen, setCreateOpen] = useState(false)
+  const [initialInviteCode, setInitialInviteCode] = useState('')
   const [viewHousehold, setViewHousehold] = useState<HouseholdResponseDto | null>(null)
   const [editHousehold, setEditHousehold] = useState<HouseholdResponseDto | null>(null)
   const [membersHousehold, setMembersHousehold] = useState<HouseholdResponseDto | null>(null)
@@ -82,6 +86,18 @@ export function HouseholdPage() {
   const hasFilteredResults = filteredHouseholds.length > 0
 
   const openCreate = () => setCreateOpen(true)
+
+  useEffect(() => {
+    const inviteFromUrl = searchParams.get(HOUSEHOLD_INVITE_QUERY_PARAM)
+    if (!inviteFromUrl) return
+
+    setInitialInviteCode(normalizeInviteCode(inviteFromUrl))
+    setCreateOpen(true)
+
+    const nextParams = new URLSearchParams(searchParams)
+    nextParams.delete(HOUSEHOLD_INVITE_QUERY_PARAM)
+    setSearchParams(nextParams, { replace: true })
+  }, [searchParams, setSearchParams])
 
   return (
     <ObjectPageLayout>
@@ -156,7 +172,14 @@ export function HouseholdPage() {
         </ObjectCollectionState>
       </ObjectPageContent>
 
-      <HouseholdCreateModal open={createOpen} onOpenChange={setCreateOpen} />
+      <HouseholdCreateModal
+        open={createOpen}
+        onOpenChange={(open) => {
+          setCreateOpen(open)
+          if (!open) setInitialInviteCode('')
+        }}
+        initialInviteCode={initialInviteCode}
+      />
 
       <HouseholdView
         household={viewHousehold}

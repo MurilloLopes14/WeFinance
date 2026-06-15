@@ -9,7 +9,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 
-const columnWidths = ['w-24', 'w-40', 'w-20', 'w-28', 'w-28', 'w-24', 'w-20']
+const columnWidths = ['w-24', 'w-40', 'w-20', 'w-28', 'w-28', 'w-24']
 
 export function TransactionTableSkeleton({ rows = 8 }: { rows?: number }) {
   return (
@@ -17,7 +17,7 @@ export function TransactionTableSkeleton({ rows = 8 }: { rows?: number }) {
       <Table>
         <TableHeader>
           <TableRow className="hover:bg-transparent">
-            {['Data', 'Descrição', 'Tipo', 'Conta', 'Categoria', 'Valor', 'Status'].map(
+            {['Data', 'Descrição', 'Tipo', 'Conta', 'Categoria', 'Valor'].map(
               (label) => (
                 <TableHead key={label} className="text-muted-foreground">
                   {label}

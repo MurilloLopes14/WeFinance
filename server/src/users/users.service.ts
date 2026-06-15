@@ -6,11 +6,11 @@
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcrypt';
-import { and, count, desc, eq, ilike, SQL } from 'drizzle-orm';
+import { and, count, desc, eq, ilike, inArray, SQL } from 'drizzle-orm';
 import { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import { DRIZZLE } from '../database/database.constants';
 import * as schema from '../database/schema';
-import { users } from '../database/schema';
+import { householdMembers, users } from '../database/schema';
 import { stripPassword } from '../common/utils/strip-password';
 import { CreateUserDto } from './dto/create-user.dto';
 import { FilterUsersDto } from './dto/filter-users.dto';
@@ -57,7 +57,17 @@ export class UsersService {
     const page = filters.page ?? 1;
     const limit = filters.limit ?? 20;
     const offset = (page - 1) * limit;
-    const where = this.buildFilterConditions(filters);
+
+    let memberUserIds: string[] | undefined;
+    if (filters.householdId) {
+      const rows = await this.db
+        .select({ userId: householdMembers.userId })
+        .from(householdMembers)
+        .where(eq(householdMembers.householdId, filters.householdId));
+      memberUserIds = rows.map((r) => r.userId);
+    }
+
+    const where = this.buildFilterConditions(filters, memberUserIds);
 
     const [rows, [{ total }]] = await Promise.all([
       this.db
@@ -163,8 +173,16 @@ export class UsersService {
     return user;
   }
 
-  private buildFilterConditions(filters: FilterUsersDto): SQL | undefined {
+  private buildFilterConditions(
+    filters: FilterUsersDto,
+    memberUserIds?: string[],
+  ): SQL | undefined {
     const conditions: SQL[] = [];
+
+    if (memberUserIds !== undefined) {
+      if (memberUserIds.length === 0) return eq(users.id, 'no-match');
+      conditions.push(inArray(users.id, memberUserIds));
+    }
 
     if (filters.name) {
       conditions.push(ilike(users.name, `%${filters.name}%`));

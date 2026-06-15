@@ -14,12 +14,12 @@ export class CreateHouseholdDto {
   currency?: string = 'BRL';
 
   @ApiPropertyOptional({
-    enum: ['equal', 'percent', 'fixed'],
+    enum: ['equal', 'percent'],
     default: 'equal',
   })
   @IsOptional()
-  @IsEnum(['equal', 'percent', 'fixed'])
-  defaultSplitType?: 'equal' | 'percent' | 'fixed' = 'equal';
+  @IsEnum(['equal', 'percent'])
+  defaultSplitType?: 'equal' | 'percent' = 'equal';
 
   @ApiPropertyOptional({ example: '#4F46E5', description: 'CSS color for UI display' })
   @IsOptional()

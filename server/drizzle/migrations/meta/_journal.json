@@ -50,6 +50,13 @@
       "when": 1780961807572,
       "tag": "0006_regular_deathstrike",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1781481297004,
+      "tag": "0007_stiff_tag",
+      "breakpoints": true
     }
   ]
 }

@@ -14,10 +14,10 @@ export class UpdateHouseholdDto {
   @Length(3, 3)
   currency?: string;
 
-  @ApiPropertyOptional({ enum: ['equal', 'percent', 'fixed'] })
+  @ApiPropertyOptional({ enum: ['equal', 'percent'] })
   @IsOptional()
-  @IsEnum(['equal', 'percent', 'fixed'])
-  defaultSplitType?: 'equal' | 'percent' | 'fixed';
+  @IsEnum(['equal', 'percent'])
+  defaultSplitType?: 'equal' | 'percent';
 
   @ApiPropertyOptional({ example: '#4F46E5', nullable: true })
   @IsOptional()

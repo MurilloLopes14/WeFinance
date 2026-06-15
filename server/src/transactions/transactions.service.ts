@@ -16,6 +16,7 @@ import {
   transactionSplits,
   transactions,
 } from '../database/schema';
+import { currentMonth, monthDateRange } from '../common/utils/month.utils';
 import { HouseholdsService } from '../households/households.service';
 import { SplitInputDto } from './dto/split-input.dto';
 import { CreateTransactionDto } from './dto/create-transaction.dto';
@@ -619,16 +620,3 @@ function groupBy<T>(arr: T[], keyFn: (item: T) => string): Record<string, T[]> {
   );
 }
 
-function currentMonth(): string {
-  const now = new Date();
-  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-}
-
-function monthDateRange(month: string): { startDate: string; endDate: string } {
-  const [year, mon] = month.split('-').map(Number);
-  const startDate = `${year}-${String(mon).padStart(2, '0')}-01`;
-  const nextMon = mon === 12 ? 1 : mon + 1;
-  const nextYear = mon === 12 ? year + 1 : year;
-  const endDate = `${nextYear}-${String(nextMon).padStart(2, '0')}-01`;
-  return { startDate, endDate };
-}

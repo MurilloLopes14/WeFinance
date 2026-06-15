@@ -1,15 +1,13 @@
-import { searchHouseholdInvitableUsers, invitableUsersQueryKey } from '@/api/household-invitable-users-api'
 import {
   getHouseholdsControllerFindAllQueryKey,
   getHouseholdsControllerFindMembersQueryKey,
-  useHouseholdsControllerAddMember,
   useHouseholdsControllerFindMembers,
   useHouseholdsControllerRemoveMember,
 } from '@/api/generated/households/households'
+import { HouseholdInviteCodePanel } from '@/components/households/household-invite-code-panel'
 import { householdsListParams } from '@/lib/household-api-helpers'
 import type { HouseholdMemberResponseDto } from '@/api/generated/models/householdMemberResponseDto'
 import type { HouseholdResponseDto } from '@/api/generated/models/householdResponseDto'
-import type { MemberUserDto } from '@/api/generated/models/memberUserDto'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -30,7 +28,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { Input } from '@/components/ui/input'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useAuthSession } from '@/hooks/use-auth-session'
 import { getApiErrorMessage } from '@/lib/get-api-error-message'
@@ -39,9 +36,8 @@ import {
   getUserInitials,
   isHouseholdOwner,
 } from '@/lib/household-helpers'
-import { cn } from '@/lib/utils'
-import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { Loader2, Search, Trash2, UserPlus, Users } from 'lucide-react'
+import { useQueryClient } from '@tanstack/react-query'
+import { Loader2, Trash2, Users } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 
@@ -102,43 +98,6 @@ function MemberRow({ member, canRemove, isRemoving, onRemove }: MemberRowProps) 
   )
 }
 
-function InvitableUserRow({
-  user,
-  isAdding,
-  onAdd,
-}: {
-  user: MemberUserDto
-  isAdding: boolean
-  onAdd: (user: MemberUserDto) => void
-}) {
-  return (
-    <button
-      type="button"
-      onClick={() => onAdd(user)}
-      disabled={isAdding}
-      className={cn(
-        'flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left transition-colors',
-        'hover:bg-accent/60 disabled:cursor-not-allowed disabled:opacity-60',
-      )}
-    >
-      <Avatar size="sm">
-        <AvatarFallback className="bg-muted text-xs font-medium">
-          {getUserInitials(user.name)}
-        </AvatarFallback>
-      </Avatar>
-      <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-medium">{user.name}</p>
-        <p className="truncate text-xs text-muted-foreground">{user.email}</p>
-      </div>
-      {isAdding ? (
-        <Loader2 className="size-4 shrink-0 animate-spin text-muted-foreground" />
-      ) : (
-        <UserPlus className="size-4 shrink-0 text-primary" />
-      )}
-    </button>
-  )
-}
-
 export function HouseholdEditMembersModal({
   household,
   open,
@@ -147,28 +106,15 @@ export function HouseholdEditMembersModal({
   const queryClient = useQueryClient()
   const { data: currentUser } = useAuthSession({ enabled: open })
 
-  const [search, setSearch] = useState('')
-  const [debouncedSearch, setDebouncedSearch] = useState('')
   const [memberToRemove, setMemberToRemove] = useState<HouseholdMemberResponseDto | null>(null)
-  const [addingUserId, setAddingUserId] = useState<string | null>(null)
 
   const householdId = household?.id ?? ''
 
   useEffect(() => {
     if (!open) {
-      setSearch('')
-      setDebouncedSearch('')
       setMemberToRemove(null)
-      setAddingUserId(null)
-      return
     }
-
-    const timeout = window.setTimeout(() => {
-      setDebouncedSearch(search.trim())
-    }, 300)
-
-    return () => window.clearTimeout(timeout)
-  }, [open, search])
+  }, [open])
 
   const {
     data: members = [],
@@ -181,16 +127,6 @@ export function HouseholdEditMembersModal({
 
   const isOwner = isHouseholdOwner(members, currentUser?.id)
 
-  const {
-    data: invitableUsers = [],
-    isFetching: isSearchingUsers,
-  } = useQuery({
-    queryKey: invitableUsersQueryKey(householdId, debouncedSearch),
-    queryFn: () => searchHouseholdInvitableUsers(householdId, debouncedSearch),
-    enabled: open && isOwner && debouncedSearch.length >= 2,
-    staleTime: 30_000,
-  })
-
   const invalidateHouseholdData = async () => {
     await Promise.all([
       queryClient.invalidateQueries({
@@ -201,22 +137,6 @@ export function HouseholdEditMembersModal({
       }),
     ])
   }
-
-  const addMemberMutation = useHouseholdsControllerAddMember({
-    mutation: {
-      onSuccess: async () => {
-        await invalidateHouseholdData()
-        toast.success('Membro adicionado ao grupo')
-        setSearch('')
-        setDebouncedSearch('')
-        setAddingUserId(null)
-      },
-      onError: (error) => {
-        setAddingUserId(null)
-        toast.error(getApiErrorMessage(error, 'Não foi possível adicionar o membro'))
-      },
-    },
-  })
 
   const removeMemberMutation = useHouseholdsControllerRemoveMember({
     mutation: {
@@ -230,16 +150,6 @@ export function HouseholdEditMembersModal({
       },
     },
   })
-
-  const handleAddUser = (user: MemberUserDto) => {
-    if (!householdId || addMemberMutation.isPending) return
-
-    setAddingUserId(user.id)
-    addMemberMutation.mutate({
-      id: householdId,
-      data: { email: user.email },
-    })
-  }
 
   const handleConfirmRemove = () => {
     if (!householdId || !memberToRemove) return
@@ -268,57 +178,12 @@ export function HouseholdEditMembersModal({
           </DialogHeader>
 
           <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-hidden">
-            {isOwner && (
-              <div className="space-y-2">
-                <div className="relative">
-                  <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
-                  <Input
-                    value={search}
-                    onChange={(event) => setSearch(event.target.value)}
-                    placeholder="Buscar usuários por nome ou e-mail..."
-                    className="rounded-xl pl-9"
-                  />
-                </div>
-
-                {debouncedSearch.length >= 2 && (
-                  <div className="glass-subtle max-h-44 overflow-y-auto rounded-xl ring-1 ring-foreground/10">
-                    {isSearchingUsers ? (
-                      <div className="space-y-2 p-2">
-                        {Array.from({ length: 3 }).map((_, index) => (
-                          <div key={index} className="flex items-center gap-3 px-2 py-1.5">
-                            <Skeleton className="size-6 rounded-full" />
-                            <div className="flex-1 space-y-1">
-                              <Skeleton className="h-3 w-28" />
-                              <Skeleton className="h-3 w-36" />
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    ) : invitableUsers.length === 0 ? (
-                      <p className="px-3 py-4 text-center text-sm text-muted-foreground">
-                        Nenhum usuário encontrado para adicionar.
-                      </p>
-                    ) : (
-                      <div className="divide-y divide-border/50 p-1">
-                        {invitableUsers.map((user) => (
-                          <InvitableUserRow
-                            key={user.id}
-                            user={user}
-                            isAdding={addingUserId === user.id}
-                            onAdd={handleAddUser}
-                          />
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {search.length > 0 && search.length < 2 && (
-                  <p className="text-xs text-muted-foreground">
-                    Digite pelo menos 2 caracteres para buscar usuários.
-                  </p>
-                )}
-              </div>
+            {isOwner && household && (
+              <HouseholdInviteCodePanel
+                householdId={householdId}
+                householdName={household.name}
+                enabled={open}
+              />
             )}
 
             <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-hidden">
@@ -378,7 +243,7 @@ export function HouseholdEditMembersModal({
             <AlertDialogTitle>Remover membro</AlertDialogTitle>
             <AlertDialogDescription>
               Deseja remover {memberToRemove?.user.name} do grupo? Essa pessoa perderá
-              acesso às finanças compartilhadas deste household.
+              acesso às finanças compartilhadas deste grupo.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

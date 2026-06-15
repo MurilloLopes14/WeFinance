@@ -4,7 +4,6 @@ import {
   formatTransactionAmount,
   formatTransactionDate,
   getTransactionAmountClassName,
-  getTransactionStatusLabel,
   getTransactionTypeLabel,
 } from '@/lib/transaction-helpers'
 import { cn } from '@/lib/utils'
@@ -77,18 +76,6 @@ export function createTransactionColumns(
         >
           {formatTransactionAmount(row.original.amount, row.original.type, meta.currency)}
         </span>
-      ),
-    },
-    {
-      accessorKey: 'status',
-      header: 'Status',
-      cell: ({ row }) => (
-        <Badge
-          variant={row.original.status === 'reconciled' ? 'default' : 'outline'}
-          className="rounded-md"
-        >
-          {getTransactionStatusLabel(row.original.status)}
-        </Badge>
       ),
     },
   ]

@@ -44,8 +44,8 @@ export class HouseholdResponseDto {
   @ApiProperty({ example: 'BRL' })
   currency: string;
 
-  @ApiProperty({ enum: ['equal', 'percent', 'fixed'] })
-  defaultSplitType: 'equal' | 'percent' | 'fixed';
+  @ApiProperty({ enum: ['equal', 'percent'] })
+  defaultSplitType: 'equal' | 'percent';
 
   @ApiPropertyOptional({ nullable: true })
   color: string | null;
