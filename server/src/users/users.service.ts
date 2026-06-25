@@ -12,18 +12,28 @@ import { DRIZZLE } from '../database/database.constants';
 import * as schema from '../database/schema';
 import { householdMembers, users } from '../database/schema';
 import { stripPassword } from '../common/utils/strip-password';
+import { UploadService } from '../upload/upload.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { FilterUsersDto } from './dto/filter-users.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { UpdateOnboardingDto } from './dto/update-onboarding.dto';
 
 type User = typeof users.$inferSelect;
 type SafeUser = Omit<User, 'password'>;
+
+export interface OnboardingData {
+  toursEnabled: boolean;
+  completedTours: string[];
+  dismissedTours: string[];
+  lastTourCompletedAt: string | null;
+}
 
 @Injectable()
 export class UsersService {
   constructor(
     @Inject(DRIZZLE) private readonly db: PostgresJsDatabase<typeof schema>,
     private readonly configService: ConfigService,
+    private readonly uploadService: UploadService,
   ) {}
 
   async create(dto: CreateUserDto): Promise<SafeUser> {
@@ -94,6 +104,45 @@ export class UsersService {
     return stripPassword(user);
   }
 
+  async findMe(id: string): Promise<SafeUser & { onboarding: OnboardingData | null }> {
+    const user = await this.findEntityById(id);
+    const safe = stripPassword(user);
+    return {
+      ...safe,
+      onboarding: (user.onboarding as OnboardingData) ?? null,
+    };
+  }
+
+  async updateOnboarding(id: string, dto: UpdateOnboardingDto): Promise<SafeUser & { onboarding: OnboardingData | null }> {
+    const user = await this.findEntityById(id);
+    const current = (user.onboarding as OnboardingData) ?? {
+      toursEnabled: true,
+      completedTours: [],
+      dismissedTours: [],
+      lastTourCompletedAt: null,
+    };
+
+    const updated: OnboardingData = {
+      toursEnabled: dto.toursEnabled ?? current.toursEnabled,
+      completedTours: dto.completedTours ?? current.completedTours,
+      dismissedTours: dto.dismissedTours ?? current.dismissedTours,
+      lastTourCompletedAt: dto.completedTours?.length
+        ? new Date().toISOString()
+        : current.lastTourCompletedAt,
+    };
+
+    const [saved] = await this.db
+      .update(users)
+      .set({ onboarding: updated, updatedAt: new Date() })
+      .where(eq(users.id, id))
+      .returning();
+
+    return {
+      ...stripPassword(saved),
+      onboarding: updated,
+    };
+  }
+
   async findByEmail(email: string): Promise<User | null> {
     const [user] = await this.db
       .select()
@@ -129,6 +178,24 @@ export class UsersService {
       .update(users)
       .set(updateData)
       .where(eq(users.id, id))
+      .returning();
+
+    return stripPassword(user);
+  }
+
+  async uploadAvatar(userId: string, file: Express.Multer.File): Promise<SafeUser> {
+    await this.findEntityById(userId);
+
+    const avatarUrl = await this.uploadService.uploadImage(
+      file.buffer,
+      'avatars',
+      userId,
+    );
+
+    const [user] = await this.db
+      .update(users)
+      .set({ avatarUrl, updatedAt: new Date() })
+      .where(eq(users.id, userId))
       .returning();
 
     return stripPassword(user);

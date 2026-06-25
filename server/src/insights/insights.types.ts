@@ -37,6 +37,27 @@ export interface SubscriptionRow {
   type: 'expense' | 'income';
 }
 
+export interface CategoryBudgetItem {
+  categoryId: string;
+  categoryName: string;
+  amount: number;
+}
+
+export interface BudgetMetrics {
+  household: { amount: number } | null;
+  categories: CategoryBudgetItem[];
+  categorySum: number;
+}
+
+export interface InvestmentAccountItem {
+  id: string;
+  name: string;
+  balance: number;
+  yieldPercent: number;
+  yieldGranularity: 'daily' | 'monthly' | 'annual';
+  maturityDate: string | null;
+}
+
 export interface InsightsContext {
   householdId: string;
   userId: string;
@@ -52,4 +73,6 @@ export interface InsightsContext {
     previous: PersonalPeriodMetrics;
     shared: PersonalSharedMetrics;
   };
+  budgets: BudgetMetrics;
+  investmentAccounts: InvestmentAccountItem[];
 }

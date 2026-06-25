@@ -5,21 +5,26 @@ import {
   useAccountsControllerUpdate,
 } from '@/api/generated/accounts/accounts'
 import { ObjectDeleteConfirmDialog } from '@/components/object/object-delete-confirm-dialog'
+import {
+  FormDialogBody,
+  FormDialogContent,
+  FormDialogFooter,
+  FormDialogHeader,
+  formDialogEditFooterClassName,
+} from '@/components/object/form-dialog-shell'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
-  DialogContent,
   DialogDescription,
-  DialogFooter,
-  DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
 import { getApiErrorMessage } from '@/lib/get-api-error-message'
 import { AccountFormFields } from '@/pages/accounts/account-form-fields'
 import {
-  defaultAccountFormValues,
-  accountFormSchema,
-  type AccountFormValues,
+  accountEditFormSchema,
+  buildInvestmentAccountPayload,
+  defaultAccountEditFormValues,
+  type AccountEditFormValues,
 } from '@/pages/accounts/account-form-schema'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Loader2, Trash2 } from 'lucide-react'
@@ -34,14 +39,17 @@ type AccountEditModalProps = {
   onOpenChange: (open: boolean) => void
 }
 
-function toFormValues(account: AccountResponseDto): AccountFormValues {
+function toFormValues(account: AccountResponseDto): AccountEditFormValues {
   return {
     householdId: account.householdId,
     name: account.name,
     type: account.type,
     institution: account.institution ?? '',
-    balanceManual: account.balanceManual,
-    color: account.color ?? defaultAccountFormValues.color,
+    color: account.color ?? defaultAccountEditFormValues.color,
+    yieldPercent:
+      account.yieldPercent != null ? String(account.yieldPercent) : '',
+    yieldGranularity: account.yieldGranularity ?? '',
+    maturityDate: account.maturityDate ?? '',
   }
 }
 
@@ -61,9 +69,9 @@ export function AccountEditModal({
     setValue,
     watch,
     formState: { errors },
-  } = useForm<AccountFormValues>({
-    resolver: zodResolver(accountFormSchema),
-    defaultValues: defaultAccountFormValues,
+  } = useForm<AccountEditFormValues>({
+    resolver: zodResolver(accountEditFormSchema),
+    defaultValues: defaultAccountEditFormValues,
   })
 
   useEffect(() => {
@@ -119,45 +127,47 @@ export function AccountEditModal({
         name: values.name,
         type: values.type,
         institution: values.institution || null,
-        balanceManual: values.balanceManual,
         color: values.color || undefined,
+        ...buildInvestmentAccountPayload(values, { clearWhenNotInvestment: true }),
       },
     })
   })
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="glass-strong">
-        <DialogHeader>
+      <FormDialogContent>
+        <FormDialogHeader>
           <DialogTitle>Editar conta</DialogTitle>
           <DialogDescription>
             Atualize as informações da conta {account?.name ?? ''}.
           </DialogDescription>
-        </DialogHeader>
+        </FormDialogHeader>
 
-        <form id="account-edit-form" onSubmit={onSubmit} className="space-y-1">
-          <AccountFormFields
-            register={register}
-            errors={errors}
-            setValue={setValue}
-            watch={watch}
-            householdDisabled
-          />
-        </form>
+        <FormDialogBody>
+          <form id="account-edit-form" onSubmit={onSubmit}>
+            <AccountFormFields
+              register={register}
+              errors={errors}
+              setValue={setValue}
+              watch={watch}
+              householdDisabled
+              variant="edit"
+            />
+          </form>
+        </FormDialogBody>
 
-        <DialogFooter className="flex-col gap-2 sm:flex-row sm:justify-between">
+        <FormDialogFooter className={formDialogEditFooterClassName}>
           <Button
             type="button"
             variant="ghost"
-            className="rounded-xl text-destructive hover:text-destructive sm:mr-auto"
+            className="rounded-xl text-destructive hover:text-destructive"
             onClick={() => setDeleteConfirmOpen(true)}
             disabled={isBusy || !account}
           >
             <Trash2 className="size-4" />
             Excluir
           </Button>
-          <div className="flex gap-2">
-            <Button
+          <div className="flex gap-2">            <Button
               type="button"
               variant="ghost"
               className="rounded-xl"
@@ -176,9 +186,8 @@ export function AccountEditModal({
               Salvar alterações
             </Button>
           </div>
-        </DialogFooter>
-      </DialogContent>
-
+        </FormDialogFooter>
+      </FormDialogContent>
       <ObjectDeleteConfirmDialog
         open={deleteConfirmOpen}
         onOpenChange={setDeleteConfirmOpen}

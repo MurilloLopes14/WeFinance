@@ -7,6 +7,7 @@ import { AuthModule } from './auth/auth.module';
 import configuration from './config/configuration';
 import { DatabaseModule } from './database/database.module';
 import { AccountsModule } from './accounts/accounts.module';
+import { BudgetsModule } from './budgets/budgets.module';
 import { CategoriesModule } from './categories/categories.module';
 import { EventsModule } from './events/events.module';
 import { HouseholdsModule } from './households/households.module';
@@ -33,6 +34,7 @@ import { UsersModule } from './users/users.module';
     AuthModule,
     HouseholdsModule,
     AccountsModule,
+    BudgetsModule,
     CategoriesModule,
     PayeesModule,
     TransactionsModule,

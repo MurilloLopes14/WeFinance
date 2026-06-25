@@ -40,6 +40,8 @@ function buildEmptyCtx(overrides: Partial<InsightsContext> = {}): InsightsContex
       previous: { totalIncome: 0, totalExpenses: 0, balance: 0, expensesByCategory: [] },
       shared: { sharedExpenseTotal: 0, personalShareInShared: 0, personalSharePercent: 0 },
     },
+    budgets: { household: null, categories: [], categorySum: 0 },
+    investmentAccounts: [],
     ...overrides,
   };
 }
@@ -244,5 +246,127 @@ describe('InsightsService', () => {
 
     expect(insight).toBeDefined();
     expect(insight?.message).toContain('40%');
+  });
+
+  it('monthly_balance success quando saldo do grupo é positivo', async () => {
+    const ctx = buildEmptyCtx();
+    ctx.household.current.totalIncome = 2000;
+    ctx.household.current.totalExpenses = 1000;
+    ctx.household.current.balance = 1000;
+    contextBuilder.build.mockResolvedValue(ctx);
+
+    const result = await service.getInsights('hh-1', 'user-1', '2026-06');
+    const insight = result.insights.find(
+      (i) => i.rule === 'monthly_balance' && i.scope === 'household',
+    );
+
+    expect(insight).toBeDefined();
+    expect(insight?.tone).toBe('success');
+  });
+
+  it('monthly_balance warning quando saldo do grupo é negativo', async () => {
+    const ctx = buildEmptyCtx();
+    ctx.household.current.totalIncome = 500;
+    ctx.household.current.totalExpenses = 1000;
+    ctx.household.current.balance = -500;
+    contextBuilder.build.mockResolvedValue(ctx);
+
+    const result = await service.getInsights('hh-1', 'user-1', '2026-06');
+    const insight = result.insights.find(
+      (i) => i.rule === 'monthly_balance' && i.scope === 'household',
+    );
+
+    expect(insight).toBeDefined();
+    expect(insight?.tone).toBe('warning');
+  });
+
+  it('fixed_vs_variable dispara quando gastos fixos superam variáveis', async () => {
+    const ctx = buildEmptyCtx();
+    ctx.household.current.fixedSpent = 800;
+    ctx.household.current.variableSpent = 200;
+    ctx.household.current.totalExpenses = 1000;
+    contextBuilder.build.mockResolvedValue(ctx);
+
+    const result = await service.getInsights('hh-1', 'user-1', '2026-06');
+    const insight = result.insights.find((i) => i.rule === 'fixed_vs_variable');
+
+    expect(insight).toBeDefined();
+    expect(insight?.tone).toBe('info');
+    expect(insight?.metadata.fixedAmount).toBe(800);
+  });
+
+  it('fixed_vs_variable não dispara quando variáveis superam fixos', async () => {
+    const ctx = buildEmptyCtx();
+    ctx.household.current.fixedSpent = 200;
+    ctx.household.current.variableSpent = 800;
+    contextBuilder.build.mockResolvedValue(ctx);
+
+    const result = await service.getInsights('hh-1', 'user-1', '2026-06');
+    const insight = result.insights.find((i) => i.rule === 'fixed_vs_variable');
+
+    expect(insight).toBeUndefined();
+  });
+
+  it('top_category dispara quando categoria principal representa < 20% das despesas', async () => {
+    const ctx = buildEmptyCtx();
+    ctx.household.current.totalExpenses = 1000;
+    ctx.household.current.expensesByCategory = [
+      { categoryId: 'cat-1', categoryName: 'Alimentação', amount: 190, isFixed: false },
+      { categoryId: 'cat-2', categoryName: 'Lazer', amount: 180, isFixed: false },
+      { categoryId: 'cat-3', categoryName: 'Transporte', amount: 170, isFixed: false },
+      { categoryId: 'cat-4', categoryName: 'Saúde', amount: 160, isFixed: false },
+      { categoryId: 'cat-5', categoryName: 'Outros', amount: 300, isFixed: false },
+    ];
+    contextBuilder.build.mockResolvedValue(ctx);
+
+    const result = await service.getInsights('hh-1', 'user-1', '2026-06');
+    const insight = result.insights.find(
+      (i) => i.rule === 'top_category' && i.scope === 'household',
+    );
+
+    expect(insight).toBeDefined();
+    expect(insight?.metadata.categoryName).toBe('Outros');
+  });
+
+  it('savings_vs_last_month não dispara quando delta é menor que R$50', async () => {
+    const ctx = buildEmptyCtx();
+    ctx.personal.current.balance = 130;
+    ctx.personal.previous.balance = 110;
+    contextBuilder.build.mockResolvedValue(ctx);
+
+    const result = await service.getInsights('hh-1', 'user-1', '2026-06');
+    const insight = result.insights.find((i) => i.rule === 'savings_vs_last_month');
+
+    expect(insight).toBeUndefined();
+  });
+
+  it('recurring_income dispara quando há assinaturas de renda ativas', async () => {
+    const ctx = buildEmptyCtx();
+    ctx.household.subscriptions = [
+      { id: 'sub-1', amount: 3000, categoryId: null, type: 'income' },
+      { id: 'sub-2', amount: 1500, categoryId: null, type: 'income' },
+    ];
+    contextBuilder.build.mockResolvedValue(ctx);
+
+    const result = await service.getInsights('hh-1', 'user-1', '2026-06');
+    const insight = result.insights.find((i) => i.rule === 'recurring_income');
+
+    expect(insight).toBeDefined();
+    expect(insight?.metadata.amount).toBe(4500);
+    expect(insight?.metadata.count).toBe(2);
+    expect(insight?.tone).toBe('info');
+  });
+
+  it('recurring_income não dispara quando todas as assinaturas são despesas', async () => {
+    const ctx = buildEmptyCtx();
+    ctx.household.subscriptions = [
+      { id: 'sub-1', amount: 39.9, categoryId: 'cat-1', type: 'expense' },
+    ];
+    contextBuilder.build.mockResolvedValue(ctx);
+
+    const result = await service.getInsights('hh-1', 'user-1', '2026-06');
+    const insight = result.insights.find((i) => i.rule === 'recurring_income');
+
+    expect(insight).toBeUndefined();
   });
 });

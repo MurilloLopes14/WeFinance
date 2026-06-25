@@ -164,7 +164,7 @@ export function CategoryPage() {
         }
       />
 
-      <ObjectPageContent>
+      <ObjectPageContent tourAnchor="categories-list">
         <ObjectCollectionState
           isLoading={isLoading}
           isError={isError}

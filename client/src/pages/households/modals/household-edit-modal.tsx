@@ -5,14 +5,18 @@ import {
   useHouseholdsControllerUpdate,
 } from '@/api/generated/households/households'
 import { ObjectDeleteConfirmDialog } from '@/components/object/object-delete-confirm-dialog'
+import {
+  FormDialogBody,
+  FormDialogContent,
+  FormDialogFooter,
+  FormDialogHeader,
+  formDialogEditFooterClassName,
+} from '@/components/object/form-dialog-shell'
 import { householdsListParams } from '@/lib/household-api-helpers'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
-  DialogContent,
   DialogDescription,
-  DialogFooter,
-  DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
 import { getApiErrorMessage } from '@/lib/get-api-error-message'
@@ -41,6 +45,7 @@ function toFormValues(household: HouseholdResponseDto): HouseholdFormValues {
     currency: household.currency,
     defaultSplitType: household.defaultSplitType,
     color: household.color ?? defaultHouseholdFormValues.color,
+    keepBudgets: household.keepBudgets,
   }
 }
 
@@ -113,34 +118,37 @@ export function HouseholdEditModal({
         currency: values.currency,
         defaultSplitType: values.defaultSplitType,
         color: values.color || undefined,
+        keepBudgets: values.keepBudgets,
       },
     })
   })
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="glass-strong">
-        <DialogHeader>
+      <FormDialogContent>
+        <FormDialogHeader>
           <DialogTitle>Editar grupo</DialogTitle>
           <DialogDescription>
             Atualize as informações do grupo {household?.name ?? ''}.
           </DialogDescription>
-        </DialogHeader>
+        </FormDialogHeader>
 
-        <form id="household-edit-form" onSubmit={onSubmit} className="space-y-1">
-          <HouseholdFormFields
-            register={register}
-            errors={errors}
-            setValue={setValue}
-            watch={watch}
-          />
-        </form>
+        <FormDialogBody>
+          <form id="household-edit-form" onSubmit={onSubmit}>
+            <HouseholdFormFields
+              register={register}
+              errors={errors}
+              setValue={setValue}
+              watch={watch}
+            />
+          </form>
+        </FormDialogBody>
 
-        <DialogFooter className="flex-col gap-2 sm:flex-row sm:justify-between">
+        <FormDialogFooter className={formDialogEditFooterClassName}>
           <Button
             type="button"
             variant="ghost"
-            className="rounded-xl text-destructive hover:text-destructive sm:mr-auto"
+            className="rounded-xl text-destructive hover:text-destructive"
             onClick={() => setDeleteConfirmOpen(true)}
             disabled={isBusy || !household}
           >
@@ -167,8 +175,8 @@ export function HouseholdEditModal({
               Salvar alterações
             </Button>
           </div>
-        </DialogFooter>
-      </DialogContent>
+        </FormDialogFooter>
+      </FormDialogContent>
 
       <ObjectDeleteConfirmDialog
         open={deleteConfirmOpen}

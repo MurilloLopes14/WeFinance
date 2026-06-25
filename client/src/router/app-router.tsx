@@ -5,7 +5,12 @@ import { DashboardHomePage } from '@/pages/dashboard/dashboard-home-page'
 import { DashboardPlaceholderPage } from '@/pages/dashboard/dashboard-placeholder-page'
 import { AccountPage } from '@/pages/accounts/account-page'
 import { CategoryPage } from '@/pages/categories/category-page'
+import { SubscriptionPage } from '@/pages/subscriptions/subscription-page'
+import { SplitPage } from '@/pages/splits/split-page'
+import { ProfilePage } from '@/pages/profile/profile-page'
 import { HouseholdPage } from '@/pages/households/household-page'
+import { BudgetPage } from '@/pages/budgets/budget-page'
+import { HelpPage } from '@/pages/help/help-page'
 import { TransactionPage } from '@/pages/transactions/transaction-page'
 import {
   dashboardGroupsNav,
@@ -42,6 +47,11 @@ export function AppRouter() {
           <Route path="/dashboard" element={<DashboardLayout />}>
             <Route index element={<DashboardHomePage />} />
 
+            <Route
+              path="assinaturas"
+              element={<Navigate to="/dashboard/fixos" replace />}
+            />
+
             {dashboardMainNav.map((item) => (
               <Route
                 key={item.url}
@@ -68,8 +78,14 @@ export function AppRouter() {
                     <HouseholdPage />
                   ) : item.url === '/dashboard/categorias' ? (
                     <CategoryPage />
+                  ) : item.url === '/dashboard/orcamentos' ? (
+                    <BudgetPage />
                   ) : item.url === '/dashboard/contas' ? (
                     <AccountPage />
+                  ) : item.url === '/dashboard/fixos' ? (
+                    <SubscriptionPage />
+                  ) : item.url === '/dashboard/rateios' ? (
+                    <SplitPage />
                   ) : (
                     <DashboardPlaceholderPage
                       title={item.title}
@@ -85,10 +101,16 @@ export function AppRouter() {
                 key={item.url}
                 path={item.url.replace('/dashboard/', '')}
                 element={
-                  <DashboardPlaceholderPage
-                    title={item.title}
-                    icon={item.icon}
-                  />
+                  item.url === '/dashboard/perfil' ? (
+                    <ProfilePage />
+                  ) : item.url === '/dashboard/ajuda' ? (
+                    <HelpPage />
+                  ) : (
+                    <DashboardPlaceholderPage
+                      title={item.title}
+                      icon={item.icon}
+                    />
+                  )
                 }
               />
             ))}

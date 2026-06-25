@@ -1,257 +1,144 @@
-# Estrutura do Front-End (React + Vite + Tailwind)
+# Estrutura do Front-End — WeFinance
 
-## ⚛️ Visão Geral
-
-A aplicação web do **Finanças a Dois** será construída com **React + TypeScript + Vite**, priorizando leveza, performance e componentização clara.  
-O layout será **responsivo**, preparado para futuras unificações com o app mobile (React Native via Expo Router).
-
-O **objetivo principal do front** é oferecer uma experiência fluida, intuitiva e empática: poucos cliques, dados claros e visual coerente com a proposta de controle compartilhado.
+> React + Vite + TypeScript. API hooks gerados automaticamente via **Orval** a partir do Swagger.
 
 ---
 
-## 🧱 Estrutura de Pastas
+## Stack
 
-`web/   src/     api/                 # Hooks e clientes HTTP (React Query)     components/          # Componentes reutilizáveis (UI + lógica)     contexts/            # Contextos globais (auth, tema, household)     hooks/               # Custom hooks     layouts/             # Layouts principais (DashboardLayout, AuthLayout)     pages/       Auth/         Login.tsx         Register.tsx       Dashboard/         index.tsx       Transactions/         index.tsx         NewTransactionForm.tsx       Subscriptions/         index.tsx       Reports/         index.tsx       Settings/         index.tsx     router/              # Configuração do React Router     store/               # Zustand ou Context API (estados leves)     styles/              # Tailwind + temas customizados     types/               # Tipos e interfaces globais     utils/               # Funções auxiliares   vite.config.ts   tailwind.config.js   package.json`
-
----
-
-## 🪄 1. Tecnologias e Bibliotecas
-
-|Área|Lib / Tech|Função|
+| Área | Tecnologia | Função |
 |---|---|---|
-|UI|Tailwind CSS + Headless UI|Interface reativa e customizável|
-|Estado|React Query|Fetching e cache de dados (API REST)|
-|Navegação|React Router v6|Rotas declarativas e protegidas|
-|Autenticação|JWT via Context|Sessões e controle de escopo|
-|Formulários|React Hook Form + Zod|Validação e UX fluida|
-|Ícones|Lucide React|Ícones leves e elegantes|
-|Notificações|React Toastify|Feedback visual|
-|Charts|Recharts|Gráficos simples para relatórios|
-|Tema|Dark/Light toggle via Context|Personalização de experiência|
+| UI base | React + Vite + TypeScript | Core |
+| Estilo | Tailwind CSS + shadcn/ui | Componentes e layout |
+| API hooks | **Orval** (gerado do Swagger) | React Query hooks tipados |
+| Estado servidor | React Query (via Orval) | Cache e sincronização |
+| Formulários | React Hook Form + Zod | Validação |
+| Roteamento | React Router v6 | Rotas protegidas |
+| Ícones | Lucide React | Ícones |
+| Gráficos | Recharts | Dashboard |
 
 ---
 
-## 🧭 2. Fluxo de Navegação
+## Geração de Hooks (Orval)
 
-`Login/Register → Dashboard Dashboard → [Transactions, Subscriptions, Reports, Settings]`
+Os hooks de API são **gerados automaticamente** a partir do Swagger do backend:
 
-### Autenticação
+```bash
+# Na pasta client/
+npm run api:update
+```
 
-- Rota `/login`: autentica o usuário e guarda token no `localStorage`.
-    
-- Middleware de rota protege todas as páginas exceto `/login` e `/register`.
-    
-- Após login, carrega o contexto `household` (grupo padrão).
-    
+Configuração em `client/orval.config.ts`. Os hooks ficam em `client/src/api/`.
 
----
-
-## 🧾 3. Dashboard
-
-### Objetivo
-
-Mostrar um **resumo consolidado** do mês atual.
-
-### Componentes
-
-- **Saldo total** (contas + transferências);
-    
-- **Receitas vs Despesas** (gráfico de barras);
-    
-- **Gastos fixos e variáveis**;
-    
-- **Assinaturas ativas**;
-    
-- **Resumo por categoria**.
-    
-
-### Hooks
-
-`const { data: summary } = useQuery(['dashboard'], () =>   api.get('/households/1/reports/summary').then(r => r.data) );`
+> Nunca escreva hooks de fetch manualmente — rode `api:update` após qualquer mudança de endpoint no backend.
 
 ---
 
-## 💸 4. Transactions
+## Estrutura de Pastas
 
-### Objetivo
-
-Permitir ao usuário **criar, listar e editar** lançamentos de forma rápida e clara.
-
-### Componentes principais
-
-- `TransactionTable.tsx`: lista paginada e filtrável.
-    
-- `NewTransactionForm.tsx`: formulário de criação/edição.
-    
-- `SplitEditor.tsx`: divisão de valores entre usuários.
-    
-
-### Fluxo
-
-`Dashboard → Transactions → [Nova Transação] → Modal → POST /transactions → Atualiza listagem automaticamente (React Query invalidate)`
-
-### Campos obrigatórios
-
-- Conta
-    
-- Tipo (`expense`, `income`, `transfer`)
-    
-- Valor
-    
-- Data
-    
-- (Opcional) Categoria, Payee, Split
-    
-
----
-
-## 🔁 5. Subscriptions
-
-### Objetivo
-
-Gerenciar **assinaturas e despesas recorrentes**.
-
-### Componentes
-
-- `SubscriptionList.tsx`
-    
-- `NewSubscriptionForm.tsx`
-    
-- `NextRunLabel.tsx`
-    
-
-### Ações disponíveis
-
-- Criar nova assinatura;
-    
-- Pausar/reativar (`PATCH active=false`);
-    
-- Executar manualmente (`POST /run`).
-    
-
-### UI
-
-Lista simples, agrupada por tipo e data de renovação, destacando:
-
-> “Netflix – R$ 39,90 – Próxima: 15/10/2025”
+```
+client/src/
+  api/                    # Hooks gerados pelo Orval (não editar manualmente)
+  components/
+    dashboard/
+      kpi-card.tsx               # Card de KPI (receita, despesa, saldo)
+      kpi-cards-column.tsx       # Coluna de KPIs (pessoal ou grupo)
+      category-donut-chart.tsx   # Gráfico donut de categorias
+      daily-evolution-chart.tsx  # Gráfico de linha (evolução diária)
+      financial-calendar.tsx     # Calendário financeiro clicável
+      day-transactions-sheet.tsx # Sheet de transações do dia
+      month-selector.tsx         # Seletor de mês
+      dashboard-perspective-tabs.tsx  # Abas Você / Grupo
+      dashboard-household-selector.tsx
+    data-table/             # Tabela genérica com filtros e paginação
+    color-preset-picker.tsx # Seletor de cor (contas, categorias)
+    insights/               # Componentes de insights financeiros
+    object/
+      household-gated-form-section.tsx  # Seção de form bloqueada sem household
+    splits/                 # Componentes de rateio de transação
+    subscriptions/          # Componentes de assinaturas
+    ui/                     # shadcn/ui base (button, input, dialog, etc.)
+  hooks/
+    use-dashboard/          # Hooks de dados do dashboard
+  pages/
+    accounts/               # Listagem e formulário de contas
+    categories/             # Listagem, criação e edição de categorias
+    dashboard/
+      dashboard-home-page.tsx
+    transactions/           # Listagem e formulário de transações
+  router/
+    app-router.tsx          # Rotas protegidas e públicas
+  index.css                 # Tailwind + tokens de tema
+```
 
 ---
 
-## 📊 6. Reports
+## Fluxo de Autenticação
 
-### Objetivo
-
-Gerar **visões analíticas** sobre o uso financeiro.
-
-### Tipos de relatórios
-
-1. **Resumo geral** – receitas, despesas, saldo.
-    
-2. **Categorias** – top gastos e percentuais.
-    
-3. **Membros** – rateio individual (via splits).
-    
-4. **Evolução temporal** – gráfico de linha (últimos 6 meses).
-    
-
-### Componentes
-
-- `ReportSummary.tsx`
-    
-- `ReportCategoriesChart.tsx`
-    
-- `ReportMembers.tsx`
-    
-- `CashflowChart.tsx`
-    
+1. `/login` → POST `/auth/login` → salva tokens no localStorage
+2. Middleware de rota redireciona não-autenticados para `/login`
+3. Após login, carrega `household` padrão do usuário
+4. Refresh token automático via interceptor do Axios
 
 ---
 
-## ⚙️ 7. Settings
+## Dashboard (Abordagem "Perspectivas")
 
-### Objetivo
+O dashboard apresenta duas colunas paralelas: **Você** e **Grupo**.
 
-Gerenciar:
+```
+[Seletor de Mês]
+[Abas: Você | Grupo]
 
-- Perfil do usuário;
-    
-- Contas e categorias;
-    
-- Preferências de tema (dark/light);
-    
-- Parâmetros de divisão padrão (`equal`, `percent`, `fixed`).
-    
+Coluna Você:                    Coluna Grupo:
+┌──────────────────┐            ┌──────────────────┐
+│ KPI: Receitas    │            │ KPI: Receitas     │
+│ KPI: Despesas    │            │ KPI: Despesas     │
+│ KPI: Saldo       │            │ KPI: Saldo        │
+│ Donut Categorias │            │ Donut Categorias  │
+└──────────────────┘            └──────────────────┘
 
-### Componentes
+[Calendário financeiro — clica no dia → sheet com transações]
+[Gráfico de Linha — Evolução diária do mês]
+```
 
-- `ProfileSettings.tsx`
-    
-- `AccountsSettings.tsx`
-    
-- `CategoriesManager.tsx`
-    
-- `ThemeSwitcher.tsx`
-    
-
----
-
-## 📦 8. API Layer
-
-### Client
-
-`import axios from 'axios';  export const api = axios.create({   baseURL: import.meta.env.VITE_API_URL,   headers: { 'Content-Type': 'application/json' }, });`
-
-### React Query Hooks
-
-``export const useTransactions = (params) =>   useQuery(['transactions', params], () =>     api.get(`/households/1/transactions`, { params }).then((r) => r.data)   );  export const useCreateTransaction = () =>   useMutation((data) => api.post(`/households/1/transactions`, data));``
+**Endpoints consumidos:**
+- `GET report/personal-summary?month=YYYY-MM` → KPIs
+- `GET report/category-breakdown?month=YYYY-MM&scope=personal|household` → donut
+- `GET report/daily-summary?month=YYYY-MM` → calendário + linha
 
 ---
 
-## 🎨 9. Estilo e Design
+## Transações
 
-- **Paleta base:** tons de teal, azul e branco (inspirados no “tea lightning” que tu mencionou).
-    
-- **Fontes:** `Inter` e `Poppins`.
-    
-- **Cards e painéis** com sombras suaves, bordas arredondadas (`rounded-2xl`).
-    
-- **Modo escuro** com fundo `#0f172a` e tons de azul petróleo.
-    
-- Layout “zen”: foco nos dados, não nos elementos.
-    
+- Tabela com filtros por tipo, conta, categoria, mês
+- Modal de criação/edição
+- Suporte a splits (rateio) com editor visual
+- `splitPreview.members` exibe avatars empilhados na listagem
 
 ---
 
-## 🧩 10. Integração com Backend
+## Assinaturas
 
-|Módulo|Hook/API|Endpoint|
-|---|---|---|
-|Auth|`useAuth()`|`/auth/login`, `/auth/register`|
-|Households|`useHousehold()`|`/households`|
-|Accounts|`useAccounts()`|`/households/:id/accounts`|
-|Categories|`useCategories()`|`/households/:id/categories`|
-|Transactions|`useTransactions()`|`/households/:id/transactions`|
-|Subscriptions|`useSubscriptions()`|`/households/:id/subscriptions`|
-|Reports|`useReports()`|`/households/:id/reports`|
+- Lista agrupada por `type` (expense/income)
+- Exibe `nextRunAt` com badge de proximidade
+- Ações: pausar (`active = false`), executar manualmente (`POST /run`)
 
 ---
 
-## 🚀 11. Scripts
+## Variáveis de Ambiente
 
-`// package.json {   "scripts": {     "dev": "vite",     "build": "vite build",     "preview": "vite preview",     "lint": "eslint src --ext .ts,.tsx"   } }`
+```env
+VITE_API_URL=http://localhost:2951/api/v1
+```
 
 ---
 
-## 🧭 Próximos Passos
+## Scripts
 
-1. Criar estrutura inicial com `npm create vite@latest web -- --template react-ts`.
-    
-2. Adicionar Tailwind e configurar tema.
-    
-3. Configurar React Router + React Query.
-    
-4. Implementar páginas: `Login`, `Dashboard`, `Transactions`, `Reports`.
-    
-5. Integrar endpoints do NestJS conforme documentado no `API_ROUTES.md`.
-    
-6. Criar componentes visuais reutilizáveis (`Card`, `Button`, `Input`, `Modal`).
+```bash
+npm run dev          # Servidor de desenvolvimento
+npm run build        # Build de produção
+npm run api:update   # Regenera hooks Orval a partir do Swagger
+npm run lint         # ESLint
+```

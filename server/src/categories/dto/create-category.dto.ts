@@ -2,11 +2,13 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
   IsBoolean,
   IsEnum,
+  IsNumber,
   IsOptional,
   IsString,
   IsUUID,
   Length,
   MaxLength,
+  Min,
 } from 'class-validator';
 
 export class CreateCategoryDto {
@@ -34,4 +36,13 @@ export class CreateCategoryDto {
   @IsString()
   @MaxLength(20)
   color?: string;
+
+  @ApiPropertyOptional({
+    example: 800,
+    description: 'Monthly budget for the current month (optional, expense categories)',
+  })
+  @IsOptional()
+  @IsNumber({ maxDecimalPlaces: 2 })
+  @Min(0.01)
+  monthlyBudget?: number;
 }

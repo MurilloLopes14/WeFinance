@@ -25,6 +25,15 @@ export class AccountResponseDto {
   @ApiPropertyOptional({ nullable: true })
   color: string | null;
 
+  @ApiPropertyOptional({ nullable: true, example: 13.5 })
+  yieldPercent: number | null;
+
+  @ApiPropertyOptional({ nullable: true, enum: ['daily', 'monthly', 'annual'] })
+  yieldGranularity: 'daily' | 'monthly' | 'annual' | null;
+
+  @ApiPropertyOptional({ nullable: true, example: '2028-06-23' })
+  maturityDate: string | null;
+
   @ApiProperty()
   createdAt: Date;
 

@@ -1,303 +1,138 @@
-# Regras de Negócio
+# Regras de Negócio — WeFinance
 
-## 🎯 Objetivo
+## 1. Rateio de Transações (Splits)
 
-Documentar as **regras determinísticas** do sistema _Finanças a Dois_, garantindo previsibilidade nos cálculos, segurança nas transações e coerência entre dados pessoais e compartilhados.
-
-O foco inicial é cobrir as regras fundamentais para o MVP:
-
-- **Rateio de transações** entre usuários;
-    
-- **Criação e vinculação de transferências espelhadas**;
-    
-- **Reconciliação** (fechamento de lançamentos);
-    
-- **Assinaturas e recorrências**;
-    
-- **Importação de CSVs** com categorização automática;
-    
-- **Auditoria e histórico (events)**.
-    
+- Cada transação pode ter splits em `transaction_splits`, onde cada linha representa a participação de um membro.
+- **Soma dos shares deve ser igual ao valor total da transação.** Diferenças de centavo por arredondamento são absorvidas automaticamente no último membro da lista.
+- Transferências não suportam splits.
+- Transações reconciliadas não podem ter splits alterados.
+- Na resposta de `GET /transactions`, o campo `splitPreview` traz os **3 primeiros membros** com nome e avatar + `totalMembers` — útil para exibição de avatares empilhados no front-end.
 
 ---
 
-## 🧾 1. Rateio de Transações
+## 2. Transferências Espelhadas
 
-### Contexto
-
-Cada transação pode ser **pessoal** ou **compartilhada**. No caso de compartilhada, o valor é dividido entre os membros de um mesmo `household`.
-
-### Regras
-
-1. **Tipos de rateio suportados**
-    
-    - `equal` → divisão igualitária (ex.: 50/50);
-        
-    - `percent` → divisão por percentual definido por usuário;
-        
-    - `fixed` → valores fixos atribuídos individualmente.
-        
-2. **Cálculo geral**
-    
-    ```text
-    Soma dos shares = valor total da transação.
-    ```
-    
-    Caso haja diferença por arredondamento, o sistema ajusta automaticamente no último membro da lista.
-    
-3. **Armazenamento**
-    
-    - Cada divisão gera um registro em `transaction_splits`.
-        
-    - O campo `share` indica o valor absoluto (positivo ou negativo) de cada participante.
-        
-4. **Visibilidade**
-    
-    - Cada membro visualiza o total consolidado de suas transações pessoais + compartilhadas.
-        
-    - O total do casal é a soma de todos os `shares` do grupo.
-        
+- `type = 'transfer'` sempre cria **dois registros** vinculados por `transferLinkId`.
+- A conta de origem (`accountId`) é debitada; a conta destino (`transfer.toAccountId`) é creditada.
+- Ambas as legs têm `transferLinkId` apontando uma para a outra.
+- Atualização de valor ou data propaga para a leg espelho automaticamente.
+- `status` inicial é `cleared`.
 
 ---
 
-## 🔁 2. Transferências Espelhadas
+## 3. Saldo Automático de Contas
 
-### Contexto
+`accounts.balanceManual` é mantido automaticamente pelo sistema — **nunca** edite diretamente.
 
-Transferências movem valores entre **duas contas do mesmo grupo** (ex.: Conta Corrente → Cartão de Crédito).
-
-### Regras
-
-1. Sempre que uma transação for criada com `type = 'transfer'`, o sistema:
-    
-    - Cria **dois lançamentos**: um de saída e um de entrada;
-        
-    - O segundo lançamento (entrada) é o **espelho** do primeiro;
-        
-    - Ambos ficam vinculados por `transfer_link_id`.
-        
-2. Exemplo:
-    
-    ```text
-    Conta A (-500) → Conta B (+500)
-    Ambos possuem transfer_link_id recíproco.
-    ```
-    
-3. Transferências **não geram splits**, pois pertencem ao grupo como um todo.
-    
-4. O status inicial padrão é `cleared` (conciliado internamente).
-    
+| Evento | Efeito no saldo |
+|---|---|
+| `create` (expense) | `balance -= amount` |
+| `create` (income) | `balance += amount` |
+| `create` (transfer) | origem `-= amount`, destino `+= amount` |
+| `update` | reverte o efeito antigo, aplica o novo |
+| `delete` | reverte o efeito da transação removida |
+| Cron subscription | atualiza o saldo da conta ao gerar a transação |
 
 ---
 
-## ⏱️ 3. Reconciliação de Transações
+## 4. Reconciliação
 
-### Contexto
-
-A reconciliação indica que uma transação foi confirmada ou ajustada de forma definitiva.
-
-### Regras
-
-1. Quando `status` muda para `reconciled`:
-    
-    - A transação torna-se **imutável** (não pode ser editada diretamente);
-        
-    - Qualquer correção gera um **novo evento de ajuste** na tabela `events`.
-        
-2. Ajustes são armazenados como:
-    
-    ```json
-    {
-      "entity": "transaction",
-      "entity_id": 102,
-      "action": "update",
-      "data": { "amount": 55.00, "note": "Ajuste de arredondamento" },
-      "user_id": 3,
-      "at": "2025-10-13T22:15:00Z"
-    }
-    ```
-    
-3. Logs de reconciliação podem ser visualizados no histórico da transação.
-    
+- Transações reconciliadas (`status = 'reconciled'`) são **imutáveis** — não podem ser editadas nem ter splits alterados.
+- Apenas `owner` pode reconciliar via `POST /transactions/:txId/reconcile`.
+- Toda reconciliação gera um evento `action = 'reconcile'` em `events`.
 
 ---
 
-## 🔁 4. Assinaturas e Recorrências
+## 5. Assinaturas e Recorrências
 
-### Contexto
+- Cada assinatura define `type` (`expense` ou `income`), valor, cadência e `nextRunAt`.
+- **Cron diário** (meia-noite UTC): busca todas as assinaturas `active = true` com `nextRunAt <= hoje`, gera a transação e avança `nextRunAt` pela cadência.
+- O saldo da conta é atualizado automaticamente junto com a geração da transação.
+- `type = 'income'` permite receitas fixas recorrentes (ex: salário mensal).
+- Assinaturas podem ser executadas manualmente via `POST /subscriptions/:id/run`.
+- `active = false` pausa sem deletar.
 
-Assinaturas (ou _subscriptions_) automatizam o lançamento de transações fixas (ex.: Netflix, academia, aluguel).
-
-### Regras
-
-1. Cada registro em `subscriptions` define:
-    
-    - Valor (`amount`);
-        
-    - Categoria (`category_id`);
-        
-    - Frequência (`cadence_unit`, `cadence_every`);
-        
-    - Próxima execução (`next_run_at`).
-        
-2. O **agendador (cron)** executa diariamente e:
-    
-    - Gera uma nova transação `expense` na data de `next_run_at`;
-        
-    - Atualiza `next_run_at` conforme o intervalo configurado;
-        
-    - Registra um evento `action = 'generate'` em `events`.
-        
-3. Exemplo:
-    
-    ```text
-    Netflix (R$39,90 / mês)
-    next_run_at = 2025-10-15 → próxima = 2025-11-15
-    ```
-    
-4. Se `active = false`, a assinatura é ignorada pelo agendador.
-    
-
----
-
-## 📥 5. Importação CSV
-
-### Contexto
-
-Permite importar lançamentos em lote de planilhas bancárias ou exportações de aplicativos.
-
-### Regras
-
-1. O arquivo deve conter colunas padrão:
-    
-    ```csv
-    date, description, amount, account, category
-    ```
-    
-2. O sistema valida duplicatas por **hash do conteúdo** (`md5(date+description+amount)`), armazenado em `metadata.hash`.
-    
-3. Pode usar **regras de payee**:
-    
-    - Regex em `payees.regex_rule` para autoidentificar o favorecido e categoria.
-        
-4. Cada linha importada gera:
-    
-    - Uma transação (`transactions`);
-        
-    - Um evento `import` em `events`;
-        
-    - Se o hash já existir → ignora ou marca como duplicada.
-        
-
----
-
-## 🧮 6. Cálculo de Relatórios
-
-### Contexto
-
-Relatórios resumem as finanças mensais e por categoria.
-
-### Regras base:
-
-1. **Saldo mensal**
-    
-    ```sql
-    SUM(CASE WHEN type='income' THEN amount ELSE -amount END)
-    ```
-    
-2. **Top categorias (despesa)**
-    
-    ```sql
-    SELECT category_id, SUM(amount) AS total
-    FROM transactions
-    WHERE type='expense'
-    GROUP BY category_id
-    ORDER BY total DESC LIMIT 5;
-    ```
-    
-3. **Total por pessoa (rateio)**
-    
-    ```sql
-    SELECT user_id, SUM(share) FROM transaction_splits GROUP BY user_id;
-    ```
-    
-
-_(Regras de budgets e metas serão incluídas na Fase 2)_
-
----
-
-## 🧾 7. Auditoria (Events)
-
-### Contexto
-
-Tudo o que altera dados críticos é logado em `events`, mantendo integridade e rastreabilidade.
-
-### Ações registradas:
-
-- `create` → criação de transações, contas, assinaturas;
-    
-- `update` → edição após reconciliação (gera novo evento, sem alterar original);
-    
-- `delete` → exclusão lógica (soft delete futuro);
-    
-- `reconcile` → marca uma transação como confirmada;
-    
-- `import` → transações importadas via CSV.
-    
-
-Cada evento armazena:
-
-```json
-{
-  "entity": "transaction",
-  "entity_id": 301,
-  "action": "reconcile",
-  "data": { "status": "reconciled" },
-  "user_id": 1,
-  "at": "2025-10-13T21:20:00Z"
-}
+**Cálculo do próximo `nextRunAt`:**
+```
+cadenceUnit = 'month', cadenceEvery = 1:
+  nextRunAt = nextRunAt + 1 mês (UTC)
 ```
 
 ---
 
-## 🔒 8. Regras de Segurança e Permissão
+## 6. Validação de `isFixed` em Categorias
 
-- Toda ação é escopada pelo `household_id`.
-    
-- Um `member` só pode manipular dados do seu grupo.
-    
-- Apenas `owner` pode editar membros e contas.
-    
-- A reconciliação é irreversível, exigindo permissão de `owner`.
-    
-- O sistema valida integridade referencial antes de cada operação (ex.: excluir categoria só se não tiver transações ativas).
-    
+- `categories.isFixed = true` indica **despesa fixa** — usada em análises de fixo vs variável.
+- O sistema **bloqueia** marcar `isFixed = true` se a categoria estiver vinculada exclusivamente a assinaturas de receita (`subscription.type = 'income'`).
+- Motivo: `isFixed` só faz sentido semântico para despesas fixas; misturar com receitas gera inconsistência nos relatórios de análise.
 
 ---
 
-## ⚙️ 9. Execuções Automáticas
+## 7. Upload de Avatar
 
-- **Cron diário**: processa assinaturas e atualiza `next_run_at`.
-    
-- **Cron de reconciliação (opcional)**: marca automaticamente lançamentos importados após X dias como reconciliados.
-    
-- **Trigger SQL** (futuro): atualizar `updated_at` automaticamente.
-    
+- Endpoint: `POST /users/me/avatar` (multipart/form-data, campo `file`)
+- Formatos aceitos: JPEG, PNG, WebP
+- Tamanho máximo: 2MB
+- Armazenado no Cloudinary em `{CLOUDINARY_ROOT_FOLDER}/avatars/{userId}`
+- A imagem é recortada para 256×256 com `crop: fill, gravity: face`
+- Enviar um novo arquivo **sobrescreve** o anterior (mesmo `publicId`)
 
 ---
 
-## 🧭 Próximos Passos
+## 8. Relatórios de Dashboard
 
-1. Implementar os serviços correspondentes em NestJS (Transactions, Subscriptions e Imports).
-    
-2. Adicionar os testes unitários para:
-    
-    - Rateio somando ao valor total;
-        
-    - Transferências espelhadas consistentes;
-        
-    - Geração automática de assinaturas.
-        
-3. Integrar auditoria (`events`) nos módulos core.
-    
-4. Atualizar o `API_ROUTES.md` com endpoints REST baseados nessas regras.
+### personal-summary
+Cálculo por mês (`YYYY-MM`):
+- `totalIncome` = soma das transações `income` do usuário + participações em splits
+- `totalExpenses` = soma das transações `expense` + splits
+- `balance` = fluxo de caixa do mês (income - expenses), **não** é o saldo da conta
+- `totalAccountsBalance` = soma atual de `accounts.balanceManual` do grupo
+
+### category-breakdown
+- `scope = 'household'`: despesas de todas as transações do grupo
+- `scope = 'personal'`: apenas transações do usuário logado + shares nos splits
+- Percentual de cada categoria calculado sobre `totalExpenses`
+
+### daily-summary
+- Retorna um array de dias do mês
+- `runningBalance` é acumulativo: começa em 0 no dia 1 e soma/subtrai dia a dia
+- Dias sem transações ainda aparecem no array (com valores zerados)
+
+---
+
+## 9. Auditoria (Events)
+
+Toda alteração relevante gera um registro em `events`:
+
+| Ação | Quando |
+|---|---|
+| `create` | Criação de transação, conta, categoria, assinatura |
+| `update` | Edição de qualquer entidade |
+| `delete` | Remoção |
+| `reconcile` | Transação marcada como reconciliada |
+| `import` | Transação criada via CSV |
+| `generate` | Transação gerada automaticamente por assinatura |
+
+---
+
+## 10. Importação CSV
+
+- Deduplicação por `md5(date + description + amount)` armazenado em `metadata.hash`
+- Payees com `regexRule` são aplicados linha a linha para auto-categorização
+- Cada importação gera um registro em `import_sessions` com contadores de sucesso, duplicatas e erros
+
+---
+
+## 11. Permissões por Role
+
+| Ação | owner | member |
+|---|---|---|
+| Criar/editar assinaturas | ✅ | ❌ |
+| Adicionar/remover membros | ✅ | ❌ |
+| Criar/editar contas | ✅ | ❌ |
+| Reconciliar transações | ✅ | ❌ |
+| Criar/editar transações | ✅ | ✅ |
+| Visualizar tudo | ✅ | ✅ |
+| Editar próprio perfil | ✅ | ✅ |
+
+> Um `member` pode editar seu próprio perfil (name, email, password, birthDate, phoneNumber) mas não pode alterar `role` ou `isActive`.

@@ -1,16 +1,15 @@
 import type { LucideIcon } from 'lucide-react'
 import {
   ArrowLeftRight,
-  BarChart3,
   CalendarClock,
   FolderKanban,
+  HelpCircle,
   Landmark,
   PieChart,
+  PiggyBank,
   Tags,
   UserCircle,
-  UserPlus,
   Users,
-  UsersRound,
 } from 'lucide-react'
 
 export type DashboardNavItem = {
@@ -48,13 +47,18 @@ export const dashboardGroupsNav: DashboardNavGroup = {
       icon: Tags,
     },
     {
+      title: 'Orçamentos',
+      url: '/dashboard/orcamentos',
+      icon: PiggyBank,
+    },
+    {
       title: 'Contas',
       url: '/dashboard/contas',
       icon: Landmark,
     },
     {
-      title: 'Assinaturas',
-      url: '/dashboard/assinaturas',
+      title: 'Fixos',
+      url: '/dashboard/fixos',
       icon: CalendarClock,
     },
     {
@@ -67,19 +71,14 @@ export const dashboardGroupsNav: DashboardNavGroup = {
 
 export const dashboardSecondaryNav: DashboardNavItem[] = [
   {
-    title: 'Relatórios',
-    url: '/dashboard/relatorios',
-    icon: BarChart3,
-  },
-  {
-    title: 'Usuários',
-    url: '/dashboard/usuarios',
-    icon: UsersRound,
-  },
-  {
     title: 'Perfil',
     url: '/dashboard/perfil',
     icon: UserCircle,
+  },
+  {
+    title: 'Central de Ajuda',
+    url: '/dashboard/ajuda',
+    icon: HelpCircle,
   },
 ]
 

@@ -48,6 +48,14 @@ export default () => ({
     path: process.env.SWAGGER_PATH || 'docs',
   },
 
+  // Cloudinary Configuration
+  cloudinary: {
+    cloudName: process.env.CLOUDINARY_CLOUD_NAME || '',
+    apiKey: process.env.CLOUDINARY_API_KEY || '',
+    apiSecret: process.env.CLOUDINARY_API_SECRET || '',
+    rootFolder: process.env.CLOUDINARY_ROOT_FOLDER || 'weFinance',
+  },
+
   // Security Configuration
   security: {
     bcryptSaltRounds: parseInt(process.env.BCRYPT_SALT_ROUNDS || '10', 10),

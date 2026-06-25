@@ -4,6 +4,7 @@ import type { HouseholdMemberResponseDto } from '@/api/generated/models/househol
 import type { HouseholdResponseDto } from '@/api/generated/models/householdResponseDto'
 import { getHouseholdSplitTypeLabel } from '@/components/households/household-header'
 import { HouseholdComboboxField } from '@/components/households/household-combobox-field'
+import { HouseholdGatedFormSection } from '@/components/object/household-gated-form-section'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import {
@@ -17,6 +18,7 @@ import {
 import { Textarea } from '@/components/ui/textarea'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import { formatAccountBalance } from '@/lib/account-helpers'
+import { isFutureTransactionDate } from '@/lib/transaction-helpers'
 import { getUserInitials } from '@/lib/household-helpers'
 import {
   getInitialCustomSplitRows,
@@ -71,9 +73,11 @@ export function TransactionFormFields({
   const householdId = watch('householdId')
   const type = watch('type')
   const accountId = watch('accountId')
+  const date = watch('date')
   const splitMode = watch('splitMode')
   const amount = watch('amount')
   const customSplits = watch('customSplits')
+  const fieldsDisabled = !householdId
 
   const { fields, append, remove } = useFieldArray({
     control,
@@ -82,6 +86,7 @@ export function TransactionFormFields({
 
   const isTransfer = type === CreateTransactionDtoType.transfer
   const showSplitSection = !isTransfer
+  const isFutureDate = isFutureTransactionDate(date)
 
   const filteredCategories = useMemo(() => {
     if (isTransfer) {
@@ -148,11 +153,13 @@ export function TransactionFormFields({
         error={errors.householdId?.message}
       />
 
+      <HouseholdGatedFormSection householdId={householdId}>
       <div className="grid min-w-0 gap-4 sm:grid-cols-2">
         <div className="space-y-2">
           <Label htmlFor="transaction-type">Tipo</Label>
           <Select
             value={type}
+            disabled={fieldsDisabled}
             onValueChange={(value) => {
               if (!value) return
               setValue('type', value as TransactionFormValues['type'], {
@@ -187,9 +194,16 @@ export function TransactionFormFields({
             id="transaction-date"
             type="date"
             className="rounded-xl"
+            disabled={fieldsDisabled}
             {...register('date')}
           />
           {errors.date && <p className="text-sm text-destructive">{errors.date.message}</p>}
+          {isFutureDate && (
+            <p className="text-xs leading-relaxed text-muted-foreground">
+              Esta transação será cadastrada como rascunho e será efetuada automaticamente ao
+              chegar o dia.
+            </p>
+          )}
         </div>
       </div>
 
@@ -200,6 +214,7 @@ export function TransactionFormFields({
           </Label>
           <Select
             value={accountId}
+            disabled={fieldsDisabled}
             onValueChange={(value) => {
               if (!value) return
               setValue('accountId', value, { shouldValidate: true })
@@ -239,6 +254,7 @@ export function TransactionFormFields({
             step="0.01"
             placeholder="0,00"
             className="rounded-xl"
+            disabled={fieldsDisabled}
             {...register('amount', { valueAsNumber: true })}
           />
           {errors.amount && <p className="text-sm text-destructive">{errors.amount.message}</p>}
@@ -250,6 +266,7 @@ export function TransactionFormFields({
           <Label htmlFor="transaction-to-account">Conta de destino</Label>
           <Select
             value={watch('toAccountId')}
+            disabled={fieldsDisabled}
             onValueChange={(value) => {
               if (!value) return
               setValue('toAccountId', value, { shouldValidate: true })
@@ -283,6 +300,7 @@ export function TransactionFormFields({
           <Label htmlFor="transaction-category">Categoria (opcional)</Label>
           <Select
             value={watch('categoryId')}
+            disabled={fieldsDisabled}
             onValueChange={(value) => {
               setValue('categoryId', value ?? '', { shouldValidate: true })
             }}
@@ -317,6 +335,7 @@ export function TransactionFormFields({
           id="transaction-description"
           placeholder="Ex.: Supermercado, salário, aluguel..."
           className="min-h-20 rounded-xl"
+          disabled={fieldsDisabled}
           {...register('description')}
         />
         {errors.description && (
@@ -335,6 +354,7 @@ export function TransactionFormFields({
 
           <ToggleGroup
             value={[splitMode]}
+            disabled={fieldsDisabled}
             onValueChange={(values) => {
               const nextMode = values[0] as TransactionFormValues['splitMode'] | undefined
               if (!nextMode) return
@@ -406,6 +426,7 @@ export function TransactionFormFields({
                             </Label>
                             <Select
                               value={customSplits[index]?.userId ?? ''}
+                              disabled={fieldsDisabled}
                               onValueChange={(value) => {
                                 if (!value) return
                                 setValue(`customSplits.${index}.userId`, value, {
@@ -455,6 +476,7 @@ export function TransactionFormFields({
                               step="0.01"
                               placeholder="0,00"
                               className="rounded-xl"
+                              disabled={fieldsDisabled}
                               {...register(`customSplits.${index}.share`, {
                                 valueAsNumber: true,
                               })}
@@ -466,7 +488,7 @@ export function TransactionFormFields({
                               type="button"
                               className="inline-flex size-9 items-center justify-center rounded-xl text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive disabled:pointer-events-none disabled:opacity-40"
                               aria-label="Remover membro do rateio"
-                              disabled={fields.length <= 1}
+                              disabled={fieldsDisabled || fields.length <= 1}
                               onClick={() => remove(index)}
                             >
                               <Trash2 className="size-4" />
@@ -480,7 +502,7 @@ export function TransactionFormFields({
                   <button
                     type="button"
                     className="inline-flex items-center gap-1.5 rounded-xl px-2 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:pointer-events-none disabled:opacity-40"
-                    disabled={availableMembersToAdd.length === 0}
+                    disabled={fieldsDisabled || availableMembersToAdd.length === 0}
                     onClick={handleAddMember}
                   >
                     <Plus className="size-4" />
@@ -509,6 +531,7 @@ export function TransactionFormFields({
           )}
         </div>
       )}
+      </HouseholdGatedFormSection>
     </div>
   )
 }

@@ -27,4 +27,11 @@ export class CategoryResponseDto {
 
   @ApiProperty()
   updatedAt: Date;
+
+  @ApiPropertyOptional({
+    example: 800,
+    nullable: true,
+    description: 'Monthly budget for the current month',
+  })
+  monthlyBudget?: number | null;
 }

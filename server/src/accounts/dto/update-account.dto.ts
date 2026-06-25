@@ -1,11 +1,13 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import {
+  IsDateString,
   IsEnum,
   IsNumber,
   IsOptional,
   IsString,
   IsUUID,
   Length,
+  Max,
   MaxLength,
   Min,
 } from 'class-validator';
@@ -44,4 +46,21 @@ export class UpdateAccountDto {
   @IsString()
   @MaxLength(20)
   color?: string | null;
+
+  @ApiPropertyOptional({ example: 13.5, nullable: true, description: 'Taxa de rendimento anual (%). null para remover.' })
+  @IsOptional()
+  @IsNumber({ maxDecimalPlaces: 4 })
+  @Min(0)
+  @Max(1000)
+  yieldPercent?: number | null;
+
+  @ApiPropertyOptional({ enum: ['daily', 'monthly', 'annual'], nullable: true })
+  @IsOptional()
+  @IsEnum(['daily', 'monthly', 'annual'])
+  yieldGranularity?: 'daily' | 'monthly' | 'annual' | null;
+
+  @ApiPropertyOptional({ example: '2028-06-23', nullable: true })
+  @IsOptional()
+  @IsDateString()
+  maturityDate?: string | null;
 }

@@ -7,12 +7,15 @@ import { householdsListParams } from '@/lib/household-api-helpers'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
-  DialogContent,
   DialogDescription,
-  DialogFooter,
-  DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
+import {
+  FormDialogBody,
+  FormDialogContent,
+  FormDialogFooter,
+  FormDialogHeader,
+} from '@/components/object/form-dialog-shell'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { OrFadeSeparator } from '@/components/ui/or-fade-separator'
@@ -105,6 +108,7 @@ export function HouseholdCreateModal({
         currency: values.currency,
         defaultSplitType: values.defaultSplitType,
         color: values.color || undefined,
+        keepBudgets: values.keepBudgets,
       },
     })
   })
@@ -134,66 +138,68 @@ export function HouseholdCreateModal({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="glass-strong">
-        <DialogHeader>
+      <FormDialogContent>
+        <FormDialogHeader>
           <DialogTitle>Novo grupo</DialogTitle>
           <DialogDescription>
             Entre em um grupo existente com código de convite ou crie um novo para compartilhar
             finanças.
           </DialogDescription>
-        </DialogHeader>
+        </FormDialogHeader>
 
-        <div className="space-y-1">
-          <div className="space-y-2">
-            <Label htmlFor="household-invite-code">Código de convite</Label>
-            <div className="flex gap-2">
-              <Input
-                id="household-invite-code"
-                value={inviteCode}
-                onChange={(event) =>
-                  setInviteCode(normalizeInviteCode(event.target.value))
-                }
-                placeholder="Ex.: A3F8C12D"
-                className="rounded-xl font-mono uppercase tracking-widest"
-                maxLength={12}
-                autoComplete="off"
-                spellCheck={false}
-                onKeyDown={(event) => {
-                  if (event.key === 'Enter') {
-                    event.preventDefault()
-                    handleJoinWithCode()
+        <FormDialogBody>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="household-invite-code">Código de convite</Label>
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
+                <Input
+                  id="household-invite-code"
+                  value={inviteCode}
+                  onChange={(event) =>
+                    setInviteCode(normalizeInviteCode(event.target.value))
                   }
-                }}
-              />
-              <Button
-                type="button"
-                variant="outline"
-                className="shrink-0 rounded-xl"
-                onClick={handleJoinWithCode}
-                disabled={isBusy}
-              >
-                {joinMutation.isPending ? (
-                  <Loader2 className="size-4 animate-spin" />
-                ) : (
-                  'Entrar'
-                )}
-              </Button>
+                  placeholder="Ex.: A3F8C12D"
+                  className="min-w-0 rounded-xl font-mono uppercase tracking-widest sm:flex-1"
+                  maxLength={12}
+                  autoComplete="off"
+                  spellCheck={false}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter') {
+                      event.preventDefault()
+                      handleJoinWithCode()
+                    }
+                  }}
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full shrink-0 rounded-xl sm:w-auto"
+                  onClick={handleJoinWithCode}
+                  disabled={isBusy}
+                >
+                  {joinMutation.isPending ? (
+                    <Loader2 className="size-4 animate-spin" />
+                  ) : (
+                    'Entrar'
+                  )}
+                </Button>
+              </div>
             </div>
+
+            <OrFadeSeparator />
+
+            <form id="household-create-form" onSubmit={onSubmit}>
+              <HouseholdFormFields
+                register={register}
+                errors={errors}
+                setValue={setValue}
+                watch={watch}
+              />
+            </form>
           </div>
+        </FormDialogBody>
 
-          <OrFadeSeparator />
-
-          <form id="household-create-form" onSubmit={onSubmit} className="space-y-1 pt-1">
-            <HouseholdFormFields
-              register={register}
-              errors={errors}
-              setValue={setValue}
-              watch={watch}
-            />
-          </form>
-        </div>
-
-        <DialogFooter className="gap-2 sm:gap-0">
+        <FormDialogFooter>
           <Button
             type="button"
             variant="ghost"
@@ -212,8 +218,8 @@ export function HouseholdCreateModal({
             {createMutation.isPending && <Loader2 className="size-4 animate-spin" />}
             Criar grupo
           </Button>
-        </DialogFooter>
-      </DialogContent>
+        </FormDialogFooter>
+      </FormDialogContent>
     </Dialog>
   )
 }

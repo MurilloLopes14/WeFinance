@@ -11,6 +11,7 @@ import {
   boolean,
   jsonb,
   pgEnum,
+  unique,
 } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 
@@ -26,6 +27,7 @@ export const accountTypeEnum = pgEnum('account_type', [
   'cash',
   'investment',
 ]);
+export const yieldGranularityEnum = pgEnum('yield_granularity', ['daily', 'monthly', 'annual']);
 export const categoryKindEnum = pgEnum('category_kind', [
   'expense',
   'income',
@@ -71,6 +73,8 @@ export const users = pgTable('users', {
   birthDate: dateColumn('birth_date'),
   phoneNumber: varchar('phone_number', { length: 30 }),
   isActive: boolean('is_active').default(true).notNull(),
+  avatarUrl: text('avatar_url'),
+  onboarding: jsonb('onboarding'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
@@ -84,6 +88,7 @@ export const households = pgTable('households', {
   defaultSplitType: splitTypeEnum('default_split_type').default('equal').notNull(),
   color: varchar('color', { length: 20 }),
   inviteCode: varchar('invite_code', { length: 12 }).unique(),
+  keepBudgets: boolean('keep_budgets').default(false).notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
@@ -120,6 +125,9 @@ export const accounts = pgTable('accounts', {
     .default('0')
     .notNull(),
   color: varchar('color', { length: 20 }),
+  yieldPercent: decimal('yield_percent', { precision: 8, scale: 4 }),
+  yieldGranularity: yieldGranularityEnum('yield_granularity'),
+  maturityDate: dateColumn('maturity_date'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
@@ -262,6 +270,51 @@ export const importSessions = pgTable('import_sessions', {
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });
 
+// ─── Household Budgets ────────────────────────────────────────────────────────
+
+export const householdBudgets = pgTable(
+  'household_budgets',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    householdId: uuid('household_id')
+      .references(() => households.id, { onDelete: 'cascade' })
+      .notNull(),
+    month: varchar('month', { length: 7 }).notNull(), // YYYY-MM
+    amount: decimal('amount', { precision: 15, scale: 2 }).notNull(),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at').defaultNow().notNull(),
+  },
+  (t) => ({
+    uniqHouseholdMonth: unique('household_budgets_household_month_uq').on(t.householdId, t.month),
+  }),
+);
+
+// ─── Category Budgets ─────────────────────────────────────────────────────────
+
+export const categoryBudgets = pgTable(
+  'category_budgets',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    householdId: uuid('household_id')
+      .references(() => households.id, { onDelete: 'cascade' })
+      .notNull(),
+    categoryId: uuid('category_id')
+      .references(() => categories.id, { onDelete: 'cascade' })
+      .notNull(),
+    month: varchar('month', { length: 7 }).notNull(), // YYYY-MM
+    amount: decimal('amount', { precision: 15, scale: 2 }).notNull(),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at').defaultNow().notNull(),
+  },
+  (t) => ({
+    uniqHouseholdCategoryMonth: unique('category_budgets_household_category_month_uq').on(
+      t.householdId,
+      t.categoryId,
+      t.month,
+    ),
+  }),
+);
+
 // ─── Relations ───────────────────────────────────────────────────────────────
 
 export const usersRelations = relations(users, ({ many }) => ({
@@ -280,6 +333,26 @@ export const householdsRelations = relations(households, ({ many }) => ({
   subscriptions: many(subscriptions),
   events: many(events),
   importSessions: many(importSessions),
+  householdBudgets: many(householdBudgets),
+  categoryBudgets: many(categoryBudgets),
+}));
+
+export const householdBudgetsRelations = relations(householdBudgets, ({ one }) => ({
+  household: one(households, {
+    fields: [householdBudgets.householdId],
+    references: [households.id],
+  }),
+}));
+
+export const categoryBudgetsRelations = relations(categoryBudgets, ({ one }) => ({
+  household: one(households, {
+    fields: [categoryBudgets.householdId],
+    references: [households.id],
+  }),
+  category: one(categories, {
+    fields: [categoryBudgets.categoryId],
+    references: [categories.id],
+  }),
 }));
 
 export const subscriptionsRelations = relations(subscriptions, ({ one }) => ({

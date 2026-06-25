@@ -58,4 +58,14 @@ export class HouseholdResponseDto {
 
   @ApiPropertyOptional({ type: [HouseholdMemberResponseDto] })
   members?: HouseholdMemberResponseDto[];
+
+  @ApiPropertyOptional({
+    example: 5000,
+    nullable: true,
+    description: 'Monthly budget for the current month',
+  })
+  monthlyBudget?: number | null;
+
+  @ApiProperty({ example: false, description: 'Copia orçamentos automaticamente na virada do mês' })
+  keepBudgets: boolean;
 }

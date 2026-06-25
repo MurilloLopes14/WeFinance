@@ -39,9 +39,9 @@ const features = [
   },
   {
     icon: Repeat,
-    title: 'Assinaturas recorrentes',
+    title: 'Despesas e receitas fixas',
     description:
-      'Netflix, Spotify e outras despesas fixas com controle de renovação e execução manual.',
+      'Netflix, Spotify, salário e outras movimentações fixas com controle de renovação e execução manual.',
   },
   {
     icon: FileSpreadsheet,

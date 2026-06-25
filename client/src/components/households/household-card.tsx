@@ -1,16 +1,16 @@
 import { getHouseholdSplitTypeLabel } from '@/components/households/household-header'
+import { ColoredObjectIcon } from '@/components/object/colored-object-icon'
+import { ObjectCardActionsMenu } from '@/components/object/object-card-actions-menu'
 import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
 import { Card, CardTitle } from '@/components/ui/card'
 import type { HouseholdResponseDto } from '@/api/generated/models/householdResponseDto'
-import { ColoredObjectIcon } from '@/components/object/colored-object-icon'
 import { DEFAULT_PRESET_COLOR } from '@/lib/color-helpers'
 import { cn } from '@/lib/utils'
 import { Pencil, Trash2, UserRoundPlus, UsersRound } from 'lucide-react'
 import type { CSSProperties } from 'react'
 
 export const householdCardGridClassName =
-  'grid w-full auto-rows-min grid-cols-2 content-start items-start gap-2.5 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5'
+  'grid w-full auto-rows-min grid-cols-1 content-start items-start gap-2.5 min-[480px]:grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5'
 
 type HouseholdCardProps = {
   household: HouseholdResponseDto
@@ -32,6 +32,30 @@ export function HouseholdCard({
   const memberCount = household.members?.length ?? 0
   const householdColor = household.color ?? DEFAULT_PRESET_COLOR
 
+  const actions = [
+    {
+      id: 'members',
+      label: 'Gerenciar membros',
+      icon: UserRoundPlus,
+      onClick: () => onManageMembers(household),
+    },
+    {
+      id: 'edit',
+      label: `Editar ${household.name}`,
+      icon: Pencil,
+      onClick: () => onEdit(household),
+    },
+    onDelete
+      ? {
+          id: 'delete',
+          label: `Excluir ${household.name}`,
+          icon: Trash2,
+          variant: 'destructive' as const,
+          onClick: () => onDelete(household),
+        }
+      : null,
+  ].filter(Boolean)
+
   return (
     <Card
       size="sm"
@@ -42,70 +66,28 @@ export function HouseholdCard({
       style={{ '--household-color': householdColor } as CSSProperties}
       onClick={() => onView(household)}
     >
-      <div className="flex min-w-0 items-center gap-2.5 px-3">
+      <div className="flex min-w-0 items-start gap-2.5 px-3 sm:items-center">
         <ColoredObjectIcon color={household.color} icon={UsersRound} />
 
-        <div className="min-w-0 flex-1">
-          <CardTitle className="line-clamp-1 text-sm leading-snug font-medium">
+        <div className="min-w-0 flex-1 overflow-hidden">
+          <CardTitle className="truncate text-sm leading-snug font-medium">
             {household.name}
           </CardTitle>
-          <div className="mt-1.5 flex min-w-0 flex-wrap items-center gap-1.5">
-            <p className="truncate text-xs leading-none text-muted-foreground">
+          <div className="mt-1.5 flex min-w-0 items-center gap-1.5 overflow-hidden">
+            <p className="min-w-0 flex-1 truncate text-xs leading-none text-muted-foreground">
               {household.currency} · {memberCount}{' '}
               {memberCount === 1 ? 'membro' : 'membros'}
             </p>
             <Badge
               variant="secondary"
-              className="h-5 shrink-0 rounded-md px-1.5 py-0 text-[11px] leading-none"
+              className="h-5 max-w-[48%] shrink truncate rounded-md px-1.5 py-0 text-[11px] leading-none sm:max-w-none"
             >
               {getHouseholdSplitTypeLabel(household.defaultSplitType)}
             </Badge>
           </div>
         </div>
 
-        <div className="flex shrink-0 items-center gap-0.5">
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon-sm"
-            className="size-7"
-            aria-label={`Gerenciar membros de ${household.name}`}
-            onClick={(event) => {
-              event.stopPropagation()
-              onManageMembers(household)
-            }}
-          >
-            <UserRoundPlus className="size-3.5" />
-          </Button>
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon-sm"
-            className="size-7"
-            aria-label={`Editar ${household.name}`}
-            onClick={(event) => {
-              event.stopPropagation()
-              onEdit(household)
-            }}
-          >
-            <Pencil className="size-3.5" />
-          </Button>
-          {onDelete && (
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon-sm"
-              className="size-7 text-destructive hover:text-destructive"
-              aria-label={`Excluir ${household.name}`}
-              onClick={(event) => {
-                event.stopPropagation()
-                onDelete(household)
-              }}
-            >
-              <Trash2 className="size-3.5" />
-            </Button>
-          )}
-        </div>
+        <ObjectCardActionsMenu actions={actions} menuLabel={`Ações de ${household.name}`} />
       </div>
     </Card>
   )

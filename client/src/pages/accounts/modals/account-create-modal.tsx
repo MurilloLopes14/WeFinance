@@ -5,15 +5,19 @@ import {
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
-  DialogContent,
   DialogDescription,
-  DialogFooter,
-  DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
+import {
+  FormDialogBody,
+  FormDialogContent,
+  FormDialogFooter,
+  FormDialogHeader,
+} from '@/components/object/form-dialog-shell'
 import { getApiErrorMessage } from '@/lib/get-api-error-message'
 import { AccountFormFields } from '@/pages/accounts/account-form-fields'
 import {
+  buildInvestmentAccountPayload,
   defaultAccountFormValues,
   accountFormSchema,
   type AccountFormValues,
@@ -71,6 +75,7 @@ export function AccountCreateModal({ open, onOpenChange }: AccountCreateModalPro
         institution: values.institution || undefined,
         balanceManual: values.balanceManual,
         color: values.color || undefined,
+        ...buildInvestmentAccountPayload(values),
       },
     })
   })
@@ -84,24 +89,26 @@ export function AccountCreateModal({ open, onOpenChange }: AccountCreateModalPro
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="glass-strong">
-        <DialogHeader>
+      <FormDialogContent>
+        <FormDialogHeader>
           <DialogTitle>Nova conta</DialogTitle>
           <DialogDescription>
             Escolha o grupo e cadastre uma conta para registrar transações e saldos.
           </DialogDescription>
-        </DialogHeader>
+        </FormDialogHeader>
 
-        <form id="account-create-form" onSubmit={onSubmit} className="space-y-1">
-          <AccountFormFields
-            register={register}
-            errors={errors}
-            setValue={setValue}
-            watch={watch}
-          />
-        </form>
+        <FormDialogBody>
+          <form id="account-create-form" onSubmit={onSubmit}>
+            <AccountFormFields
+              register={register}
+              errors={errors}
+              setValue={setValue}
+              watch={watch}
+            />
+          </form>
+        </FormDialogBody>
 
-        <DialogFooter className="gap-2 sm:gap-0">
+        <FormDialogFooter>
           <Button
             type="button"
             variant="ghost"
@@ -120,8 +127,8 @@ export function AccountCreateModal({ open, onOpenChange }: AccountCreateModalPro
             {createMutation.isPending && <Loader2 className="size-4 animate-spin" />}
             Criar conta
           </Button>
-        </DialogFooter>
-      </DialogContent>
+        </FormDialogFooter>
+      </FormDialogContent>
     </Dialog>
   )
 }

@@ -9,6 +9,7 @@ import {
   ParseUUIDPipe,
   Patch,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import {
@@ -21,6 +22,7 @@ import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import type { AuthenticatedUser } from '../common/types/jwt-payload.type';
 import { AccountResponseDto } from './dto/account-response.dto';
+import { AccountProjectionDto } from './dto/account-projection.dto';
 import { CreateAccountDto } from './dto/create-account.dto';
 import { UpdateAccountDto } from './dto/update-account.dto';
 import { AccountsService } from './accounts.service';
@@ -51,6 +53,18 @@ export class AccountsController {
     @CurrentUser() user: AuthenticatedUser,
   ) {
     return this.accountsService.findAll(householdId, user.id);
+  }
+
+  @Get(':accountId/projection')
+  @ApiOperation({ summary: 'Projeta rendimento de uma conta de investimento até a data informada' })
+  @ApiResponse({ status: 200, type: AccountProjectionDto })
+  getProjection(
+    @Param('householdId', ParseUUIDPipe) householdId: string,
+    @Param('accountId', ParseUUIDPipe) accountId: string,
+    @Query('date') date: string,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    return this.accountsService.getProjection(householdId, accountId, user.id, date);
   }
 
   @Get(':accountId')

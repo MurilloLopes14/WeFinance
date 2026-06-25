@@ -1,0 +1,1 @@
+ALTER TABLE "households" ADD COLUMN "keep_budgets" boolean DEFAULT false NOT NULL;

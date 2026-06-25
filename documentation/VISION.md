@@ -1,130 +1,88 @@
-# Finanças a Dois
+# WeFinance — Visão do Produto
 
-## 🎯 Visão Geral
+## Objetivo
 
-O **Finanças a Dois** é um sistema de **gestão financeira compartilhada** projetado para casais (ou duplas) que desejam ter **transparência, controle e planejamento** sobre seus gastos e economias. O objetivo principal é permitir que duas pessoas acompanhem juntas suas finanças pessoais e conjuntas de forma simples e acessível, tanto via web quanto aplicativo móvel.
+O **WeFinance** é uma plataforma de **gestão financeira compartilhada** projetada para grupos (casais, famílias, repúblicas) que desejam ter transparência e controle conjunto sobre suas finanças. Cada membro tem sua visão pessoal e o grupo tem uma visão consolidada.
 
-A filosofia do projeto é unir **inteligência financeira com empatia de relacionamento** — cada decisão de gasto e economia é uma construção conjunta. 💑
-
----
-
-## 🌟 Objetivos Principais
-
-1. **Controle compartilhado de finanças** (entradas, saídas, assinaturas e poupanças);
-    
-2. **Planejamento e metas financeiras** a curto e médio prazo;
-    
-3. **Relatórios claros e intuitivos**, com filtros por pessoa e categoria;
-    
-4. **Importação automática de dados bancários** (CSV/OFX);
-    
-5. **Futuro mobile-first** com sincronização offline via React Native;
-    
-6. **Privacidade e autonomia** – cada pessoa tem seu próprio login e visibilidade parcial dos dados, conforme o combinado no grupo.
-    
+A filosofia: unir **inteligência financeira com colaboração** — cada decisão é uma construção coletiva.
 
 ---
 
-## 🧱 Stack Tecnológica
+## Objetivos Principais
 
-|Camada|Tecnologia|Observação|
+1. Controle compartilhado (entradas, saídas, assinaturas, transferências);
+2. Visão dual: perspectiva **pessoal** + perspectiva do **grupo**;
+3. Relatórios claros por categoria, membro, evolução diária e mensal;
+4. Importação automática via CSV;
+5. Futuro mobile-first com sincronização offline;
+6. Privacidade e autonomia por membro.
+
+---
+
+## Stack Tecnológica
+
+| Camada | Tecnologia | Observação |
 |---|---|---|
-|**Backend**|NestJS|Estrutura modular, escalável e segura|
-|**Banco de Dados**|PostgreSQL (Supabase)|Estrutura SQL relacional e gratuita no plano inicial|
-|**ORM**|Drizzle ORM|ORM TypeScript-first leve com suporte a migrations e performance superior|
-|**Frontend Web**|React + Vite + Tailwind|Interface leve e reativa|
-|**Mobile**|React Native (Expo)|Sincronização offline + experiência nativa|
-|**Infra**|Docker Compose|Facilita desenvolvimento local|
+| **Backend** | NestJS + Drizzle ORM | Modular, TypeScript-first, migrations via Drizzle Kit |
+| **Banco de Dados** | PostgreSQL (Supabase) | Cloud, gratuito no plano inicial |
+| **Frontend Web** | React + Vite + TypeScript | Orval para geração de hooks React Query a partir do Swagger |
+| **Upload de Mídia** | Cloudinary | Avatar de perfil dos usuários |
+| **Mobile** | React Native (Expo) | Fase M3 — offline-first |
 
 ---
 
-## ⚙️ Funcionalidades do MVP
+## Estado Atual (Beta 1.2 — Jun/2026)
 
-1. **Autenticação e grupos compartilhados** (usuário + parceiro[a]);
-    
-2. **Contas financeiras** (banco, cartão, poupança, investimento);
-    
-3. **Transações manuais** (despesas, receitas, transferências);
-    
-4. **Rateio de valores** entre os membros do casal (50/50, percentual, valor fixo);
-    
-5. **Categorias** com hierarquia e tipos (Receita, Despesa, Transferência);
-    
-6. **Assinaturas / Despesas recorrentes** (Netflix, Spotify, etc.);
-    
-7. **Importação CSV básica** para lançar transações em lote;
-    
-8. **Relatórios resumidos** (total de receitas/despesas, top categorias, saldo mensal);
-    
-9. **Trilha de auditoria (events)** para registrar cada modificação relevante.
-    
+### Backend — Completo ✅
 
-_(Funcionalidades como budgets, metas e OCR serão reservadas para fases futuras.)_
+| Módulo | Status | Destaques |
+|---|---|---|
+| Auth | ✅ | JWT + Refresh token |
+| Users | ✅ | CRUD + upload de avatar via Cloudinary |
+| Households | ✅ | Invite code, membros, permissões por role |
+| Accounts | ✅ | Saldo automático atualizado a cada transação |
+| Categories | ✅ | Hierarquia (pai/filho), isFixed com validação |
+| Payees | ✅ | Favorecidos com regex para auto-categorização |
+| Transactions | ✅ | Despesas, receitas, transferências espelhadas, splits |
+| Transaction Splits | ✅ | Rateio por valor absoluto entre membros |
+| Subscriptions | ✅ | Cron diário, expense + income (salário etc.) |
+| Reports / Dashboard | ✅ | personal-summary, category-breakdown, daily-summary |
+| Insights | ✅ | Regras automatizadas de análise financeira |
+| Events | ✅ | Auditoria completa de todas as ações |
+| Imports | ✅ | CSV com deduplicação por hash |
 
----
+### Frontend Web — Em andamento 🟡
 
-## 💡 Princípios do Projeto
+| Módulo | Status |
+|---|---|
+| Autenticação (login/registro) | ✅ |
+| Dashboard (KPIs, calendário, donut, evolução) | 🟡 |
+| Transações (listagem, criação, edição) | 🟡 |
+| Categorias | ✅ |
+| Contas | ✅ |
+| Assinaturas | 🟡 |
+| Insights | 🟡 |
+| Perfil do usuário (avatar) | ⚪ |
 
-1. **Simplicidade de uso:** foco em poucos cliques e interface limpa;
-    
-2. **Transparência:** cada pessoa visualiza seus dados e os compartilhados de forma clara;
-    
-3. **Confiabilidade:** toda alteração é rastreável (event sourcing);
-    
-4. **Escalabilidade:** código modular e banco preparado para futuras expansões;
-    
-5. **Controle manual e automático:** o sistema permite importação de dados, mas nunca impõe regras sem confirmação do usuário.
-    
+### Mobile — Não iniciado ⚪
 
 ---
 
-## 🔮 Roadmap de Evolução
+## Roadmap
 
-| Fase         | Objetivo     | Entregas principais                                                 |
-| ------------ | ------------ | ------------------------------------------------------------------- |
-| **MVP (M1)** | Fundamentos  | Auth, Households, Accounts, Transactions, Categories, Subscriptions |
-| **M2**       | Planejamento | Budgets, Relatórios avançados, Exportações                          |
-| **M3**       | Mobile       | Aplicativo React Native + Sync offline                              |
-| **M4**       | Automação    | Importador OFX/CSV com IA e OCR para notas fiscais                  |
-
----
-
-## 🔐 Segurança e Privacidade
-
-- **JWT** para autenticação e refresh tokens;
-    
-- Cada requisição escopada por `household_id`;
-    
-- Permissões de leitura/escrita com base em papéis (`owner`, `member`);
-    
-- Senhas criptografadas com bcrypt;
-    
-- Logs e auditorias gravadas em `events`.
-    
+| Fase | Nome | Objetivo | Status |
+|---|---|---|---|
+| **Beta 1.x** | Fundamentos | Backend completo + dashboard web | 🟡 Em andamento |
+| **Beta 2.0** | Web Completo | Todas as telas web funcionais | ⚪ |
+| **M3** | Mobile | App React Native offline-first | ⚪ |
+| **M4** | Automação | Importação inteligente, OCR, IA | ⚪ |
 
 ---
 
-## 📈 Métricas Futuras (fase M2+)
+## Princípios
 
-- Evolução do saldo consolidado (gráfico de linha);
-    
-- Top categorias mensais;
-    
-- Gastos fixos vs variáveis;
-    
-- Taxa de poupança = (Receitas - Despesas) / Receitas.
-    
-
----
-
-## 🚀 Missão
-
-Transformar o controle financeiro em um **ato de parceria**, onde transparência e colaboração fortalecem tanto o planejamento quanto o relacionamento.
-
----
-
-### ➕ Próximos passos
-
-1. Criar o arquivo `SCHEMA.md` com a estrutura das tabelas PostgreSQL (Supabase);
-    
-2. Em seguida, documentar `BUSINESS_RULES.md` com as lógicas determinísticas de cálculo, rateio e recorrência.
+1. **Simplicidade:** poucos cliques, interface limpa;
+2. **Transparência:** dados pessoais e compartilhados claramente separados;
+3. **Confiabilidade:** toda alteração rastreada em `events`;
+4. **Escalabilidade:** código modular, schema preparado para extensões;
+5. **Controle:** o sistema nunca impõe ações sem confirmação do usuário.

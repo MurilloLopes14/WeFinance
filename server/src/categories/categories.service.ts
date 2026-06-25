@@ -8,7 +8,8 @@ import { and, eq, isNull } from 'drizzle-orm';
 import { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import { DRIZZLE } from '../database/database.constants';
 import * as schema from '../database/schema';
-import { categories } from '../database/schema';
+import { categories, subscriptions } from '../database/schema';
+import { BudgetsService } from '../budgets/budgets.service';
 import { HouseholdsService } from '../households/households.service';
 import { CategoryResponseDto } from './dto/category-response.dto';
 import { CreateCategoryDto } from './dto/create-category.dto';
@@ -21,6 +22,7 @@ export class CategoriesService {
   constructor(
     @Inject(DRIZZLE) private readonly db: PostgresJsDatabase<typeof schema>,
     private readonly householdsService: HouseholdsService,
+    private readonly budgetsService: BudgetsService,
   ) {}
 
   async create(
@@ -46,7 +48,15 @@ export class CategoriesService {
       })
       .returning();
 
-    return this.format(category);
+    if (dto.monthlyBudget !== undefined && dto.kind === 'expense') {
+      await this.budgetsService.setCategoryBudget(
+        householdId,
+        category.id,
+        dto.monthlyBudget,
+      );
+    }
+
+    return this.format(category, dto.monthlyBudget ?? null);
   }
 
   async findAll(
@@ -60,7 +70,12 @@ export class CategoriesService {
       .from(categories)
       .where(eq(categories.householdId, householdId));
 
-    return rows.map(this.format);
+    const budgetByCategoryId =
+      await this.budgetsService.getCategoryBudgetAmountsForHousehold(householdId);
+
+    return rows.map((row) =>
+      this.format(row, budgetByCategoryId.get(row.id) ?? null),
+    );
   }
 
   async findOne(
@@ -70,7 +85,11 @@ export class CategoriesService {
   ): Promise<CategoryResponseDto> {
     await this.householdsService.assertMember(householdId, requesterId);
     const category = await this.findCategory(householdId, categoryId);
-    return this.format(category);
+    const monthlyBudget = await this.budgetsService.getCategoryBudgetAmount(
+      householdId,
+      categoryId,
+    );
+    return this.format(category, monthlyBudget);
   }
 
   async update(
@@ -81,6 +100,10 @@ export class CategoriesService {
   ): Promise<CategoryResponseDto> {
     await this.householdsService.assertOwner(householdId, requesterId);
     await this.findCategory(householdId, categoryId);
+
+    if (dto.isFixed === true) {
+      await this.assertIsFixedAllowed(householdId, categoryId);
+    }
 
     if (dto.parentId) {
       if (dto.parentId === categoryId) {
@@ -111,7 +134,25 @@ export class CategoriesService {
       )
       .returning();
 
-    return this.format(updated);
+    if (dto.monthlyBudget !== undefined) {
+      const effectiveKind = dto.kind ?? updated.kind;
+      if (dto.monthlyBudget === null || effectiveKind !== 'expense') {
+        await this.budgetsService.clearCategoryBudget(householdId, categoryId);
+      } else {
+        await this.budgetsService.setCategoryBudget(
+          householdId,
+          categoryId,
+          dto.monthlyBudget,
+        );
+      }
+    }
+
+    const monthlyBudget = await this.budgetsService.getCategoryBudgetAmount(
+      householdId,
+      categoryId,
+    );
+
+    return this.format(updated, monthlyBudget);
   }
 
   async remove(
@@ -145,6 +186,32 @@ export class CategoriesService {
   }
 
   // ─── Private helpers ──────────────────────────────────────────────────────
+
+  private async assertIsFixedAllowed(
+    householdId: string,
+    categoryId: string,
+  ): Promise<void> {
+    const subs = await this.db
+      .select({ type: subscriptions.type })
+      .from(subscriptions)
+      .where(
+        and(
+          eq(subscriptions.householdId, householdId),
+          eq(subscriptions.categoryId, categoryId),
+          eq(subscriptions.active, true),
+        ),
+      );
+
+    const hasExpense = subs.some((s) => s.type === 'expense');
+    const hasIncome = subs.some((s) => s.type === 'income');
+
+    if (subs.length > 0 && hasIncome && !hasExpense) {
+      throw new BadRequestException(
+        'Não é possível marcar como fixa uma categoria vinculada exclusivamente a rendas recorrentes. ' +
+          'Categorias fixas são usadas para análise de despesas fixas vs variáveis.',
+      );
+    }
+  }
 
   private async findCategory(
     householdId: string,
@@ -198,7 +265,7 @@ export class CategoriesService {
     }
   }
 
-  private format(category: Category): CategoryResponseDto {
+  private format(category: Category, monthlyBudget: number | null = null): CategoryResponseDto {
     return {
       id: category.id,
       householdId: category.householdId,
@@ -209,6 +276,7 @@ export class CategoriesService {
       color: category.color ?? null,
       createdAt: category.createdAt,
       updatedAt: category.updatedAt,
+      monthlyBudget: category.kind === 'expense' ? monthlyBudget : null,
     };
   }
 }

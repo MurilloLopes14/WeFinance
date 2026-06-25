@@ -18,3 +18,9 @@ export function previousMonth(month: string): string {
   const prevYear = mon === 1 ? year - 1 : year;
   return `${prevYear}-${String(prevMon).padStart(2, '0')}`;
 }
+
+export function subtractMonths(month: string, n: number): string {
+  const [year, mon] = month.split('-').map(Number);
+  const d = new Date(year, mon - 1 - n, 1);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+}

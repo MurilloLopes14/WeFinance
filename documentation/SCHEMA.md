@@ -1,143 +1,222 @@
-# Estrutura do Banco de Dados (PostgreSQL / Supabase)
+# Schema do Banco de Dados — WeFinance
 
-## 💾 Visão Geral
-
-O banco de dados utiliza **PostgreSQL** hospedado no **Supabase**, aproveitando sua estrutura SQL robusta, suporte a **JSONB**, e plano gratuito para desenvolvimento.
-
-O modelo é **relacional**, garantindo consistência em operações financeiras, mas flexível o suficiente para permitir extensões futuras (ex: budgets e metas).
+> PostgreSQL via Supabase. ORM: Drizzle. Todos os IDs são UUID.
 
 ---
 
-## 🧱 Tabelas Principais
+## Enums
 
-### 1. `users`
+```sql
+user_role:           admin | member
+household_role:      owner | member
+split_type:          equal | percent
+account_type:        checking | savings | credit | cash | investment
+category_kind:       expense | income | transfer
+cadence_unit:        day | week | month | year
+subscription_type:   expense | income
+transaction_type:    income | expense | transfer
+transaction_status:  draft | cleared | reconciled
+event_action:        create | update | delete | reconcile | import | generate
+```
 
-Representa cada pessoa que utiliza o sistema (ex.: Murillo e parceira).
+---
 
-|Campo|Tipo|Descrição|
+## Tabelas
+
+### `users`
+
+| Campo | Tipo | Descrição |
 |---|---|---|
-|`id`|SERIAL PRIMARY KEY|Identificador único do usuário|
-|`name`|VARCHAR(100)|Nome completo|
-|`email`|VARCHAR(150) UNIQUE NOT NULL|Email de login|
-|`password_hash`|TEXT|Senha criptografada com bcrypt|
-|`created_at`|TIMESTAMP DEFAULT NOW()|Data de criação|
-|`updated_at`|TIMESTAMP DEFAULT NOW()|Última atualização|
+| `id` | UUID PK | Identificador |
+| `email` | VARCHAR(255) UNIQUE NOT NULL | Login |
+| `password` | VARCHAR(255) NOT NULL | Hash bcrypt |
+| `name` | VARCHAR(255) NOT NULL | Nome completo |
+| `role` | user_role DEFAULT 'member' | Papel global |
+| `birth_date` | DATE | Data de nascimento |
+| `phone_number` | VARCHAR(30) | Telefone |
+| `is_active` | BOOLEAN DEFAULT true | Conta ativa |
+| `avatar_url` | TEXT | URL do avatar no Cloudinary |
+| `created_at` | TIMESTAMP | Criação |
+| `updated_at` | TIMESTAMP | Atualização |
 
 ---
 
-### 2. `households`
+### `households`
 
-Grupos de controle compartilhado (ex.: casal ou família).
-
-|Campo|Tipo|Descrição|
+| Campo | Tipo | Descrição |
 |---|---|---|
-|`id`|SERIAL PRIMARY KEY|Identificador do grupo|
-|`name`|VARCHAR(100)|Nome do grupo (ex.: “Murillo & Parceira”)|
-|`currency`|CHAR(3) DEFAULT 'BRL'|Moeda padrão|
-|`default_split_type`|ENUM('equal','percent','fixed')|Tipo padrão de divisão de gastos|
-|`created_at`|TIMESTAMP DEFAULT NOW()|Data de criação|
-|`updated_at`|TIMESTAMP DEFAULT NOW()|Atualização|
+| `id` | UUID PK | Identificador |
+| `name` | VARCHAR(100) NOT NULL | Nome do grupo |
+| `currency` | VARCHAR(3) DEFAULT 'BRL' | Moeda |
+| `default_split_type` | split_type DEFAULT 'equal' | Divisão padrão |
+| `color` | VARCHAR(20) | Cor de identificação visual |
+| `invite_code` | VARCHAR(12) UNIQUE | Código de convite |
+| `created_at` | TIMESTAMP | Criação |
+| `updated_at` | TIMESTAMP | Atualização |
 
 ---
 
-### 3. `household_members`
+### `household_members`
 
-Relaciona usuários a um grupo e define suas permissões e percentuais.
-
-|Campo|Tipo|Descrição|
+| Campo | Tipo | Descrição |
 |---|---|---|
-|`id`|SERIAL PRIMARY KEY|Identificador|
-|`household_id`|INT REFERENCES households(id) ON DELETE CASCADE|Grupo|
-|`user_id`|INT REFERENCES users(id) ON DELETE CASCADE|Usuário vinculado|
-|`role`|ENUM('owner','member') DEFAULT 'member'|Permissão no grupo|
-|`split_value`|NUMERIC(10,2) DEFAULT 0|Percentual ou valor fixo de participação|
+| `id` | UUID PK | Identificador |
+| `household_id` | UUID FK households | Grupo |
+| `user_id` | UUID FK users | Membro |
+| `role` | household_role DEFAULT 'member' | Permissão |
+| `split_value` | DECIMAL(10,2) DEFAULT 0 | Valor/percentual de participação |
+| `joined_at` | TIMESTAMP | Data de entrada |
 
 ---
 
-### 4. `accounts`
+### `accounts`
 
-Contas financeiras controladas pelo casal.
-
-|Campo|Tipo|Descrição|
+| Campo | Tipo | Descrição |
 |---|---|---|
-|`id`|SERIAL PRIMARY KEY|Identificador|
-|`household_id`|INT REFERENCES households(id)|Dono da conta|
-|`user_id`|INT REFERENCES users(id) ON DELETE SET NULL|Titular/Responsável principal da conta (Opcional/Nullable)|
-|`name`|VARCHAR(100)|Nome da conta (ex.: "Nubank Crédito")|
-|`type`|ENUM('checking','savings','credit','cash','investment')|Tipo da conta|
-|`institution`|VARCHAR(100)|Banco ou instituição|
-|`balance_manual`|NUMERIC(12,2) DEFAULT 0|Saldo manual inicial|
-|`created_at`|TIMESTAMP DEFAULT NOW()|Data de criação|
-|`updated_at`|TIMESTAMP DEFAULT NOW()|Atualização|
+| `id` | UUID PK | Identificador |
+| `household_id` | UUID FK households | Grupo |
+| `user_id` | UUID FK users NULLABLE | Titular (opcional) |
+| `name` | VARCHAR(100) NOT NULL | Nome da conta |
+| `type` | account_type NOT NULL | Tipo |
+| `institution` | VARCHAR(100) | Banco / instituição |
+| `balance_manual` | DECIMAL(12,2) DEFAULT 0 | **Saldo automático** (atualizado a cada transação) |
+| `color` | VARCHAR(20) | Cor de identificação visual |
+| `created_at` | TIMESTAMP | Criação |
+| `updated_at` | TIMESTAMP | Atualização |
+
+> `balance_manual` é mantido automaticamente pelo sistema a cada `create`, `update` e `delete` de transação.
 
 ---
 
-### 5. `categories`
+### `categories`
 
-Classificação de receitas e despesas.
-
-|Campo|Tipo|Descrição|
+| Campo | Tipo | Descrição |
 |---|---|---|
-|`id`|SERIAL PRIMARY KEY|Identificador|
-|`household_id`|INT REFERENCES households(id)|Grupo associado|
-|`parent_id`|INT REFERENCES categories(id)|Categoria pai|
-|`name`|VARCHAR(100)|Nome|
-|`kind`|ENUM('expense','income','transfer')|Tipo de categoria|
-|`is_fixed`|BOOLEAN DEFAULT FALSE|Indica se é despesa fixa|
-|`created_at`|TIMESTAMP DEFAULT NOW()|Criação|
-|`updated_at`|TIMESTAMP DEFAULT NOW()|Atualização|
+| `id` | UUID PK | Identificador |
+| `household_id` | UUID FK households | Grupo |
+| `parent_id` | UUID FK categories NULLABLE | Categoria pai (hierarquia) |
+| `name` | VARCHAR(100) NOT NULL | Nome |
+| `kind` | category_kind NOT NULL | Tipo (expense/income/transfer) |
+| `is_fixed` | BOOLEAN DEFAULT false | Despesa fixa (para análise fixo vs variável) |
+| `color` | VARCHAR(20) | Cor de identificação visual |
+| `created_at` | TIMESTAMP | Criação |
+| `updated_at` | TIMESTAMP | Atualização |
+
+> `is_fixed = true` é bloqueado pelo sistema se a categoria pertence exclusivamente a assinaturas de receita (`subscription.type = 'income'`).
 
 ---
 
-### 6. `payees`
+### `payees`
 
-Entidades ou pessoas envolvidas em pagamentos ou recebimentos.
-
-|Campo|Tipo|Descrição|
+| Campo | Tipo | Descrição |
 |---|---|---|
-|`id`|SERIAL PRIMARY KEY|Identificador|
-|`household_id`|INT REFERENCES households(id)|Grupo associado|
-|`name`|VARCHAR(120)|Nome do favorecido|
-|`default_category_id`|INT REFERENCES categories(id)|Categoria sugerida|
-|`regex_rule`|TEXT|Expressão usada para auto-categorização na importação|
-|`created_at`|TIMESTAMP DEFAULT NOW()|Criação|
-|`updated_at`|TIMESTAMP DEFAULT NOW()|Atualização|
+| `id` | UUID PK | Identificador |
+| `household_id` | UUID FK households | Grupo |
+| `default_category_id` | UUID FK categories NULLABLE | Categoria sugerida |
+| `name` | VARCHAR(120) NOT NULL | Nome do favorecido |
+| `regex_rule` | TEXT | Regra regex para auto-categorização na importação CSV |
+| `created_at` | TIMESTAMP | Criação |
+| `updated_at` | TIMESTAMP | Atualização |
 
 ---
 
-### 7. `transactions`
+### `transactions`
 
-Coração do sistema – cada registro financeiro, seja despesa, receita ou transferência.
-
-|Campo|Tipo|Descrição|
+| Campo | Tipo | Descrição |
 |---|---|---|
-|`id`|SERIAL PRIMARY KEY|Identificador|
-|`household_id`|INT REFERENCES households(id)|Grupo|
-|`account_id`|INT REFERENCES accounts(id)|Conta de origem|
-|`payee_id`|INT REFERENCES payees(id)|Favorecido (opcional)|
-|`category_id`|INT REFERENCES categories(id)|Categoria|
-|`type`|ENUM('expense','income','transfer')|Tipo de operação|
-|`amount`|NUMERIC(12,2) NOT NULL|Valor monetário|
-|`description`|TEXT|Observação ou resumo|
-|`date`|DATE NOT NULL|Data da transação|
-|`status`|ENUM('draft','cleared','reconciled') DEFAULT 'cleared'|Estado atual|
-|`transfer_to_id`|INT REFERENCES accounts(id)|Conta destino (para transferências)|
-|`transfer_link_id`|INT REFERENCES transactions(id)|Transação espelho|
-|`metadata`|JSONB|Dados auxiliares (ex.: hash de importação)|
-|`created_by`|INT REFERENCES users(id)|Usuário criador|
-|`created_at`|TIMESTAMP DEFAULT NOW()|Criação|
-|`updated_at`|TIMESTAMP DEFAULT NOW()|Atualização|
+| `id` | UUID PK | Identificador |
+| `household_id` | UUID FK households | Grupo |
+| `account_id` | UUID FK accounts | Conta de origem |
+| `payee_id` | UUID FK payees NULLABLE | Favorecido |
+| `category_id` | UUID FK categories NULLABLE | Categoria |
+| `type` | transaction_type NOT NULL | Tipo da operação |
+| `amount` | DECIMAL(12,2) NOT NULL | Valor |
+| `description` | TEXT | Descrição livre |
+| `date` | DATE NOT NULL | Data da transação |
+| `status` | transaction_status DEFAULT 'cleared' | Estado |
+| `transfer_to_id` | UUID FK accounts NULLABLE | Conta destino (transferências) |
+| `transfer_link_id` | UUID FK transactions NULLABLE | Transação espelho |
+| `metadata` | JSONB | Dados auxiliares (ex: hash CSV) |
+| `created_by_id` | UUID FK users | Criador |
+| `created_at` | TIMESTAMP | Criação |
+| `updated_at` | TIMESTAMP | Atualização |
 
 ---
 
-### 8. `transaction_splits`
+### `transaction_splits`
 
-Rateio detalhado por usuário em uma transação.
+| Campo | Tipo | Descrição |
+|---|---|---|
+| `id` | UUID PK | Identificador |
+| `transaction_id` | UUID FK transactions CASCADE | Transação |
+| `user_id` | UUID FK users | Membro participante |
+| `share` | DECIMAL(12,2) NOT NULL | Valor absoluto do rateio |
+| `category_id` | UUID FK categories NULLABLE | Categoria específica do participante |
 
-| Campo            | Tipo                                              | Descrição                       |
-| ---------------- | ------------------------------------------------- | ------------------------------- |
-| `id`             | SERIAL PRIMARY KEY                                | Identificador                   |
-| `transaction_id` | INT REFERENCES transactions(id) ON DELETE CASCADE | Transação associada             |
-| `user_id`        | INT REFERENCES users(id)                          | Pessoa associada                |
-| `share`          | NUMERIC(12,2)                                     | Valor ou percentual             |
-| `category_id`    | INT REFERENCES categories(id)                     | Categoria específica (opcional) |
+---
+
+### `subscriptions`
+
+| Campo | Tipo | Descrição |
+|---|---|---|
+| `id` | UUID PK | Identificador |
+| `household_id` | UUID FK households | Grupo |
+| `account_id` | UUID FK accounts | Conta de débito/crédito |
+| `category_id` | UUID FK categories NULLABLE | Categoria |
+| `name` | VARCHAR(100) NOT NULL | Nome (ex: "Netflix", "Salário") |
+| `amount` | DECIMAL(12,2) NOT NULL | Valor |
+| `type` | subscription_type DEFAULT 'expense' | **Despesa ou Receita** |
+| `cadence_unit` | cadence_unit NOT NULL | Unidade de cadência |
+| `cadence_every` | INTEGER DEFAULT 1 | Intervalo da cadência |
+| `next_run_at` | DATE NOT NULL | Próxima execução |
+| `active` | BOOLEAN DEFAULT true | Se está ativa |
+| `created_at` | TIMESTAMP | Criação |
+| `updated_at` | TIMESTAMP | Atualização |
+
+> `type = 'income'` permite cadastrar receitas fixas (ex: salário mensal). O cron gera automaticamente a transação de receita.
+
+---
+
+### `events`
+
+| Campo | Tipo | Descrição |
+|---|---|---|
+| `id` | UUID PK | Identificador |
+| `household_id` | UUID FK households | Grupo |
+| `entity` | VARCHAR(50) | Nome da entidade |
+| `entity_id` | UUID | ID da entidade |
+| `action` | event_action | Ação executada |
+| `data` | JSONB | Dados do snapshot |
+| `user_id` | UUID FK users NULLABLE | Usuário responsável |
+| `occurred_at` | TIMESTAMP | Momento do evento |
+
+---
+
+### `import_sessions`
+
+| Campo | Tipo | Descrição |
+|---|---|---|
+| `id` | UUID PK | Identificador |
+| `household_id` | UUID FK households | Grupo |
+| `account_id` | UUID FK accounts | Conta alvo |
+| `filename` | VARCHAR(255) | Nome do arquivo |
+| `imported_count` | INTEGER DEFAULT 0 | Transações importadas |
+| `duplicate_count` | INTEGER DEFAULT 0 | Duplicatas ignoradas |
+| `error_count` | INTEGER DEFAULT 0 | Erros |
+| `created_by_id` | UUID FK users | Usuário |
+| `created_at` | TIMESTAMP | Criação |
+
+---
+
+## Migrations
+
+Gerenciadas via **Drizzle Kit**:
+
+```bash
+cd server
+npm run db:generate   # gera migration a partir do schema.ts
+npm run db:migrate    # aplica no banco
+npm run db:studio     # UI visual do banco
+```
+
+Migrations geradas ficam em `server/drizzle/migrations/`.

@@ -45,6 +45,7 @@ export function HouseholdHeader({
   return (
     <ObjectHeader
       title="Grupos"
+      tourAnchor="households-header"
       description="Organize finanças compartilhadas com família, casal ou amigos. Cada grupo tem moeda, rateio e membros próprios."
       searchValue={showToolbar ? searchValue : undefined}
       onSearchChange={showToolbar ? onSearchChange : undefined}

@@ -1,561 +1,481 @@
-# WeInsights — Especificação Backend (MVP)
+# WeFinance — Especificação Técnica (Backend ✅ | Frontend ⏳)
 
-> **Escopo deste documento:** implementação exclusiva do **backend** (NestJS + Drizzle).
-> **Fora de escopo:** UI, componentes React, Orval no client (será feito depois).
-> **Objetivo:** expor insights financeiros contextualizados por **grupo (household)** e **individual (personal)**, prontos para consumo pelo frontend WeInsights.
-
----
-
-## 1. Visão geral
-
-WeInsights é um feed de mensagens curtas derivadas dos dados financeiros do grupo. Exemplos:
-
-- "A categoria Alimentação equivale a 32% do gasto mensal do grupo."
-- "Suas despesas superaram o mês passado em 18%. Considere controlar seus gastos."
-- "Os gastos com assinatura superam as transações comuns do grupo."
-- "Você economizou R$ 420 a mais que no mês passado. Parabéns!"
-
-### Decisões de produto já aprovadas
-
-| Decisão | Escolha |
-|---------|---------|
-| Escopos | **Grupo + Individual** (ambos no mesmo feed) |
-| UI futura | Feed **misto** com badge `Grupo` / `Você` (front faz isso via `scope`) |
-| Quantidade de regras (MVP) | **6–8 regras** |
-| Formato da resposta | **Híbrido (C):** `message` pronta em PT-BR + `metadata` estruturada |
-| Onde roda a lógica | **100% backend** — front só renderiza |
+> **Documento vivo:** cada seção indica seu status atual.
+> - ✅ **Implementado e testado**
+> - ⚙️ **Implementado, pendente migração/revisão**
+> - ⏳ **Próxima fase (frontend)**
 
 ---
 
-## 2. Endpoint
+## Parte 1 — Módulo de Insights ✅
+
+> Backend 100% implementado. Pronto para consumo.
 
 ### Rota
 
 ```
-GET /api/v1/households/:householdId/insights
+GET /api/v1/households/:householdId/insights?month=YYYY-MM
 ```
 
-### Query params
-
-| Param | Tipo | Obrigatório | Default | Descrição |
-|-------|------|-------------|---------|-----------|
-| `month` | `string` | Não | mês atual (`YYYY-MM`) | Mês de referência dos insights |
-
-### Autenticação & autorização
-
-- `@UseGuards(JwtAuthGuard)` + `@ApiBearerAuth('JWT-auth')`
-- `@CurrentUser()` para obter `user.id`
-- Chamar `householdsService.assertMember(householdId, user.id)` antes de qualquer query
-- Padrão igual a `TransactionsService.getSummary`
-
-### Resposta — DTOs
-
-Criar em `server/src/insights/dto/`:
+### Resposta — `InsightsResponseDto`
 
 ```typescript
-// insight-response.dto.ts
-
-export type InsightScope = 'household' | 'personal';
-export type InsightTone = 'neutral' | 'info' | 'success' | 'warning';
-
-export class InsightMetadataDto {
-  categoryId?: string;
-  categoryName?: string;
-  percentage?: number;
-  amount?: number;
-  previousAmount?: number;
-  delta?: number;
-  deltaPercent?: number;
-  currency?: string;
-  subscriptionAmount?: number;
-  commonAmount?: number;
-  fixedAmount?: number;
-  variableAmount?: number;
-  balance?: number;
-  sharedExpenseTotal?: number;
-  personalSharePercent?: number;
-}
-
-export class InsightDto {
-  id: string;           // estável por regra+escopo+entidade, ex: "category_share:household:<categoryId>"
-  rule: string;         // snake_case, ex: "category_share"
-  scope: InsightScope;
-  tone: InsightTone;
-  title: string;        // curto (1 linha)
-  message: string;      // frase completa em PT-BR
-  priority: number;     // maior = mais relevante (usado para ordenar)
-  metadata: InsightMetadataDto;
-}
-
-export class InsightsResponseDto {
+{
   month: string;        // "YYYY-MM"
   generatedAt: string;  // ISO 8601
   currency: string;     // moeda do household (ex: "BRL")
   insights: InsightDto[];
 }
-```
 
-### Comportamento da resposta
-
-1. Executar **todas** as regras aplicáveis ao contexto
-2. Descartar regras que retornarem `null` (sem insight relevante)
-3. Ordenar por `priority` DESC; empate por `rule` ASC
-4. **Limitar a 8 insights** no MVP (top 8 após ordenação)
-5. Se nenhuma regra disparar: `insights: []` (200 OK, não erro)
-
-### Swagger
-
-- `@ApiTags('Insights')`
-- Documentar query `month`, response `InsightsResponseDto`
-- Exemplos realistas nos `@ApiProperty`
-
----
-
-## 3. Estrutura de módulo
-
-Criar módulo NestJS seguindo padrões existentes (`transactions`, `subscriptions`):
-
-```
-server/src/insights/
-  insights.module.ts
-  insights.controller.ts
-  insights.service.ts
-  insights-context.builder.ts
-  insights.types.ts
-  insights.helpers.ts          # monthDateRange, formatCurrency, previousMonth, etc.
-  rules/
-    insight-rule.interface.ts
-    category-share.rule.ts
-    month-over-month-expense.rule.ts
-    monthly-balance.rule.ts
-    subscription-vs-common.rule.ts
-    fixed-vs-variable.rule.ts
-    top-category.rule.ts
-    personal-shared-share.rule.ts
-    savings-vs-last-month.rule.ts
-  dto/
-    insight-response.dto.ts
-    filter-insights.dto.ts     # month query validation (YYYY-MM regex)
-```
-
-### Registro no app
-
-- Importar `InsightsModule` em `app.module.ts`
-- `InsightsModule` importa `HouseholdsModule` (para `assertMember` e currency)
-- **Não** acoplar lógica dentro de `TransactionsService` — módulo isolado
-
-### Interface de regra
-
-```typescript
-// insight-rule.interface.ts
-export interface InsightRule {
-  readonly key: string;
-  evaluate(ctx: InsightsContext): InsightDto | null;
+// InsightDto
+{
+  id: string;           // ex: "category_share:household:<categoryId>"
+  rule: string;         // snake_case, ex: "category_share"
+  scope: 'household' | 'personal';
+  tone: 'neutral' | 'info' | 'success' | 'warning';
+  title: string;
+  message: string;      // frase completa em PT-BR
+  priority: number;
+  metadata: {
+    categoryId?: string;
+    categoryName?: string;
+    percentage?: number;
+    amount?: number;
+    previousAmount?: number;
+    delta?: number;
+    deltaPercent?: number;
+    currency?: string;
+    subscriptionAmount?: number;
+    commonAmount?: number;
+    fixedAmount?: number;
+    variableAmount?: number;
+    balance?: number;
+    sharedExpenseTotal?: number;
+    personalSharePercent?: number;
+    count?: number;
+  };
 }
 ```
 
-`InsightsService` injeta array de regras, itera e agrega.
+### Regras implementadas (9 regras, cap de 8 no MVP)
+
+| # | Regra | Escopo | Priority | Tone |
+|---|-------|--------|----------|------|
+| 1 | `category_share` | household + personal | 70 | info |
+| 2 | `month_over_month_expense` | household + personal | 85 (warn) / 60 (success) | warning/success |
+| 3 | `monthly_balance` | household + personal | 75 | success/warning |
+| 4 | `subscription_vs_common` | household | 65 | warning |
+| 5 | `fixed_vs_variable` | household | 55 | info |
+| 6 | `top_category` | household + personal | 50 | neutral |
+| 7 | `personal_shared_share` | personal | 80 | info |
+| 8 | `savings_vs_last_month` | personal | 90 (success) / 40 (warn) | success/warning |
+| 9 | `recurring_income` | household | 58 | info |
+
+### Arquivos relevantes
+
+| Arquivo | Responsabilidade |
+|---------|-----------------|
+| `server/src/insights/insights.service.ts` | Pipeline de regras, cap de 8, ordenação |
+| `server/src/insights/insights-context.builder.ts` | Queries e pré-cálculo do contexto |
+| `server/src/insights/rules/*.rule.ts` | 9 regras individuais |
+| `server/src/insights/dto/insight-response.dto.ts` | DTOs de resposta |
 
 ---
 
-## 4. InsightsContext — métricas pré-calculadas
+## Parte 2 — Endpoints de Dashboard ⚙️
 
-`InsightsContextBuilder.build(householdId, userId, month)` deve fazer **poucas queries** e montar um objeto reutilizado por todas as regras.
+> Backend implementado. Requer `npm run api:update` no client para gerar hooks Orval.
 
-### Parâmetros de tempo
+Todos os endpoints ficam sob:
 
-Reutilizar lógica de `transactions.service.ts`:
+```
+/api/v1/households/:householdId/transactions/report/
+```
+
+Autenticação: `Bearer JWT`. O usuário precisa ser membro do household.
+
+---
+
+### 2.1 — `GET report/summary`
+
+**Status:** ✅ Existente
+
+KPI do household (soma bruta de todas as transações do grupo).
+
+```
+GET /households/:id/transactions/report/summary?month=YYYY-MM
+```
+
+**Resposta — `TransactionSummaryResponseDto`:**
+```typescript
+{
+  month: string;
+  totalIncome: number;
+  totalExpenses: number;
+  balance: number;
+  transactionCount: number;
+}
+```
+
+---
+
+### 2.2 — `GET report/personal-summary` ✅ NOVO
+
+KPI pessoal do usuário autenticado, respeitando rateios via `transaction_splits`.
+
+**Regra de cálculo:**
+- Transações **com splits**: soma apenas o `share` do usuário (`transaction_splits.userId = requesterId`)
+- Transações **sem splits**: soma integral, somente se `createdById = requesterId`
+- Transferências são sempre ignoradas
+
+```
+GET /households/:id/transactions/report/personal-summary?month=YYYY-MM
+```
+
+**Resposta — `TransactionSummaryResponseDto`:**
+```typescript
+{
+  month: string;
+  totalIncome: number;
+  totalExpenses: number;
+  balance: number;
+  transactionCount: number;  // splits + transações diretas do usuário
+}
+```
+
+---
+
+### 2.3 — `GET report/category-breakdown` ✅ NOVO
+
+Breakdown de despesas por categoria. Suporta dois escopos via query param `scope`.
+
+```
+GET /households/:id/transactions/report/category-breakdown?month=YYYY-MM&scope=household|personal
+```
+
+| Param | Tipo | Default | Descrição |
+|-------|------|---------|-----------|
+| `month` | `YYYY-MM` | mês atual | Mês de referência |
+| `scope` | `household` \| `personal` | `household` | Escopo dos dados |
+
+**Escopo `household`:** agrupa todas as despesas do grupo por categoria.
+
+**Escopo `personal`:** agrupa despesas usando mesma lógica do `personal-summary` (shares + diretas). A categoria efetiva é `split.categoryId ?? transaction.categoryId`.
+
+**Resposta — `CategoryBreakdownResponseDto`:**
+```typescript
+{
+  month: string;
+  scope: 'household' | 'personal';
+  totalExpenses: number;
+  categories: Array<{
+    categoryId: string | null;
+    categoryName: string;       // "Sem categoria" se null
+    amount: number;
+    percentage: number;         // % do totalExpenses, 2 casas decimais
+    isFixed: boolean;
+    color: string | null;       // hex color da categoria
+  }>;
+}
+```
+
+Ordenado por `amount DESC`.
+
+---
+
+### 2.4 — `GET report/daily-summary` ✅ NOVO
+
+Agregação diária de transações do household para o calendário financeiro.
+
+```
+GET /households/:id/transactions/report/daily-summary?month=YYYY-MM
+```
+
+**Resposta — `DailySummaryResponseDto`:**
+```typescript
+{
+  month: string;
+  days: Array<{
+    date: string;           // "YYYY-MM-DD"
+    income: number;
+    expenses: number;
+    balance: number;        // net do dia (income - expenses)
+    runningBalance: number; // saldo acumulado desde o início do mês
+    transactionCount: number;
+  }>;
+}
+```
+
+Apenas dias com movimentação são retornados (dias sem transação não aparecem no array). O front preenche os dias sem dados com zeros.
+
+---
+
+## Parte 3 — Pendências de Schema ⚙️
+
+As seguintes colunas foram adicionadas ao schema mas a **migração Drizzle ainda precisa ser gerada e aplicada**:
+
+```bash
+# No diretório server/:
+npx drizzle-kit generate
+npx drizzle-kit migrate
+```
+
+Colunas adicionadas:
+- `households.color` — `varchar(20)`
+- `accounts.color` — `varchar(20)`
+- `categories.color` — `varchar(20)`
+- `subscriptions.type` — `enum('expense', 'income')`, default `'expense'`
+
+Migração de referência gerada: `server/drizzle/migrations/0008_quick_runaways.sql`
+
+---
+
+## Parte 4 — Próximos Passos para o Frontend ⏳
+
+> **Para o agente de frontend:** leia esta seção integralmente antes de começar. Ela contém todo o contexto de decisões de produto e a arquitetura de componentes esperada.
+
+### 4.1 — Pré-requisito: gerar hooks Orval
+
+```bash
+cd client
+npm run api:update
+```
+
+Isso regenera os hooks React Query tipados para os 4 endpoints de report e o endpoint de insights. Confirmar que os seguintes hooks existem após o comando:
+
+- `useTransactionsControllerGetSummary`
+- `useTransactionsControllerGetPersonalSummary` ← novo
+- `useTransactionsControllerGetCategoryBreakdown` ← novo
+- `useTransactionsControllerGetDailySummary` ← novo
+- `useInsightsControllerGetInsights`
+
+---
+
+### 4.2 — Decisões de produto aprovadas
+
+| Decisão | Escolha |
+|---------|---------|
+| Perspectiva | **Ambas lado a lado:** coluna "Você" + coluna "Grupo" |
+| Seletor de mês | Mês atual por padrão, navegável ← → |
+| Tipos de gráfico | **Distribuição (donut) + Evolução (linha)** |
+| Calendário | Clicável: abre lista de transações do dia |
+| Estrutura da tela | **Approach B** (ver 4.3) |
+
+---
+
+### 4.3 — Estrutura da tela de Dashboard (Approach B)
+
+```
+┌─────────────────────────────────────────────────────┐
+│ [← Junho 2026 →]          [Seletor de mês]          │
+├──────────────────┬──────────────────────────────────┤
+│      VOCÊ        │              GRUPO                │
+│  KPI Card Income │  KPI Card Income                  │
+│  KPI Card Expense│  KPI Card Expense                 │
+│  KPI Card Balance│  KPI Card Balance                 │
+├──────────────────┴──────────────────────────────────┤
+│  [Donut: Você]         [Donut: Grupo]               │
+│  (category-breakdown   (category-breakdown           │
+│   scope=personal)       scope=household)             │
+├─────────────────────────────────────────────────────┤
+│  [Gráfico de Evolução — linha diária]               │
+│  (daily-summary → runningBalance)                   │
+├─────────────────────────────────────────────────────┤
+│  [Calendário Financeiro]                            │
+│  Cada dia colorido por balanço; clicável            │
+│  (daily-summary → balance por dia)                  │
+└─────────────────────────────────────────────────────┘
+│  [Seção de Insights]                                │
+│  (insights existentes, já funcionando)              │
+└─────────────────────────────────────────────────────┘
+```
+
+---
+
+### 4.4 — Componentes a construir
+
+#### `MonthSelector`
+
+```
+client/src/components/dashboard/month-selector.tsx
+```
+
+- Props: `month: string`, `onChange: (month: string) => void`
+- Mostra "Mês Ano" em PT-BR (ex: "Junho 2026")
+- Botões ← → para navegar meses
+- Não permite navegar para frente do mês atual
+- Formato interno: `YYYY-MM` (para query params)
+
+---
+
+#### `KpiCard`
+
+```
+client/src/components/dashboard/kpi-card.tsx
+```
+
+- Props: `label: string`, `value: number`, `currency: string`, `variant: 'income' | 'expense' | 'balance'`
+- Formatar valor com `Intl.NumberFormat` para moeda do household
+- `income` → verde; `expense` → vermelho; `balance` → azul/neutro (negativo = vermelho)
+
+---
+
+#### `KpiCardsColumn`
+
+```
+client/src/components/dashboard/kpi-cards-column.tsx
+```
+
+- Props: `data: TransactionSummaryResponseDto | undefined`, `currency: string`, `isLoading: boolean`, `label: 'Você' | 'Grupo'`
+- Renderiza 3 `KpiCard` (Income, Expense, Balance) mais skeleton se loading
+- **API consumida:** `report/personal-summary` (Você) e `report/summary` (Grupo)
+
+---
+
+#### `CategoryDonutChart`
+
+```
+client/src/components/dashboard/category-donut-chart.tsx
+```
+
+- Props: `data: CategoryBreakdownResponseDto | undefined`, `isLoading: boolean`
+- Biblioteca sugerida: **Recharts** (`PieChart` + `Tooltip`) — já usada no projeto?
+  - Se não estiver instalada: `npm install recharts`
+- Cada fatia colorida por `category.color` (fallback para paleta automática se null)
+- Legenda com categoria + percentual
+- Tooltip com valor monetário
+
+---
+
+#### `DailyEvolutionChart`
+
+```
+client/src/components/dashboard/daily-evolution-chart.tsx
+```
+
+- Props: `data: DailySummaryResponseDto | undefined`, `isLoading: boolean`
+- Biblioteca: Recharts `LineChart`
+- Série: `runningBalance` por `date`
+- Eixo X: dia do mês (1–31)
+- Linha vermelha se runningBalance < 0 no ponto; verde se ≥ 0 (usar gradient ou cor condicional)
+
+---
+
+#### `FinancialCalendar`
+
+```
+client/src/components/dashboard/financial-calendar.tsx
+```
+
+- Props: `data: DailySummaryResponseDto | undefined`, `month: string`, `onDayClick: (date: string) => void`, `isLoading: boolean`
+- Renderiza grid de dias do mês (não precisa de lib externa — CSS grid funciona)
+- Cada dia:
+  - Fundo verde claro se `balance > 0`
+  - Fundo vermelho claro se `balance < 0`
+  - Neutro/cinza se sem transações
+  - Badge com `transactionCount` se > 0
+- Ao clicar: chama `onDayClick(date)` com `"YYYY-MM-DD"`
+
+---
+
+#### `DayTransactionsSheet`
+
+```
+client/src/components/dashboard/day-transactions-sheet.tsx
+```
+
+- Props: `date: string | null`, `householdId: string`, `onClose: () => void`
+- Abre como `Sheet` (bottom sheet / side panel) quando `date !== null`
+- Internamente chama `useTransactionsControllerFindAll` com `{ month: "YYYY-MM", ... }` e filtra localmente por `date`
+- Lista transações do dia: valor, categoria, descrição, tipo
+
+---
+
+### 4.5 — Hooks customizados a criar
+
+#### `useDashboardData`
+
+```
+client/src/hooks/use-dashboard-data.ts
+```
 
 ```typescript
-function currentMonth(): string
-function monthDateRange(month: string): { startDate: string; endDate: string }
-function previousMonth(month: string): string
-```
-
-- `month` = mês alvo
-- `previousMonth` = mês anterior (cuidado com janeiro → dezembro do ano anterior)
-
-### Dados do household
-
-- Buscar household (id, currency) — falhar 404 se não existir
-- `currency` vai na resposta raiz e em cada `metadata`
-
-### Escopo HOUSEHOLD — agregações
-
-**Base:** transações do household no intervalo `[startDate, endDate)`, **excluir `type = 'transfer'`**.
-
-#### Totais do mês (`household.current`)
-
-| Campo | Cálculo |
-|-------|---------|
-| `totalIncome` | SUM(amount) WHERE type = 'income' |
-| `totalExpenses` | SUM(amount) WHERE type = 'expense' |
-| `balance` | totalIncome - totalExpenses (2 casas) |
-| `transactionCount` | COUNT(*) |
-
-#### Totais mês anterior (`household.previous`)
-
-Mesmas métricas para `previousMonth`.
-
-#### Despesas por categoria (`household.current.expensesByCategory`)
-
-```
-GROUP BY COALESCE(categoryId, 'uncategorized')
-SUM(amount) WHERE type = 'expense'
-```
-
-Join opcional com `categories` para obter `name`, `isFixed`.
-
-Incluir bucket `uncategorized` para transações sem categoria.
-
-#### Assinaturas (`household.subscriptions`)
-
-- Listar `subscriptions` WHERE `householdId` AND `active = true`
-- Para cada uma: `amount`, `cadenceUnit`, `cadenceEvery`, `categoryId`, `type`
-
-#### Despesas assinatura vs comum (`household.current`)
-
-Como **não existe** `subscriptionId` em `transactions`, usar proxy por categoria:
-
-1. `subscriptionCategoryIds` = Set de `categoryId` não-nulos das assinaturas ativas do tipo `expense`
-2. `subscriptionSpent` = SUM despesas do mês WHERE `categoryId IN subscriptionCategoryIds`
-3. `commonSpent` = SUM despesas do mês WHERE `categoryId NOT IN subscriptionCategoryIds` (inclui sem categoria)
-
-**Se `subscriptionCategoryIds` estiver vazio:** regra `subscription_vs_common` retorna `null`.
-
-#### Fixo vs variável (`household.current`)
-
-- `fixedSpent` = SUM despesas WHERE categoria existe AND `categories.isFixed = true`
-- `variableSpent` = SUM despesas WHERE categoria não existe OR `isFixed = false`
-
----
-
-### Escopo PERSONAL — agregações (via splits)
-
-**Princípio:** o gasto/receita pessoal do usuário logado considera rateio.
-
-Para cada transação `expense` ou `income` no mês:
-
-1. **Com splits:** somar apenas `transaction_splits.share` WHERE `userId = requesterId`
-   - Categoria efetiva: `COALESCE(split.categoryId, transaction.categoryId)`
-2. **Sem splits:** somar `transaction.amount` **somente se** `transaction.createdById = requesterId`
-   - (Transação pessoal implícita / legado)
-
-**Não incluir transferências.**
-
-#### Totais pessoais (`personal.current` / `personal.previous`)
-
-| Campo | Cálculo |
-|-------|---------|
-| `totalIncome` | soma shares/regras acima para income |
-| `totalExpenses` | soma shares/regras acima para expense |
-| `balance` | income - expenses |
-| `expensesByCategory` | GROUP BY categoria efetiva, mesma lógica |
-
-#### Participação em gastos compartilhados (`personal.shared`)
-
-- `sharedExpenseTotal` = SUM de despesas do household que **possuem splits** (qualquer split)
-- `personalShareInShared` = SUM dos shares do user nessas transações
-- `personalSharePercent` = (personalShareInShared / sharedExpenseTotal) * 100, se sharedExpenseTotal > 0
-
----
-
-## 5. Regras do MVP (8)
-
-Cada regra retorna `InsightDto | null`. Mensagens em **PT-BR**, valores monetários formatáveis pelo front via `metadata`, mas incluir valor numérico em `message` com 2 casas.
-
-Helper sugerido: `formatMoney(amount, currency)` → `"R$ 420,00"` para BRL.
-
----
-
-### Regra 1 — `category_share`
-
-| | |
-|---|---|
-| **Escopos** | `household` + `personal` (avaliar separadamente) |
-| **Priority** | 70 |
-| **Tone** | `info` |
-
-**Condição de disparo:**
-
-- `totalExpenses > 0`
-- Categoria com maior `amount` no mês (desempate: nome alfabético)
-- `percentage >= 20` (≥ 20% do total de despesas)
-
-**Mensagens:**
-
-- Household: `"A categoria {name} equivale a {pct}% do gasto mensal do grupo."`
-- Personal: `"A categoria {name} equivale a {pct}% dos seus gastos no mês."`
-
-**Metadata:** `categoryId`, `categoryName`, `percentage`, `amount`, `currency`
-
-**id:** `category_share:{scope}:{categoryId}`
-
----
-
-### Regra 2 — `month_over_month_expense`
-
-| | |
-|---|---|
-| **Escopos** | `household` + `personal` |
-| **Priority** | 85 (warning) / 60 (success) |
-| **Tone** | `warning` se aumento ≥ 10%; `success` se redução ≥ 10%; senão `null` |
-
-**Condição:**
-
-- `previous.totalExpenses > 0` (senão null — sem base de comparação)
-- `deltaPercent = ((current - previous) / previous) * 100`
-- Disparar se `|deltaPercent| >= 10`
-
-**Mensagens:**
-
-- Aumento household: `"As despesas do grupo superaram o mês passado em {pct}%. Considere controlar os gastos."`
-- Redução household: `"As despesas do grupo ficaram {pct}% abaixo do mês passado. Bom trabalho!"`
-- Aumento personal: `"Suas despesas superaram o mês passado em {pct}%. Considere controlar seus gastos."`
-- Redução personal: `"Suas despesas ficaram {pct}% abaixo do mês passado. Bom trabalho!"`
-
-**Metadata:** `amount`, `previousAmount`, `delta`, `deltaPercent`, `currency`
-
-**id:** `month_over_month_expense:{scope}`
-
----
-
-### Regra 3 — `monthly_balance`
-
-| | |
-|---|---|
-| **Escopos** | `household` + `personal` |
-| **Priority** | 75 |
-| **Tone** | `success` se balance ≥ 0; `warning` se balance < 0 |
-
-**Condição:** `totalIncome > 0 OR totalExpenses > 0` (mês com alguma movimentação)
-
-**Mensagens:**
-
-- Positivo household: `"O saldo do grupo no mês ficou positivo em {valor}."`
-- Negativo household: `"O saldo do grupo no mês ficou negativo em {valor}."`
-- Positivo personal: `"Seu saldo no mês ficou positivo em {valor}."`
-- Negativo personal: `"Seu saldo no mês ficou negativo em {valor}."`
-
-**Metadata:** `balance`, `currency`
-
-**id:** `monthly_balance:{scope}`
-
----
-
-### Regra 4 — `subscription_vs_common`
-
-| | |
-|---|---|
-| **Escopo** | **`household` apenas** |
-| **Priority** | 65 |
-| **Tone** | `warning` |
-
-**Condição:**
-
-- Existe ao menos 1 assinatura ativa com `categoryId` definido
-- `subscriptionSpent > commonSpent`
-- `commonSpent > 0` (evitar insight trivial no primeiro mês)
-
-**Mensagem:** `"Os gastos com assinatura superam as transações comuns do grupo neste mês ({sub} vs {common})."`
-
-**Metadata:** `subscriptionAmount`, `commonAmount`, `currency`
-
-**id:** `subscription_vs_common:household`
-
-**Nota:** usa gasto **real** em categorias vinculadas a assinaturas, não o valor teórico recorrente.
-
----
-
-### Regra 5 — `fixed_vs_variable`
-
-| | |
-|---|---|
-| **Escopo** | **`household` apenas** |
-| **Priority** | 55 |
-| **Tone** | `info` |
-
-**Condição:**
-
-- `fixedSpent > variableSpent`
-- `variableSpent > 0`
-
-**Mensagem:** `"Os gastos fixos do grupo superam os variáveis neste mês ({fixed} vs {variable})."`
-
-**Metadata:** `fixedAmount`, `variableAmount`, `currency`
-
-**id:** `fixed_vs_variable:household`
-
----
-
-### Regra 6 — `top_category`
-
-| | |
-|---|---|
-| **Escopos** | `household` + `personal` |
-| **Priority** | 50 |
-| **Tone** | `neutral` |
-
-**Condição:**
-
-- `totalExpenses > 0`
-- Maior categoria por valor (mesma do rule 1, mas **sem** threshold de 20%)
-- **Não emitir** se regra `category_share` já emitiu para a mesma categoria+escopo (evitar duplicata)
-
-**Mensagens:**
-
-- Household: `"A maior despesa do grupo foi em {name} ({valor})."`
-- Personal: `"Sua maior despesa do mês foi em {name} ({valor})."`
-
-**Metadata:** `categoryId`, `categoryName`, `amount`, `currency`
-
-**id:** `top_category:{scope}:{categoryId}`
-
----
-
-### Regra 7 — `personal_shared_share`
-
-| | |
-|---|---|
-| **Escopo** | **`personal` apenas** |
-| **Priority** | 80 |
-| **Tone** | `info` |
-
-**Condição:**
-
-- `sharedExpenseTotal > 0`
-
-**Mensagem:** `"Você responde por {pct}% dos gastos compartilhados do grupo neste mês."`
-
-**Metadata:** `personalSharePercent`, `amount` (personalShareInShared), `sharedExpenseTotal`, `currency`
-
-**id:** `personal_shared_share:personal`
-
----
-
-### Regra 8 — `savings_vs_last_month`
-
-| | |
-|---|---|
-| **Escopo** | **`personal` apenas** |
-| **Priority** | 90 (success) / 40 (warning) |
-| **Tone** | `success` se economia; `warning` se piorou |
-
-**Definição de "economia":** melhora do **saldo pessoal** vs mês anterior.
-
-- `delta = current.balance - previous.balance`
-- Disparar se `|delta| >= 50` (mínimo R$ 50 ou equivalente — evita ruído)
-
-**Mensagens:**
-
-- `delta > 0`: `"Você economizou {valor} a mais que no mês passado. Parabéns!"`
-- `delta < 0`: `"Seu saldo ficou {valor} abaixo do mês passado em relação ao mês anterior."`
-
-**Metadata:** `balance`, `previousAmount` (previous.balance), `delta`, `currency`
-
-**id:** `savings_vs_last_month:personal`
-
----
-
-## 6. Validação & edge cases
-
-| Cenário | Comportamento esperado |
-|---------|------------------------|
-| Mês sem transações | `insights: []` |
-| Mês inválido (`month=foo`) | `400 Bad Request` |
-| Usuário não membro | `403 Forbidden` (via assertMember) |
-| Household inexistente | `404 Not Found` |
-| Transferências | **Sempre ignoradas** em todos os cálculos |
-| Transação sem categoria | Bucket `uncategorized`; `categoryName = "Sem categoria"` |
-| Percentuais | Arredondar para **1 casa decimal** na message; valor exato em `metadata.percentage` |
-| Valores monetários | 2 casas decimais; usar `parseFloat` + `toFixed(2)` como em `transactions.service.ts` |
-| Duplicata rule 1 vs 6 | Rule 6 suprimida quando rule 1 já cobriu mesma categoria+escopo |
-
----
-
-## 7. Controller — exemplo de rota
-
-Preferência: controller **nested** under households (consistente com transactions):
-
-```typescript
-@Controller('households/:householdId/insights')
-export class InsightsController {
-  @Get()
-  getInsights(
-    @Param('householdId', ParseUUIDPipe) householdId: string,
-    @Query() query: FilterInsightsDto,
-    @CurrentUser() user: AuthenticatedUser,
-  ) {
-    return this.insightsService.getInsights(householdId, user.id, query.month);
+export function useDashboardData(householdId: string, month: string) {
+  const summary = useTransactionsControllerGetSummary(householdId, { month })
+  const personalSummary = useTransactionsControllerGetPersonalSummary(householdId, { month })
+  const householdBreakdown = useTransactionsControllerGetCategoryBreakdown(householdId, { month, scope: 'household' })
+  const personalBreakdown = useTransactionsControllerGetCategoryBreakdown(householdId, { month, scope: 'personal' })
+  const dailySummary = useTransactionsControllerGetDailySummary(householdId, { month })
+
+  return {
+    summary,
+    personalSummary,
+    householdBreakdown,
+    personalBreakdown,
+    dailySummary,
+    isLoading: [summary, personalSummary, householdBreakdown, personalBreakdown, dailySummary]
+      .some(q => q.isLoading),
   }
 }
 ```
 
-`FilterInsightsDto`: `month?: string` com validação `@Matches(/^\d{4}-\d{2}$/)`.
+---
+
+### 4.6 — Atualizar `dashboard-home-page.tsx`
+
+Arquivo: `client/src/pages/dashboard/dashboard-home-page.tsx`
+
+Adicionar acima da `InsightsSection` existente:
+
+1. `MonthSelector` no topo (controla `month` via `useState`)
+2. Grid 2 colunas com `KpiCardsColumn` (Você + Grupo)
+3. Grid 2 colunas com `CategoryDonutChart` (personal + household)
+4. `DailyEvolutionChart` (largura total)
+5. `FinancialCalendar` com handler que abre `DayTransactionsSheet`
+
+O household ativo já está disponível via contexto/query na página. O `month` começa como `currentMonthParam()` (helper existente em `lib/transaction-helpers`).
 
 ---
 
-## 8. Testes (obrigatório)
+### 4.7 — Coloring strategy do calendário
 
-Criar `insights.service.spec.ts` (e testes unitários por regra se possível):
-
-1. **Household com despesas por categoria** → rule `category_share` dispara
-2. **MoM increase ≥ 10%** → rule `month_over_month_expense` warning
-3. **Transação com splits** → totais personal ≠ household
-4. **Sem assinaturas com categoryId** → rule 4 retorna null
-5. **Mês vazio** → array vazio
-6. **Ordenação** → insights respeitam `priority`
-7. **Limite 8** → com muitas regras, retorna no máximo 8
-
-Preferir testes com mocks do Drizzle ou fixtures in-memory seguindo padrão existente no repo.
+```typescript
+// Sugestão de classes Tailwind por balanço do dia:
+const getDayColorClass = (balance: number | undefined) => {
+  if (balance === undefined) return 'bg-muted/30'
+  if (balance > 0) return 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400'
+  if (balance < 0) return 'bg-red-500/15 text-red-700 dark:text-red-400'
+  return 'bg-muted/30'
+}
+```
 
 ---
 
-## 9. Referências no codebase
+### 4.8 — Checklist de entrega do frontend
 
-| Referência | Caminho |
-|------------|---------|
-| Summary mensal (padrão de query) | `server/src/transactions/transactions.service.ts` → `getSummary`, `monthDateRange`, `currentMonth` |
-| assertMember | `server/src/households/households.service.ts` |
-| Schema transações/splits/categorias/assinaturas | `server/src/database/schema.ts` |
-| Padrão controller nested | `server/src/transactions/transactions.controller.ts` |
-| Cadence assinaturas | `cadenceUnit`: `day`, `week`, `month`, `year` + `cadenceEvery` |
-
-### Extração sugerida
-
-Mover `currentMonth()` e `monthDateRange()` para util compartilhado (ex: `server/src/common/utils/month.utils.ts`) se `InsightsContextBuilder` precisar — evitar duplicação. **Opcional no MVP**, mas recomendado.
-
----
-
-## 10. Fora de escopo (não implementar agora)
-
-- Persistir insights dismiss/snooze
-- Cache Redis
-- Push notifications
-- i18n EN/ES
-- Endpoint separado `/metrics`
-- Insights históricos multi-mês
-- Machine learning / detecção de anomalias
-- **Frontend / Orval client** (próxima fase)
+- [ ] `npm run api:update` executado e hooks Orval gerados
+- [ ] `MonthSelector` navegável, sem ultrapassar mês atual
+- [ ] `KpiCardsColumn` com skeleton durante loading
+- [ ] `CategoryDonutChart` com cores das categorias (`category.color`)
+- [ ] `DailyEvolutionChart` com `runningBalance` diário
+- [ ] `FinancialCalendar` com cores por `balance` e clique funcional
+- [ ] `DayTransactionsSheet` lista transações do dia clicado
+- [ ] `InsightsSection` existente mantida abaixo de tudo
+- [ ] Responsivo: mobile (coluna única) → desktop (2 colunas)
+- [ ] Loading states com skeletons em todos os componentes
+- [ ] Sem regressões na tela de transações, contas e grupos
 
 ---
 
-## 11. Critérios de aceite
+## Referências do codebase
 
-- [ ] `GET /api/v1/households/:id/insights` documentado no Swagger
-- [ ] Resposta segue `InsightsResponseDto` com até 8 insights ordenados
-- [ ] 8 regras implementadas conforme seção 5
-- [ ] Escopos `household` e `personal` corretos (splits respeitados)
-- [ ] Transferências excluídas
-- [ ] `InsightsModule` registrado em `AppModule`
-- [ ] Testes unitários passando
-- [ ] Sem regressões em módulos existentes
-
----
-
-## 12. Pós-implementação
-
-Após merge do backend:
-
-1. Rodar `npm run api:update` no **client** para gerar hook Orval
-2. Implementar UI WeInsights (feed misturado, badges, tons) — spec separada
+| O que | Onde |
+|-------|------|
+| Schema completo (tabelas, tipos) | `server/src/database/schema.ts` |
+| Endpoints de transações | `server/src/transactions/transactions.controller.ts` |
+| Lógica de cálculo pessoal | `server/src/transactions/transactions.service.ts` → `getPersonalSummary`, `getPersonalCategoryBreakdown` |
+| Lógica de insights | `server/src/insights/insights-context.builder.ts` |
+| Hooks de insights existentes | `client/src/hooks/use-mixed-household-insights.ts` |
+| Helpers de mês | `client/src/lib/transaction-helpers.ts` → `getCurrentMonthParam()` |
+| Componente InsightsSection (modelo) | `client/src/components/insights/insights-section.tsx` |
+| Estilos glassmorphism | `client/src/index.css` → classes `.glass-*` |

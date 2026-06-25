@@ -5,6 +5,10 @@ import {
   useHouseholdsControllerRemoveMember,
 } from '@/api/generated/households/households'
 import { HouseholdInviteCodePanel } from '@/components/households/household-invite-code-panel'
+import {
+  FormDialogContent,
+  FormDialogHeader,
+} from '@/components/object/form-dialog-shell'
 import { householdsListParams } from '@/lib/household-api-helpers'
 import type { HouseholdMemberResponseDto } from '@/api/generated/models/householdMemberResponseDto'
 import type { HouseholdResponseDto } from '@/api/generated/models/householdResponseDto'
@@ -23,9 +27,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
-  DialogContent,
   DialogDescription,
-  DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -167,17 +169,17 @@ export function HouseholdEditMembersModal({
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="glass-strong flex max-h-[min(90svh,calc(100%-2rem))] flex-col overflow-hidden">
-          <DialogHeader>
+        <FormDialogContent>
+          <FormDialogHeader>
             <DialogTitle>Membros do grupo</DialogTitle>
             <DialogDescription>
               {household
                 ? `Gerencie quem participa de ${household.name}.`
                 : 'Gerencie os membros deste grupo.'}
             </DialogDescription>
-          </DialogHeader>
+          </FormDialogHeader>
 
-          <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-hidden">
+          <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-hidden px-4 pb-4 sm:px-6">
             {isOwner && household && (
               <HouseholdInviteCodePanel
                 householdId={householdId}
@@ -229,7 +231,7 @@ export function HouseholdEditMembersModal({
               </div>
             </div>
           </div>
-        </DialogContent>
+        </FormDialogContent>
       </Dialog>
 
       <AlertDialog

@@ -19,6 +19,7 @@ export const householdFormSchema = z.object({
     .regex(/^#[0-9A-Fa-f]{6}$/, 'Use uma cor no formato #RRGGBB')
     .optional()
     .or(z.literal('')),
+  keepBudgets: z.boolean(),
 })
 
 export type HouseholdFormValues = z.infer<typeof householdFormSchema>
@@ -28,6 +29,7 @@ export const defaultHouseholdFormValues: HouseholdFormValues = {
   currency: 'BRL',
   defaultSplitType: HouseholdResponseDtoDefaultSplitType.equal,
   color: DEFAULT_PRESET_COLOR,
+  keepBudgets: false,
 }
 
 export const currencyFormOptions = [

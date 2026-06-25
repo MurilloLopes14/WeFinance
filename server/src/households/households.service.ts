@@ -1,6 +1,7 @@
 import {
   ConflictException,
   ForbiddenException,
+  forwardRef,
   Inject,
   Injectable,
   NotFoundException,
@@ -11,6 +12,7 @@ import { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import { DRIZZLE } from '../database/database.constants';
 import * as schema from '../database/schema';
 import { householdMembers, households, users } from '../database/schema';
+import { BudgetsService } from '../budgets/budgets.service';
 import { CreateHouseholdDto } from './dto/create-household.dto';
 import { UpdateHouseholdDto } from './dto/update-household.dto';
 import { HouseholdMemberResponseDto, HouseholdResponseDto } from './dto/household-response.dto';
@@ -23,6 +25,7 @@ type HouseholdMember = typeof householdMembers.$inferSelect;
 export class HouseholdsService {
   constructor(
     @Inject(DRIZZLE) private readonly db: PostgresJsDatabase<typeof schema>,
+    @Inject(forwardRef(() => BudgetsService)) private readonly budgetsService: BudgetsService,
   ) {}
 
   async create(userId: string, dto: CreateHouseholdDto): Promise<HouseholdResponseDto> {
@@ -33,6 +36,8 @@ export class HouseholdsService {
           name: dto.name,
           currency: dto.currency ?? 'BRL',
           defaultSplitType: dto.defaultSplitType ?? 'equal',
+          color: dto.color ?? null,
+          keepBudgets: dto.keepBudgets ?? false,
           inviteCode: generateInviteCode(),
         })
         .returning();
@@ -43,6 +48,10 @@ export class HouseholdsService {
         role: 'owner',
         splitValue: '0',
       });
+
+      if (dto.monthlyBudget !== undefined) {
+        await this.budgetsService.setHouseholdBudget(household.id, dto.monthlyBudget);
+      }
 
       return household;
     });
@@ -91,12 +100,21 @@ export class HouseholdsService {
     if (dto.currency !== undefined) updateData.currency = dto.currency.toUpperCase();
     if (dto.defaultSplitType !== undefined) updateData.defaultSplitType = dto.defaultSplitType;
     if (dto.color !== undefined) updateData.color = dto.color;
+    if (dto.keepBudgets !== undefined) updateData.keepBudgets = dto.keepBudgets;
 
     const [updated] = await this.db
       .update(households)
       .set(updateData)
       .where(eq(households.id, id))
       .returning();
+
+    if (dto.monthlyBudget !== undefined) {
+      if (dto.monthlyBudget === null) {
+        await this.budgetsService.clearHouseholdBudget(id);
+      } else {
+        await this.budgetsService.setHouseholdBudget(id, dto.monthlyBudget);
+      }
+    }
 
     return this.fetchWithMembers(updated);
   }
@@ -272,7 +290,8 @@ export class HouseholdsService {
 
   private async fetchWithMembers(household: Household): Promise<HouseholdResponseDto> {
     const members = await this.fetchMembers(household.id);
-    return { ...household, members };
+    const monthlyBudget = await this.budgetsService.getHouseholdBudgetAmount(household.id);
+    return { ...household, members, monthlyBudget };
   }
 
   private formatMember(

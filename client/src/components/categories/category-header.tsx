@@ -51,6 +51,7 @@ export function CategoryHeader({
   return (
     <ObjectHeader
       title="Categorias"
+      tourAnchor="categories-header"
       description="Organize despesas, receitas e transferências por grupo. Use cores e subcategorias para manter tudo fácil de encontrar."
       searchValue={showToolbar ? searchValue : undefined}
       onSearchChange={showToolbar ? onSearchChange : undefined}

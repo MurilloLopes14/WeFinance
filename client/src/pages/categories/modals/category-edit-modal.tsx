@@ -6,13 +6,17 @@ import {
   useCategoriesControllerUpdate,
 } from '@/api/generated/categories/categories'
 import { ObjectDeleteConfirmDialog } from '@/components/object/object-delete-confirm-dialog'
+import {
+  FormDialogBody,
+  FormDialogContent,
+  FormDialogFooter,
+  FormDialogHeader,
+  formDialogEditFooterClassName,
+} from '@/components/object/form-dialog-shell'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
-  DialogContent,
   DialogDescription,
-  DialogFooter,
-  DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
 import { getApiErrorMessage } from '@/lib/get-api-error-message'
@@ -23,6 +27,7 @@ import {
   categoryFormSchema,
   type CategoryFormValues,
 } from '@/pages/categories/category-form-schema'
+import { CategoryResponseDtoKind } from '@/api/generated/models/categoryResponseDtoKind'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Loader2, Trash2 } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
@@ -42,7 +47,8 @@ function toFormValues(category: CategoryResponseDto): CategoryFormValues {
     name: category.name,
     kind: category.kind,
     parentId: category.parentId ?? '',
-    isFixed: category.isFixed,
+    isFixed:
+      category.kind === CategoryResponseDtoKind.expense ? category.isFixed : false,
     color: category.color ?? defaultCategoryFormValues.color,
   }
 }
@@ -133,46 +139,51 @@ export function CategoryEditModal({
         name: values.name,
         kind: values.kind,
         parentId: values.parentId ? values.parentId : null,
-        isFixed: values.isFixed,
+        isFixed:
+          values.kind === CategoryResponseDtoKind.expense ? values.isFixed : false,
         color: values.color || undefined,
+        ...(values.kind !== CategoryResponseDtoKind.expense
+          ? { monthlyBudget: null }
+          : {}),
       },
     })
   })
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="glass-strong">
-        <DialogHeader>
+      <FormDialogContent>
+        <FormDialogHeader>
           <DialogTitle>Editar categoria</DialogTitle>
           <DialogDescription>
             Atualize as informações da categoria {category?.name ?? ''}.
           </DialogDescription>
-        </DialogHeader>
+        </FormDialogHeader>
 
-        <form id="category-edit-form" onSubmit={onSubmit} className="space-y-1">
-          <CategoryFormFields
-            register={register}
-            errors={errors}
-            setValue={setValue}
-            watch={watch}
-            parentOptions={parentOptions}
-            householdDisabled
-          />
-        </form>
+        <FormDialogBody>
+          <form id="category-edit-form" onSubmit={onSubmit}>
+            <CategoryFormFields
+              register={register}
+              errors={errors}
+              setValue={setValue}
+              watch={watch}
+              parentOptions={parentOptions}
+              householdDisabled
+            />
+          </form>
+        </FormDialogBody>
 
-        <DialogFooter className="flex-col gap-2 sm:flex-row sm:justify-between">
+        <FormDialogFooter className={formDialogEditFooterClassName}>
           <Button
             type="button"
             variant="ghost"
-            className="rounded-xl text-destructive hover:text-destructive sm:mr-auto"
+            className="rounded-xl text-destructive hover:text-destructive"
             onClick={() => setDeleteConfirmOpen(true)}
             disabled={isBusy || !category}
           >
             <Trash2 className="size-4" />
             Excluir
           </Button>
-          <div className="flex gap-2">
-            <Button
+          <div className="flex gap-2">            <Button
               type="button"
               variant="ghost"
               className="rounded-xl"
@@ -191,9 +202,8 @@ export function CategoryEditModal({
               Salvar alterações
             </Button>
           </div>
-        </DialogFooter>
-      </DialogContent>
-
+        </FormDialogFooter>
+      </FormDialogContent>
       <ObjectDeleteConfirmDialog
         open={deleteConfirmOpen}
         onOpenChange={setDeleteConfirmOpen}

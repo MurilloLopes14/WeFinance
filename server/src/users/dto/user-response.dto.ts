@@ -1,5 +1,19 @@
 ﻿import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
+export class OnboardingDto {
+  @ApiProperty()
+  toursEnabled: boolean;
+
+  @ApiProperty({ type: [String] })
+  completedTours: string[];
+
+  @ApiProperty({ type: [String] })
+  dismissedTours: string[];
+
+  @ApiPropertyOptional({ nullable: true })
+  lastTourCompletedAt: string | null;
+}
+
 export class UserResponseDto {
   @ApiProperty()
   id: string;
@@ -22,11 +36,19 @@ export class UserResponseDto {
   @ApiProperty()
   isActive: boolean;
 
+  @ApiPropertyOptional({ nullable: true })
+  avatarUrl: string | null;
+
   @ApiProperty()
   createdAt: Date;
 
   @ApiProperty()
   updatedAt: Date;
+}
+
+export class MeResponseDto extends UserResponseDto {
+  @ApiPropertyOptional({ type: OnboardingDto, nullable: true })
+  onboarding: OnboardingDto | null;
 }
 
 export class PaginatedUsersResponseDto {

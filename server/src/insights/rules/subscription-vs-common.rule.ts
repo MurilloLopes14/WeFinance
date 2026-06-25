@@ -24,8 +24,8 @@ export class SubscriptionVsCommonRule implements InsightRule {
       rule: 'subscription_vs_common',
       scope: 'household',
       tone: 'warning',
-      title: 'Assinaturas superam gastos comuns',
-      message: `Os gastos com assinatura superam as transações comuns do grupo neste mês (${sub} vs ${common}).`,
+      title: 'Fixos superam gastos comuns',
+      message: `Os gastos com despesas fixas superam as transações comuns do grupo neste mês (${sub} vs ${common}).`,
       priority: 65,
       metadata: {
         subscriptionAmount: current.subscriptionSpent,

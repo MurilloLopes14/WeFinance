@@ -3,6 +3,7 @@ import {
   Inject,
   Injectable,
   NotFoundException,
+  UnprocessableEntityException,
 } from '@nestjs/common';
 import { and, eq } from 'drizzle-orm';
 import { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
@@ -13,6 +14,7 @@ import { HouseholdsService } from '../households/households.service';
 import { AccountResponseDto } from './dto/account-response.dto';
 import { CreateAccountDto } from './dto/create-account.dto';
 import { UpdateAccountDto } from './dto/update-account.dto';
+import { AccountProjectionDto } from './dto/account-projection.dto';
 
 type Account = typeof accounts.$inferSelect;
 
@@ -44,6 +46,9 @@ export class AccountsService {
         institution: dto.institution ?? null,
         balanceManual: String(dto.balanceManual ?? 0),
         color: dto.color ?? null,
+        yieldPercent: dto.yieldPercent != null ? String(dto.yieldPercent) : null,
+        yieldGranularity: dto.yieldGranularity ?? null,
+        maturityDate: dto.maturityDate ?? null,
       })
       .returning();
 
@@ -99,6 +104,9 @@ export class AccountsService {
       updateData.balanceManual = String(dto.balanceManual);
     }
     if (dto.color !== undefined) updateData.color = dto.color;
+    if (dto.yieldPercent !== undefined) updateData.yieldPercent = dto.yieldPercent != null ? String(dto.yieldPercent) : null;
+    if (dto.yieldGranularity !== undefined) updateData.yieldGranularity = dto.yieldGranularity;
+    if (dto.maturityDate !== undefined) updateData.maturityDate = dto.maturityDate;
 
     const [updated] = await this.db
       .update(accounts)
@@ -130,6 +138,47 @@ export class AccountsService {
           eq(accounts.householdId, householdId),
         ),
       );
+  }
+
+  async getProjection(
+    householdId: string,
+    accountId: string,
+    requesterId: string,
+    targetDate: string,
+  ): Promise<AccountProjectionDto> {
+    await this.householdsService.assertMember(householdId, requesterId);
+    const account = await this.findAccount(householdId, accountId);
+
+    if (account.type !== 'investment') {
+      throw new UnprocessableEntityException('Projeção de rendimento disponível apenas para contas de investimento');
+    }
+    if (!account.yieldPercent || !account.yieldGranularity) {
+      throw new UnprocessableEntityException('Conta sem taxa de rendimento configurada');
+    }
+
+    const today = new Date();
+    const end = new Date(targetDate);
+    if (end <= today) {
+      throw new UnprocessableEntityException('A data de projeção deve ser futura');
+    }
+
+    const balance = parseFloat(account.balanceManual);
+    const annualRate = parseFloat(account.yieldPercent) / 100;
+    const projectedBalance = calcProjection(balance, annualRate, account.yieldGranularity, today, end);
+    const projectedYield = parseFloat((projectedBalance - balance).toFixed(2));
+
+    return {
+      accountId: account.id,
+      accountName: account.name,
+      currentBalance: balance,
+      projectedBalance: parseFloat(projectedBalance.toFixed(2)),
+      projectedYield,
+      annualRate: parseFloat(account.yieldPercent),
+      granularity: account.yieldGranularity,
+      fromDate: today.toISOString().slice(0, 10),
+      toDate: targetDate,
+      maturityDate: account.maturityDate ?? null,
+    };
   }
 
   // ─── Private helpers ──────────────────────────────────────────────────────
@@ -188,8 +237,38 @@ export class AccountsService {
       institution: account.institution ?? null,
       balanceManual: parseFloat(account.balanceManual),
       color: account.color ?? null,
+      yieldPercent: account.yieldPercent != null ? parseFloat(account.yieldPercent) : null,
+      yieldGranularity: account.yieldGranularity ?? null,
+      maturityDate: account.maturityDate ?? null,
       createdAt: account.createdAt,
       updatedAt: account.updatedAt,
     };
+  }
+}
+
+function calcProjection(
+  balance: number,
+  annualRate: number,
+  granularity: 'daily' | 'monthly' | 'annual',
+  from: Date,
+  to: Date,
+): number {
+  const msPerDay = 86_400_000;
+  const days = (to.getTime() - from.getTime()) / msPerDay;
+
+  switch (granularity) {
+    case 'daily': {
+      const r = annualRate / 365;
+      return balance * Math.pow(1 + r, days);
+    }
+    case 'monthly': {
+      const months = days / 30.4375;
+      const r = annualRate / 12;
+      return balance * Math.pow(1 + r, months);
+    }
+    case 'annual': {
+      const years = days / 365.25;
+      return balance * Math.pow(1 + annualRate, years);
+    }
   }
 }

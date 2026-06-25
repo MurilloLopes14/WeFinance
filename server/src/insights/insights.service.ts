@@ -11,13 +11,18 @@ import { SubscriptionVsCommonRule } from './rules/subscription-vs-common.rule';
 import { FixedVsVariableRule } from './rules/fixed-vs-variable.rule';
 import { TopCategoryRule } from './rules/top-category.rule';
 import { PersonalSharedShareRule } from './rules/personal-shared-share.rule';
+import { RecurringIncomeRule } from './rules/recurring-income.rule';
 import { SavingsVsLastMonthRule } from './rules/savings-vs-last-month.rule';
+import { BudgetOverviewRule } from './rules/budget-overview.rule';
+import { InvestmentYieldRule } from './rules/investment-yield.rule';
 
 const MAX_INSIGHTS = 8;
 
 @Injectable()
 export class InsightsService {
   private readonly rules: InsightRule[] = [
+    new BudgetOverviewRule(),
+    new InvestmentYieldRule(),
     new CategoryShareRule(),
     new MonthOverMonthExpenseRule(),
     new MonthlyBalanceRule(),
@@ -26,6 +31,7 @@ export class InsightsService {
     new TopCategoryRule(),
     new PersonalSharedShareRule(),
     new SavingsVsLastMonthRule(),
+    new RecurringIncomeRule(),
   ];
 
   constructor(

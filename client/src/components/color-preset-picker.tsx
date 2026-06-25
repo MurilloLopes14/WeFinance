@@ -10,6 +10,7 @@ type ColorPresetPickerProps = {
   onChange: (color: string) => void
   presets?: readonly PresetColor[]
   className?: string
+  disabled?: boolean
 }
 
 export function ColorPresetPicker({
@@ -17,6 +18,7 @@ export function ColorPresetPicker({
   onChange,
   presets = DEFAULT_PRESET_COLORS,
   className,
+  disabled = false,
 }: ColorPresetPickerProps) {
   return (
     <div
@@ -35,9 +37,10 @@ export function ColorPresetPicker({
             aria-selected={selected}
             aria-label={preset.label}
             title={preset.label}
+            disabled={disabled}
             onClick={() => onChange(preset.value)}
             className={cn(
-              'size-8 shrink-0 rounded-full ring-2 ring-offset-2 ring-offset-background transition-transform hover:scale-105 focus-visible:outline-none focus-visible:ring-ring',
+              'size-8 shrink-0 rounded-full ring-2 ring-offset-2 ring-offset-background transition-transform hover:scale-105 focus-visible:outline-none focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50',
               selected ? 'ring-foreground' : 'ring-transparent',
             )}
             style={{ backgroundColor: preset.value }}

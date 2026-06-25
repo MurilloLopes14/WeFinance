@@ -6,12 +6,15 @@ import {
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
-  DialogContent,
   DialogDescription,
-  DialogFooter,
-  DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
+import {
+  FormDialogBody,
+  FormDialogContent,
+  FormDialogFooter,
+  FormDialogHeader,
+} from '@/components/object/form-dialog-shell'
 import { getApiErrorMessage } from '@/lib/get-api-error-message'
 import { getParentCategoryOptions } from '@/lib/category-helpers'
 import { CategoryFormFields } from '@/pages/categories/category-form-fields'
@@ -20,6 +23,7 @@ import {
   categoryFormSchema,
   type CategoryFormValues,
 } from '@/pages/categories/category-form-schema'
+import { CategoryResponseDtoKind } from '@/api/generated/models/categoryResponseDtoKind'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Loader2 } from 'lucide-react'
 import { useMemo } from 'react'
@@ -83,7 +87,8 @@ export function CategoryCreateModal({ open, onOpenChange }: CategoryCreateModalP
         name: values.name,
         kind: values.kind,
         parentId: values.parentId || undefined,
-        isFixed: values.isFixed,
+        isFixed:
+          values.kind === CategoryResponseDtoKind.expense ? values.isFixed : false,
         color: values.color || undefined,
       },
     })
@@ -98,26 +103,27 @@ export function CategoryCreateModal({ open, onOpenChange }: CategoryCreateModalP
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="glass-strong">
-        <DialogHeader>
+      <FormDialogContent>
+        <FormDialogHeader>
           <DialogTitle>Nova categoria</DialogTitle>
           <DialogDescription>
             Escolha o grupo e preencha os dados para classificar transações e relatórios.
           </DialogDescription>
-        </DialogHeader>
+        </FormDialogHeader>
 
-        <form id="category-create-form" onSubmit={onSubmit} className="space-y-1">
-          <CategoryFormFields
-            register={register}
-            errors={errors}
-            setValue={setValue}
-            watch={watch}
-            parentOptions={parentOptions}
-          />
-        </form>
+        <FormDialogBody>
+          <form id="category-create-form" onSubmit={onSubmit}>
+            <CategoryFormFields
+              register={register}
+              errors={errors}
+              setValue={setValue}
+              watch={watch}
+              parentOptions={parentOptions}
+            />
+          </form>
+        </FormDialogBody>
 
-        <DialogFooter className="gap-2 sm:gap-0">
-          <Button
+        <FormDialogFooter>          <Button
             type="button"
             variant="ghost"
             className="rounded-xl"
@@ -135,8 +141,7 @@ export function CategoryCreateModal({ open, onOpenChange }: CategoryCreateModalP
             {createMutation.isPending && <Loader2 className="size-4 animate-spin" />}
             Criar categoria
           </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  )
+        </FormDialogFooter>
+      </FormDialogContent>
+    </Dialog>  )
 }

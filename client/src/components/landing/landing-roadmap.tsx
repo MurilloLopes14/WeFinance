@@ -14,7 +14,7 @@ const phases = [
     items: [
       'Auth & Households',
       'Accounts & Transactions',
-      'Categories & Subscriptions',
+      'Categories & Fixed expenses/income',
     ],
   },
   {

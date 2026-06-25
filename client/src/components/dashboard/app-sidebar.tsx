@@ -4,6 +4,7 @@ import {
   dashboardSecondaryNav,
   isDashboardGroupPath,
 } from '@/components/dashboard/dashboard-nav'
+import { AppBrandMark } from '@/components/brand/app-brand-mark'
 import { Button } from '@/components/ui/button'
 import {
   Sidebar,
@@ -25,25 +26,25 @@ import {
 import { clearAccessToken } from '@/api/auth-storage'
 import { AUTH_SESSION_QUERY_KEY } from '@/hooks/use-auth-session'
 import { cn } from '@/lib/utils'
-import { ChevronRight, LogOut, PanelLeft, Wallet } from 'lucide-react'
+import { ChevronRight, LogOut, PanelLeft } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
 
 function AppLogo() {
-  return (
-    <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary/15 text-primary">
-      <Wallet className="size-4" />
-    </span>
-  )
+  return <AppBrandMark />
 }
 
 export function AppSidebar() {
   const location = useLocation()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
-  const { state, toggleSidebar } = useSidebar()
+  const { state, toggleSidebar, isMobile, setOpenMobile } = useSidebar()
   const isCollapsed = state === 'collapsed'
+
+  const closeMobileSidebar = () => {
+    if (isMobile) setOpenMobile(false)
+  }
 
   const [groupsOpen, setGroupsOpen] = useState(() =>
     isDashboardGroupPath(location.pathname),
@@ -61,12 +62,14 @@ export function AppSidebar() {
     navigate('/login', { replace: true })
   }
 
+  const showCollapsedHeader = isCollapsed && !isMobile
+
   return (
     <Sidebar collapsible="icon" variant="inset">
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
-            {isCollapsed ? (
+            {showCollapsedHeader ? (
               <SidebarMenuButton
                 size="lg"
                 onClick={toggleSidebar}
@@ -78,7 +81,7 @@ export function AppSidebar() {
               <div className="flex w-full items-center gap-0.5">
                 <SidebarMenuButton
                   size="lg"
-                  render={<NavLink to="/dashboard" />}
+                  render={<NavLink to="/dashboard" onClick={closeMobileSidebar} />}
                   className="min-w-0 flex-1"
                 >
                   <AppLogo />
@@ -90,8 +93,8 @@ export function AppSidebar() {
                   type="button"
                   variant="ghost"
                   size="icon-sm"
-                  onClick={toggleSidebar}
-                  aria-label="Recolher menu"
+                  onClick={isMobile ? closeMobileSidebar : toggleSidebar}
+                  aria-label={isMobile ? 'Fechar menu' : 'Recolher menu'}
                   className="size-8 shrink-0 cursor-pointer text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-foreground"
                 >
                   <PanelLeft className="size-4" />
@@ -102,15 +105,15 @@ export function AppSidebar() {
         </SidebarMenu>
       </SidebarHeader>
 
-      <SidebarContent>
+      <SidebarContent data-tour="tour-sidebar">
         <SidebarGroup>
           <SidebarGroupLabel className="text-sm">Principal</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {dashboardMainNav.map((item) => (
-                <SidebarMenuItem key={item.url}>
+                <SidebarMenuItem key={item.url} data-tour="tour-nav-transactions">
                   <SidebarMenuButton
-                    render={<NavLink to={item.url} />}
+                    render={<NavLink to={item.url} onClick={closeMobileSidebar} />}
                     isActive={location.pathname === item.url}
                     tooltip={item.title}
                     className="text-base [&_svg]:size-4.5"
@@ -128,7 +131,7 @@ export function AppSidebar() {
           <SidebarGroupLabel className="text-sm">Gestão</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              <SidebarMenuItem>
+              <SidebarMenuItem data-tour="tour-nav-groups">
                 <SidebarMenuButton
                   onClick={() => setGroupsOpen((open) => !open)}
                   isActive={isDashboardGroupPath(location.pathname)}
@@ -151,7 +154,7 @@ export function AppSidebar() {
                     {dashboardGroupsNav.items.map((item) => (
                       <SidebarMenuSubItem key={item.url}>
                         <SidebarMenuSubButton
-                          render={<NavLink to={item.url} />}
+                          render={<NavLink to={item.url} onClick={closeMobileSidebar} />}
                           isActive={location.pathname === item.url}
                           className="text-base [&_svg]:size-4.5"
                         >
@@ -172,9 +175,12 @@ export function AppSidebar() {
           <SidebarGroupContent>
             <SidebarMenu>
               {dashboardSecondaryNav.map((item) => (
-                <SidebarMenuItem key={item.url}>
+                <SidebarMenuItem
+                  key={item.url}
+                  {...(item.url === '/dashboard/ajuda' ? { 'data-tour': 'tour-nav-help' } : {})}
+                >
                   <SidebarMenuButton
-                    render={<NavLink to={item.url} />}
+                    render={<NavLink to={item.url} onClick={closeMobileSidebar} />}
                     isActive={location.pathname === item.url}
                     tooltip={item.title}
                     className="text-base [&_svg]:size-4.5"

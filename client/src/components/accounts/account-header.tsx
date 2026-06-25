@@ -56,6 +56,7 @@ export function AccountHeader({
   return (
     <ObjectHeader
       title="Contas"
+      tourAnchor="accounts-header"
       description="Cadastre contas bancárias, cartões, poupança e investimentos por grupo para registrar transações e acompanhar saldos."
       searchValue={showToolbar ? searchValue : undefined}
       onSearchChange={showToolbar ? onSearchChange : undefined}

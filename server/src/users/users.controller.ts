@@ -1,4 +1,5 @@
-﻿import {
+import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -11,10 +12,14 @@
   Patch,
   Post,
   Query,
+  UploadedFile,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import {
   ApiBearerAuth,
+  ApiConsumes,
   ApiOperation,
   ApiResponse,
   ApiTags,
@@ -27,11 +32,16 @@ import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { CreateUserDto } from './dto/create-user.dto';
 import { FilterUsersDto } from './dto/filter-users.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { UpdateOnboardingDto } from './dto/update-onboarding.dto';
 import {
+  MeResponseDto,
   PaginatedUsersResponseDto,
   UserResponseDto,
 } from './dto/user-response.dto';
 import { UsersService } from './users.service';
+
+const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB
 
 @ApiTags('Users')
 @ApiBearerAuth('JWT-auth')
@@ -57,10 +67,45 @@ export class UsersController {
   }
 
   @Get('me')
-  @ApiOperation({ summary: 'Get current authenticated user profile' })
-  @ApiResponse({ status: 200, type: UserResponseDto })
+  @ApiOperation({ summary: 'Get current authenticated user profile (includes onboarding)' })
+  @ApiResponse({ status: 200, type: MeResponseDto })
   getProfile(@CurrentUser() user: AuthenticatedUser) {
-    return this.usersService.findById(user.id);
+    return this.usersService.findMe(user.id);
+  }
+
+  @Patch('me/onboarding')
+  @ApiOperation({ summary: 'Update onboarding/tour state for current user' })
+  @ApiResponse({ status: 200, type: MeResponseDto })
+  updateOnboarding(
+    @CurrentUser() user: AuthenticatedUser,
+    @Body() dto: UpdateOnboardingDto,
+  ) {
+    return this.usersService.updateOnboarding(user.id, dto);
+  }
+
+  @Post('me/avatar')
+  @ApiOperation({ summary: 'Upload profile avatar (max 2MB, JPEG/PNG/WebP)' })
+  @ApiConsumes('multipart/form-data')
+  @ApiResponse({ status: 201, type: UserResponseDto })
+  @UseInterceptors(
+    FileInterceptor('file', {
+      limits: { fileSize: MAX_FILE_SIZE },
+      fileFilter: (_, file, cb) => {
+        if (!ALLOWED_MIME_TYPES.includes(file.mimetype)) {
+          return cb(new BadRequestException('Apenas imagens JPEG, PNG ou WebP são aceitas'), false);
+        }
+        cb(null, true);
+      },
+    }),
+  )
+  uploadAvatar(
+    @CurrentUser() user: AuthenticatedUser,
+    @UploadedFile() file: Express.Multer.File,
+  ) {
+    if (!file) {
+      throw new BadRequestException('Nenhum arquivo enviado');
+    }
+    return this.usersService.uploadAvatar(user.id, file);
   }
 
   @Get(':id')

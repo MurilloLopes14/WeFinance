@@ -172,7 +172,7 @@ export function AccountPage() {
         }
       />
 
-      <ObjectPageContent>
+      <ObjectPageContent tourAnchor="accounts-list">
         <ObjectCollectionState
           isLoading={isLoading}
           isError={isError}

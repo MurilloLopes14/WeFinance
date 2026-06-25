@@ -1,5 +1,6 @@
 import type { TransactionResponseDto } from '@/api/generated/models/transactionResponseDto'
 import { Badge } from '@/components/ui/badge'
+import { TransactionOwnerAvatar } from '@/components/transactions/transaction-owner-avatar'
 import {
   formatTransactionAmount,
   formatTransactionDate,
@@ -24,6 +25,13 @@ export function createTransactionColumns(
       header: 'Data',
       cell: ({ row }) => (
         <span className="tabular-nums">{formatTransactionDate(row.original.date)}</span>
+      ),
+    },
+    {
+      accessorKey: 'owner',
+      header: 'Responsável',
+      cell: ({ row }) => (
+        <TransactionOwnerAvatar owner={row.original.owner} showName />
       ),
     },
     {

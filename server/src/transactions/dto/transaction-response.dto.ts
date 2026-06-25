@@ -1,5 +1,35 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
+export class TransactionOwnerDto {
+  @ApiProperty()
+  id: string;
+
+  @ApiProperty()
+  name: string;
+
+  @ApiPropertyOptional({ nullable: true })
+  avatarUrl: string | null;
+}
+
+export class SplitMemberPreviewDto {
+  @ApiProperty()
+  id: string;
+
+  @ApiProperty()
+  name: string;
+
+  @ApiPropertyOptional({ nullable: true })
+  avatarUrl: string | null;
+}
+
+export class SplitPreviewDto {
+  @ApiProperty()
+  totalMembers: number;
+
+  @ApiProperty({ type: [SplitMemberPreviewDto], description: 'First 3 members' })
+  members: SplitMemberPreviewDto[];
+}
+
 export class TransactionSplitResponseDto {
   @ApiProperty()
   id: string;
@@ -60,6 +90,9 @@ export class TransactionResponseDto {
   @ApiProperty()
   createdById: string;
 
+  @ApiProperty({ type: TransactionOwnerDto })
+  owner: TransactionOwnerDto;
+
   @ApiProperty()
   createdAt: Date;
 
@@ -68,6 +101,9 @@ export class TransactionResponseDto {
 
   @ApiProperty({ type: [TransactionSplitResponseDto] })
   splits: TransactionSplitResponseDto[];
+
+  @ApiPropertyOptional({ type: SplitPreviewDto, nullable: true })
+  splitPreview: SplitPreviewDto | null;
 }
 
 export class PaginatedTransactionsResponseDto {

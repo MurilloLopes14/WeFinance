@@ -6,6 +6,7 @@ import {
   type HouseholdFormValues,
 } from '@/pages/households/household-form-schema'
 import { colorPickerInputClassName } from '@/lib/color-helpers'
+import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import {
@@ -34,6 +35,7 @@ export function HouseholdFormFields({
   const currency = watch('currency')
   const splitType = watch('defaultSplitType')
   const color = watch('color') || defaultHouseholdFormValues.color
+  const keepBudgets = watch('keepBudgets')
 
   return (
     <div className="min-w-0 space-y-4">
@@ -160,6 +162,29 @@ export function HouseholdFormFields({
           <p className="text-sm text-destructive">
             {errors.defaultSplitType.message}
           </p>
+        )}
+      </div>
+
+      <div className="space-y-2">
+        <div className="flex items-start gap-2">
+          <Checkbox
+            id="household-keep-budgets"
+            checked={keepBudgets}
+            onCheckedChange={(checked) =>
+              setValue('keepBudgets', checked === true, { shouldValidate: true })
+            }
+          />
+          <div className="space-y-1">
+            <Label htmlFor="household-keep-budgets" className="font-normal leading-snug">
+              Manter budgets do grupo e categorias na virada de mês
+            </Label>
+            <p className="text-xs leading-relaxed text-muted-foreground">
+              Na virada do mês, os orçamentos são copiados automaticamente para o novo período.
+            </p>
+          </div>
+        </div>
+        {errors.keepBudgets && (
+          <p className="text-sm text-destructive">{errors.keepBudgets.message}</p>
         )}
       </div>
     </div>

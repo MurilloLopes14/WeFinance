@@ -50,3 +50,12 @@ export function getCurrentMonthParam(): string {
   const month = String(now.getMonth() + 1).padStart(2, '0')
   return `${now.getFullYear()}-${month}`
 }
+
+export function getTodayIsoDate(): string {
+  return new Date().toISOString().slice(0, 10)
+}
+
+export function isFutureTransactionDate(date: string): boolean {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return false
+  return date > getTodayIsoDate()
+}

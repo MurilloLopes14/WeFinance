@@ -2,6 +2,7 @@ import { useAccountsControllerFindAll } from '@/api/generated/accounts/accounts'
 import { useCategoriesControllerFindAll } from '@/api/generated/categories/categories'
 import { useHouseholdsControllerFindAll } from '@/api/generated/households/households'
 import { useTransactionsControllerFindAll } from '@/api/generated/transactions/transactions'
+import { InsightsSection } from '@/components/insights/insights-section'
 import { TransactionHeader, type TransactionFilters } from '@/components/transactions/transaction-header'
 import { TransactionTableSkeleton } from '@/components/transactions/transaction-table-skeleton'
 import { TransactionsDataTable } from '@/components/transactions/transactions-data-table'
@@ -9,8 +10,11 @@ import { ObjectCollectionState } from '@/components/object/object-collection-sta
 import { ObjectEmptyState } from '@/components/object/object-empty-state'
 import { ObjectPageContent, ObjectPageLayout } from '@/components/object/object-page-layout'
 import { useTransactionCreate } from '@/contexts/transaction-create-context'
+import { useHouseholdInsights } from '@/hooks/use-household-insights'
 import { householdsListParams } from '@/lib/household-api-helpers'
 import { buildTransactionListParams } from '@/lib/transaction-api-helpers'
+import { formatInsightMonthLabel } from '@/lib/insight-helpers'
+import { getCurrentMonthParam } from '@/lib/transaction-helpers'
 import { ArrowLeftRight, SearchX, Users } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
@@ -98,6 +102,21 @@ export function TransactionPage() {
     [households, selectedHouseholdId],
   )
 
+  const insightsMonth = filters.month || getCurrentMonthParam()
+
+  const {
+    insights,
+    month: insightsReferenceMonth,
+    isLoading: isLoadingInsights,
+    isError: isInsightsError,
+    refetch: refetchInsights,
+  } = useHouseholdInsights({
+    householdId: selectedHouseholdId,
+    householdName: selectedHousehold?.name,
+    month: insightsMonth,
+    enabled: Boolean(selectedHouseholdId),
+  })
+
   const accountNameById = useMemo(
     () => Object.fromEntries((accounts ?? []).map((account) => [account.id, account.name])),
     [accounts],
@@ -128,6 +147,7 @@ export function TransactionPage() {
   const refetch = () => {
     void refetchHouseholds()
     void refetchTransactions()
+    void refetchInsights()
   }
 
   const handleFiltersChange = (nextFilters: TransactionFilters) => {
@@ -150,7 +170,21 @@ export function TransactionPage() {
         }}
       />
 
-      <ObjectPageContent>
+      {hasAnyHousehold && (
+        <InsightsSection
+          insights={insights}
+          month={insightsReferenceMonth}
+          isLoading={isLoadingInsights}
+          isError={isInsightsError}
+          description={`Análises do grupo selecionado para ${formatInsightMonthLabel(insightsMonth)}.`}
+          tourAnchor="transactions-insights"
+          onRetry={() => {
+            void refetchInsights()
+          }}
+        />
+      )}
+
+      <ObjectPageContent tourAnchor="transactions-table">
         <ObjectCollectionState
           isLoading={isLoading}
           isError={isError}

@@ -1,9 +1,19 @@
 import { customInstance } from './axios-instance'
-import type { UserResponseDto } from './generated/models/userResponseDto'
+import type { MeResponseDto } from './generated/models/meResponseDto'
+import type { UpdateOnboardingDto } from './generated/models/onboardingDto'
 
 export function fetchCurrentUser() {
-  return customInstance<UserResponseDto>({
+  return customInstance<MeResponseDto>({
     url: '/api/v1/users/me',
     method: 'GET',
+  })
+}
+
+export function updateUserOnboarding(payload: UpdateOnboardingDto) {
+  return customInstance<MeResponseDto>({
+    url: '/api/v1/users/me/onboarding',
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    data: payload,
   })
 }

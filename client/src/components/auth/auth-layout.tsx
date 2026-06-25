@@ -1,6 +1,6 @@
-﻿import { AmbientBackground } from '@/components/landing/ambient-background'
+﻿import { AppBrandMark } from '@/components/brand/app-brand-mark'
+import { AmbientBackground } from '@/components/landing/ambient-background'
 import { cn } from '@/lib/utils'
-import { Wallet } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 
@@ -19,9 +19,7 @@ export function AuthLayout({ children, className }: AuthLayoutProps) {
           to="/"
           className="glass-interactive flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium"
         >
-          <span className="glass flex size-8 items-center justify-center rounded-lg glow-sm">
-            <Wallet className="size-4 text-primary" />
-          </span>
+          <AppBrandMark />
           <span className="font-heading">WeFinance</span>
         </Link>
       </header>

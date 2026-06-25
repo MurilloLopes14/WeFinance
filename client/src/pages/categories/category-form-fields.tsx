@@ -1,5 +1,6 @@
 import { HouseholdComboboxField } from '@/components/households/household-combobox-field'
 import { ColorPresetPicker } from '@/components/color-preset-picker'
+import { HouseholdGatedFormSection } from '@/components/object/household-gated-form-section'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -43,6 +44,7 @@ export function CategoryFormFields({
   const color = watch('color') || defaultCategoryFormValues.color
   const parentId = watch('parentId')
   const isFixed = watch('isFixed')
+  const fieldsDisabled = !householdId
 
   return (
     <div className="min-w-0 space-y-4">
@@ -56,14 +58,16 @@ export function CategoryFormFields({
         error={errors.householdId?.message}
       />
 
-      <div className="space-y-2">
-        <Label htmlFor="category-name">Nome</Label>
-        <Input
-          id="category-name"
-          placeholder="Ex.: Alimentação, Salário, Poupança..."
-          className="rounded-xl"
-          {...register('name')}
-        />
+      <HouseholdGatedFormSection householdId={householdId}>
+        <div className="space-y-2">
+          <Label htmlFor="category-name">Nome</Label>
+          <Input
+            id="category-name"
+            placeholder="Ex.: Alimentação, Salário, Poupança..."
+            className="rounded-xl"
+            disabled={fieldsDisabled}
+            {...register('name')}
+          />
         {errors.name && (
           <p className="text-sm text-destructive">{errors.name.message}</p>
         )}
@@ -74,6 +78,7 @@ export function CategoryFormFields({
           <Label htmlFor="category-kind">Tipo</Label>
           <Select
             value={kind}
+            disabled={fieldsDisabled}
             onValueChange={(value) => {
               if (!value) return
               setValue('kind', value as CategoryFormValues['kind'], {
@@ -111,6 +116,7 @@ export function CategoryFormFields({
             <Label htmlFor="category-parent">Categoria pai (opcional)</Label>
             <Select
               value={parentId || 'none'}
+              disabled={fieldsDisabled}
               onValueChange={(value) => {
                 if (!value) return
                 setValue('parentId', value === 'none' ? '' : value, {
@@ -144,17 +150,23 @@ export function CategoryFormFields({
       </div>
 
       {kind === CategoryResponseDtoKind.expense && (
-        <div className="flex items-center gap-2">
-          <Checkbox
-            id="category-is-fixed"
-            checked={isFixed}
-            onCheckedChange={(checked) =>
-              setValue('isFixed', checked === true, { shouldValidate: true })
-            }
-          />
-          <Label htmlFor="category-is-fixed" className="font-normal">
-            Despesa fixa recorrente
-          </Label>
+        <div className="space-y-2">
+          <div className="flex items-center gap-2">
+            <Checkbox
+              id="category-is-fixed"
+              checked={isFixed}
+              disabled={fieldsDisabled}
+              onCheckedChange={(checked) =>
+                setValue('isFixed', checked === true, { shouldValidate: true })
+              }
+            />
+            <Label htmlFor="category-is-fixed" className="font-normal">
+              Despesa fixa recorrente
+            </Label>
+          </div>
+          {errors.isFixed && (
+            <p className="text-sm text-destructive">{errors.isFixed.message}</p>
+          )}
         </div>
       )}
 
@@ -166,6 +178,7 @@ export function CategoryFormFields({
             type="color"
             className={colorPickerInputClassName}
             value={color}
+            disabled={fieldsDisabled}
             onChange={(event) =>
               setValue('color', event.target.value, { shouldValidate: true })
             }
@@ -173,6 +186,7 @@ export function CategoryFormFields({
           <Input
             placeholder="#6366f1"
             className="min-w-0 flex-1 rounded-xl"
+            disabled={fieldsDisabled}
             {...register('color')}
           />
         </div>
@@ -181,11 +195,13 @@ export function CategoryFormFields({
         )}
         <ColorPresetPicker
           value={color}
+          disabled={fieldsDisabled}
           onChange={(nextColor) =>
             setValue('color', nextColor, { shouldValidate: true })
           }
         />
       </div>
+      </HouseholdGatedFormSection>
     </div>
   )
 }

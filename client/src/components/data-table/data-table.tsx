@@ -12,6 +12,7 @@ import {
   getCoreRowModel,
   useReactTable,
   type ColumnDef,
+  type Row,
 } from '@tanstack/react-table'
 
 type DataTableProps<TData, TValue> = {
@@ -19,6 +20,7 @@ type DataTableProps<TData, TValue> = {
   data: TData[]
   className?: string
   emptyMessage?: string
+  getRowClassName?: (row: Row<TData>) => string | undefined
 }
 
 export function DataTable<TData, TValue>({
@@ -26,6 +28,7 @@ export function DataTable<TData, TValue>({
   data,
   className,
   emptyMessage = 'Nenhum registro encontrado.',
+  getRowClassName,
 }: DataTableProps<TData, TValue>) {
   const table = useReactTable({
     data,
@@ -52,7 +55,11 @@ export function DataTable<TData, TValue>({
         <TableBody>
           {table.getRowModel().rows.length > 0 ? (
             table.getRowModel().rows.map((row) => (
-              <TableRow key={row.id} data-state={row.getIsSelected() && 'selected'}>
+              <TableRow
+                key={row.id}
+                data-state={row.getIsSelected() && 'selected'}
+                className={getRowClassName?.(row)}
+              >
                 {row.getVisibleCells().map((cell) => (
                   <TableCell key={cell.id}>
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}

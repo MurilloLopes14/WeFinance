@@ -1,7 +1,8 @@
-﻿import { Button } from '@/components/ui/button'
+﻿import { AppBrandMark } from '@/components/brand/app-brand-mark'
+import { Button } from '@/components/ui/button'
 import { useScrollLock } from '@/hooks/use-scroll-lock'
 import { cn } from '@/lib/utils'
-import { Menu, Sparkles, X } from 'lucide-react'
+import { Menu, X } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { PageContainer } from '@/components/layout/page-container'
@@ -48,9 +49,7 @@ export function LandingNavbar() {
           className="group flex min-w-0 items-center gap-2 sm:gap-2.5"
           onClick={closeMobileMenu}
         >
-          <span className="glass flex size-8 shrink-0 items-center justify-center rounded-xl glow-sm sm:size-9">
-            <Sparkles className="size-3.5 text-primary sm:size-4" />
-          </span>
+          <AppBrandMark size="md" />
           <span className="truncate font-heading text-base font-semibold tracking-tight sm:text-lg">
             We<span className="text-gradient">Finance</span>
           </span>

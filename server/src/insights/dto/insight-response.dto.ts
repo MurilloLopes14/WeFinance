@@ -19,6 +19,13 @@ export class InsightMetadataDto {
   @ApiPropertyOptional() balance?: number;
   @ApiPropertyOptional() sharedExpenseTotal?: number;
   @ApiPropertyOptional() personalSharePercent?: number;
+  @ApiPropertyOptional() count?: number;
+  @ApiPropertyOptional() budgetUsed?: number;
+  @ApiPropertyOptional() budgetRemaining?: number;
+  @ApiPropertyOptional() budgetPercent?: number;
+  @ApiPropertyOptional() accountId?: string;
+  @ApiPropertyOptional() projectedBalance?: number;
+  @ApiPropertyOptional() projectedYield?: number;
 }
 
 export class InsightDto {

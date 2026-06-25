@@ -1,3 +1,4 @@
+import { AppBrandMark } from '@/components/brand/app-brand-mark'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -31,6 +32,9 @@ type ObjectHeaderProps = {
   onApplyFilters?: () => void
   onClearFilters?: () => void
   createAction?: ObjectHeaderCreateAction
+  headerActions?: ReactNode
+  tourAnchor?: string
+  toolbarTourAnchor?: string
   className?: string
 }
 
@@ -47,6 +51,9 @@ export function ObjectHeader({
   onApplyFilters,
   onClearFilters,
   createAction,
+  headerActions,
+  tourAnchor,
+  toolbarTourAnchor,
   className,
 }: ObjectHeaderProps) {
   const [filtersOpen, setFiltersOpen] = useState(false)
@@ -64,29 +71,43 @@ export function ObjectHeader({
 
   return (
     <>
-      <header className={cn('shrink-0 space-y-5', className)}>
+      <header
+        className={cn('shrink-0 space-y-5', className)}
+        {...(tourAnchor ? { 'data-tour': tourAnchor } : {})}
+      >
         <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-          <div className="space-y-1.5">
-            <h1 className="font-heading text-2xl font-semibold tracking-tight">{title}</h1>
-            <p className="max-w-2xl text-sm leading-relaxed text-muted-foreground">
-              {description}
-            </p>
+          <div className="flex min-w-0 items-start gap-3">
+            <AppBrandMark size="lg" className="mt-0.5" />
+            <div className="min-w-0 space-y-1.5">
+              <h1 className="font-heading text-2xl font-semibold tracking-tight">{title}</h1>
+              <p className="max-w-2xl text-sm leading-relaxed text-muted-foreground">
+                {description}
+              </p>
+            </div>
           </div>
 
-          {createAction && (
-            <Button
-              type="button"
-              onClick={createAction.onClick}
-              className="glow-primary h-10 shrink-0 rounded-xl px-4 lg:self-start"
-            >
-              <Plus className="size-4" />
-              {createAction.label}
-            </Button>
+          {(headerActions || createAction) && (
+            <div className="flex shrink-0 flex-wrap items-center gap-2 lg:self-start">
+              {headerActions}
+              {createAction && (
+                <Button
+                  type="button"
+                  onClick={createAction.onClick}
+                  className="glow-primary h-10 rounded-xl px-4"
+                >
+                  <Plus className="size-4" />
+                  {createAction.label}
+                </Button>
+              )}
+            </div>
           )}
         </div>
 
         {(onSearchChange || hasFilters) && (
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+          <div
+            className="flex flex-col gap-2 sm:flex-row sm:items-center"
+            {...(toolbarTourAnchor ? { 'data-tour': toolbarTourAnchor } : {})}
+          >
             {onSearchChange && (
               <div className="relative min-w-0 flex-1">
                 <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />

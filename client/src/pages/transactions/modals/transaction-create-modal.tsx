@@ -11,12 +11,15 @@ import {
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
-  DialogContent,
   DialogDescription,
-  DialogFooter,
-  DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
+import {
+  FormDialogBody,
+  FormDialogContent,
+  FormDialogFooter,
+  FormDialogHeader,
+} from '@/components/object/form-dialog-shell'
 import { useAuthSession } from '@/hooks/use-auth-session'
 import { findHouseholdInList } from '@/lib/household-helpers'
 import { householdsListParams } from '@/lib/household-api-helpers'
@@ -167,32 +170,34 @@ export function TransactionCreateModal({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="glass-strong max-h-[90vh] overflow-y-auto sm:max-w-xl">
-        <DialogHeader>
+      <FormDialogContent size="wide">
+        <FormDialogHeader>
           <DialogTitle>Nova transação</DialogTitle>
           <DialogDescription>
             Registre uma despesa, receita ou transferência entre contas.
           </DialogDescription>
-        </DialogHeader>
+        </FormDialogHeader>
 
-        <form id="transaction-create-form" onSubmit={onSubmit} className="space-y-1">
-          <TransactionFormFields
-            register={register}
-            control={control}
-            errors={errors}
-            setValue={setValue}
-            watch={watch}
-            accounts={accounts}
-            categories={categories}
-            members={members}
-            household={selectedHousehold}
-            currentUserId={currentUser?.id}
-            isLoadingMembers={isLoadingMembers}
-            householdDisabled={Boolean(defaultHouseholdId)}
-          />
-        </form>
+        <FormDialogBody>
+          <form id="transaction-create-form" onSubmit={onSubmit}>
+            <TransactionFormFields
+              register={register}
+              control={control}
+              errors={errors}
+              setValue={setValue}
+              watch={watch}
+              accounts={accounts}
+              categories={categories}
+              members={members}
+              household={selectedHousehold}
+              currentUserId={currentUser?.id}
+              isLoadingMembers={isLoadingMembers}
+              householdDisabled={Boolean(defaultHouseholdId)}
+            />
+          </form>
+        </FormDialogBody>
 
-        <DialogFooter className="gap-2 sm:gap-0">
+        <FormDialogFooter>
           <Button
             type="button"
             variant="ghost"
@@ -211,8 +216,8 @@ export function TransactionCreateModal({
             {createMutation.isPending && <Loader2 className="size-4 animate-spin" />}
             Criar transação
           </Button>
-        </DialogFooter>
-      </DialogContent>
+        </FormDialogFooter>
+      </FormDialogContent>
     </Dialog>
   )
 }

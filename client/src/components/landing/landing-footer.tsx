@@ -1,5 +1,5 @@
-﻿import { PageContainer } from '@/components/layout/page-container'
-import { Sparkles } from 'lucide-react'
+﻿import { AppBrandMark } from '@/components/brand/app-brand-mark'
+import { PageContainer } from '@/components/layout/page-container'
 import { Link } from 'react-router-dom'
 
 export function LandingFooter() {
@@ -7,7 +7,7 @@ export function LandingFooter() {
     <footer className="border-t border-border/50 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-8 sm:pt-10">
       <PageContainer className="flex flex-col items-center gap-6 text-center md:flex-row md:items-center md:justify-between md:text-left">
         <Link to="/" className="inline-flex items-center gap-2">
-          <Sparkles className="size-4 text-primary" />
+          <AppBrandMark size="sm" />
           <span className="font-heading text-sm font-semibold">
             WeFinance
           </span>

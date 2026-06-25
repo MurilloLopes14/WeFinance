@@ -72,6 +72,7 @@
   --blur-glass-strong: var(--glass-blur-strong);
 
   --animate-glow-pulse: glow-pulse 4s ease-in-out infinite;
+  --animate-brand-logo-glow: brand-logo-glow-pulse 3.2s ease-in-out infinite;
   --animate-mesh-drift: mesh-drift 18s ease-in-out infinite alternate;
   --animate-shimmer: shimmer 2.8s linear infinite;
 }
@@ -251,6 +252,23 @@
   }
 }
 
+@keyframes brand-logo-glow-pulse {
+  0%,
+  100% {
+    filter:
+      drop-shadow(0 0 2px oklch(from var(--neon-cyan) l c h / 95%))
+      drop-shadow(0 0 6px oklch(from var(--neon-cyan) l c h / 60%))
+      drop-shadow(0 0 14px oklch(from var(--neon-cyan) l c h / 38%));
+  }
+  50% {
+    filter:
+      drop-shadow(0 0 3px oklch(from var(--neon-cyan) l c h / 100%))
+      drop-shadow(0 0 10px oklch(from var(--neon-cyan) l c h / 82%))
+      drop-shadow(0 0 20px oklch(from var(--neon-cyan) l c h / 58%))
+      drop-shadow(0 0 32px oklch(from var(--neon-cyan) l c h / 32%));
+  }
+}
+
 @keyframes mesh-drift {
   0% {
     transform: translate(0%, 0%) scale(1);
@@ -399,6 +417,40 @@
     background: var(--background);
   }
 
+  .dashboard-mobile-topbar {
+    position: sticky;
+    top: 0;
+    z-index: 30;
+    min-height: calc(3.5rem + env(safe-area-inset-top));
+    padding-top: env(safe-area-inset-top);
+    background: oklch(0.14 0.028 265 / 97%);
+    color: var(--sidebar-foreground);
+    border-bottom: 1px solid oklch(1 0 0 / 14%);
+    box-shadow: 0 1px 12px oklch(0 0 0 / 12%);
+    backdrop-filter: blur(20px) saturate(1.25);
+    -webkit-backdrop-filter: blur(20px) saturate(1.25);
+  }
+
+  .dashboard-mobile-topbar [data-sidebar="trigger"] {
+    color: var(--sidebar-foreground);
+  }
+
+  .dashboard-mobile-topbar [data-sidebar="trigger"]:hover {
+    background: oklch(1 0 0 / 8%);
+    color: var(--sidebar-foreground);
+  }
+
+  [data-sidebar="sidebar"][data-mobile="true"] {
+    --sidebar: oklch(0.14 0.028 265 / 98%);
+    --sidebar-foreground: oklch(0.96 0.01 250);
+    --sidebar-accent: oklch(1 0 0 / 8%);
+    --sidebar-border: oklch(1 0 0 / 14%);
+    background: var(--sidebar) !important;
+    backdrop-filter: blur(24px) saturate(1.25);
+    -webkit-backdrop-filter: blur(24px) saturate(1.25);
+    box-shadow: 0 0 40px oklch(0 0 0 / 28%);
+  }
+
   ::selection {
     background: oklch(from var(--glow-primary) l c h / 28%);
     color: var(--foreground);
@@ -521,6 +573,62 @@
     transform: translateY(0);
   }
 
+  .subscription-card-glow {
+    transition:
+      border-color 0.3s ease,
+      box-shadow 0.3s ease,
+      transform 0.25s ease,
+      background 0.25s ease;
+  }
+
+  .subscription-card-glow:hover {
+    border-color: color-mix(in oklch, var(--subscription-color) 42%, transparent);
+    box-shadow:
+      var(--shadow-inset-reflect),
+      0 0 0 1px color-mix(in oklch, var(--subscription-color) 22%, transparent),
+      0 12px 32px color-mix(in oklch, var(--subscription-color) 32%, transparent);
+    transform: translateY(-2px);
+  }
+
+  .subscription-card-glow:active {
+    transform: translateY(0);
+  }
+
+  .insight-card-glow-success,
+  .insight-card-glow-warning,
+  .insight-card-glow-info,
+  .insight-card-glow-neutral {
+    transition:
+      border-color 0.3s ease,
+      box-shadow 0.3s ease,
+      transform 0.25s ease,
+      background 0.25s ease;
+  }
+
+  .insight-card-glow-success:hover {
+    border-color: oklch(0.62 0.14 165 / 35%);
+    box-shadow: var(--shadow-inset-reflect), 0 0 24px oklch(0.62 0.14 165 / 18%);
+    transform: translateY(-2px);
+  }
+
+  .insight-card-glow-warning:hover {
+    border-color: oklch(0.72 0.16 85 / 35%);
+    box-shadow: var(--shadow-inset-reflect), 0 0 24px oklch(0.72 0.16 85 / 18%);
+    transform: translateY(-2px);
+  }
+
+  .insight-card-glow-info:hover {
+    border-color: oklch(0.62 0.14 250 / 35%);
+    box-shadow: var(--shadow-inset-reflect), 0 0 24px oklch(0.62 0.14 250 / 18%);
+    transform: translateY(-2px);
+  }
+
+  .insight-card-glow-neutral:hover {
+    border-color: oklch(from var(--glow-primary) l c h / 30%);
+    box-shadow: var(--shadow-inset-reflect), var(--shadow-glow-sm);
+    transform: translateY(-2px);
+  }
+
   /* semantic aliases for shadcn Card-like usage */
   .surface-glass {
     border-radius: var(--radius-2xl);
@@ -639,6 +747,20 @@
     background: oklch(from var(--neon-teal) l c h / 40%);
   }
 
+  .brand-mark-glow {
+    animation: var(--animate-brand-logo-glow);
+    will-change: filter;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .brand-mark-glow {
+      animation: none;
+      filter:
+        drop-shadow(0 0 2px oklch(from var(--neon-cyan) l c h / 90%))
+        drop-shadow(0 0 8px oklch(from var(--neon-cyan) l c h / 50%));
+    }
+  }
+
   /* ── Dividers with light refraction ── */
   .divider-glass {
     height: 1px;
@@ -681,5 +803,23 @@
 
   .scrollbar-glass::-webkit-scrollbar-thumb:hover {
     background: oklch(from var(--glow-primary) l c h / 38%);
+  }
+
+  /* ── React Joyride — botão primário no estilo WeFinance ── */
+  #react-joyride-portal button[data-action='primary'] {
+    background: var(--primary) !important;
+    color: var(--primary-foreground) !important;
+    border: none;
+    box-shadow: var(--shadow-glow-primary);
+    transition:
+      box-shadow 0.2s ease,
+      transform 0.15s ease;
+  }
+
+  #react-joyride-portal button[data-action='primary']:hover {
+    box-shadow:
+      var(--shadow-glow-primary),
+      0 0 24px oklch(from var(--glow-primary) l c h / 38%);
+    transform: translateY(-1px);
   }
 }

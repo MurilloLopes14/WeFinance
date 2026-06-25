@@ -4,7 +4,10 @@ import { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import { DRIZZLE } from '../database/database.constants';
 import * as schema from '../database/schema';
 import {
+  accounts,
   categories,
+  categoryBudgets,
+  householdBudgets,
   households,
   subscriptions,
   transactionSplits,
@@ -12,9 +15,12 @@ import {
 } from '../database/schema';
 import { monthDateRange, previousMonth } from './insights.helpers';
 import {
+  BudgetMetrics,
   CategoryBucket,
+  CategoryBudgetItem,
   HouseholdPeriodMetrics,
   InsightsContext,
+  InvestmentAccountItem,
   PersonalPeriodMetrics,
   SubscriptionRow,
 } from './insights.types';
@@ -58,19 +64,44 @@ export class InsightsContextBuilder {
       throw new NotFoundException('Grupo familiar não encontrado');
     }
 
-    const [currentTxRows, prevTxRows, subscriptionRows] = await Promise.all([
-      this.fetchTxRows(householdId, currentRange.startDate, currentRange.endDate),
-      this.fetchTxRows(householdId, prevRange.startDate, prevRange.endDate),
-      this.db
-        .select({
-          id: subscriptions.id,
-          amount: subscriptions.amount,
-          categoryId: subscriptions.categoryId,
-          type: subscriptions.type,
-        })
-        .from(subscriptions)
-        .where(and(eq(subscriptions.householdId, householdId), eq(subscriptions.active, true))),
-    ]);
+    const [currentTxRows, prevTxRows, subscriptionRows, householdBudgetRows, categoryBudgetRows] =
+      await Promise.all([
+        this.fetchTxRows(householdId, currentRange.startDate, currentRange.endDate),
+        this.fetchTxRows(householdId, prevRange.startDate, prevRange.endDate),
+        this.db
+          .select({
+            id: subscriptions.id,
+            amount: subscriptions.amount,
+            categoryId: subscriptions.categoryId,
+            type: subscriptions.type,
+          })
+          .from(subscriptions)
+          .where(and(eq(subscriptions.householdId, householdId), eq(subscriptions.active, true))),
+        this.db
+          .select({ amount: householdBudgets.amount })
+          .from(householdBudgets)
+          .where(
+            and(
+              eq(householdBudgets.householdId, householdId),
+              eq(householdBudgets.month, month),
+            ),
+          )
+          .limit(1),
+        this.db
+          .select({
+            categoryId: categoryBudgets.categoryId,
+            amount: categoryBudgets.amount,
+            categoryName: categories.name,
+          })
+          .from(categoryBudgets)
+          .leftJoin(categories, eq(categoryBudgets.categoryId, categories.id))
+          .where(
+            and(
+              eq(categoryBudgets.householdId, householdId),
+              eq(categoryBudgets.month, month),
+            ),
+          ),
+      ]);
 
     const subscriptionList: SubscriptionRow[] = subscriptionRows.map((s) => ({
       id: s.id,
@@ -126,6 +157,45 @@ export class InsightsContextBuilder {
         ? parseFloat(((personalShareInShared / sharedExpenseTotal) * 100).toFixed(2))
         : 0;
 
+    const householdBudget = householdBudgetRows[0]
+      ? { amount: parseFloat(householdBudgetRows[0].amount) }
+      : null;
+
+    const catBudgetItems: CategoryBudgetItem[] = categoryBudgetRows.map((r) => ({
+      categoryId: r.categoryId,
+      categoryName: r.categoryName ?? 'Sem categoria',
+      amount: parseFloat(r.amount),
+    }));
+
+    const budgets: BudgetMetrics = {
+      household: householdBudget,
+      categories: catBudgetItems,
+      categorySum: parseFloat(catBudgetItems.reduce((s, b) => s + b.amount, 0).toFixed(2)),
+    };
+
+    const investmentRows = await this.db
+      .select({
+        id: accounts.id,
+        name: accounts.name,
+        balance: accounts.balanceManual,
+        yieldPercent: accounts.yieldPercent,
+        yieldGranularity: accounts.yieldGranularity,
+        maturityDate: accounts.maturityDate,
+      })
+      .from(accounts)
+      .where(and(eq(accounts.householdId, householdId), eq(accounts.type, 'investment')));
+
+    const investmentAccounts: InvestmentAccountItem[] = investmentRows
+      .filter((r) => r.yieldPercent != null && r.yieldGranularity != null)
+      .map((r) => ({
+        id: r.id,
+        name: r.name,
+        balance: parseFloat(r.balance),
+        yieldPercent: parseFloat(r.yieldPercent!),
+        yieldGranularity: r.yieldGranularity!,
+        maturityDate: r.maturityDate ?? null,
+      }));
+
     return {
       householdId,
       userId,
@@ -145,6 +215,8 @@ export class InsightsContextBuilder {
           personalSharePercent,
         },
       },
+      budgets,
+      investmentAccounts,
     };
   }
 

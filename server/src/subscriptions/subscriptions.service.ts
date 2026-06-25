@@ -5,7 +5,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
-import { and, eq, lte } from 'drizzle-orm';
+import { and, eq, lte, sql } from 'drizzle-orm';
 import { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import { DRIZZLE } from '../database/database.constants';
 import * as schema from '../database/schema';
@@ -251,6 +251,16 @@ export class SubscriptionsService {
         .where(eq(subscriptions.id, sub.id))
         .returning();
 
+      const amount = parseFloat(sub.amount);
+      const balanceDelta = sub.type === 'income' ? amount : -amount;
+      await trx
+        .update(accounts)
+        .set({
+          balanceManual: sql`${accounts.balanceManual} + ${balanceDelta}`,
+          updatedAt: new Date(),
+        })
+        .where(eq(accounts.id, sub.accountId));
+
       await this.eventsService.log(
         sub.householdId,
         'subscription',
@@ -285,7 +295,7 @@ export class SubscriptionsService {
 
     if (!sub) {
       throw new NotFoundException(
-        `Assinatura "${subId}" não encontrada neste grupo familiar`,
+        `Fixo "${subId}" não encontrado neste grupo familiar`,
       );
     }
 

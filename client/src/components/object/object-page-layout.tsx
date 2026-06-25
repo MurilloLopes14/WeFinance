@@ -17,15 +17,17 @@ export function ObjectPageLayout({ children, className }: ObjectPageLayoutProps)
 type ObjectPageContentProps = {
   children: ReactNode
   className?: string
+  tourAnchor?: string
 }
 
-export function ObjectPageContent({ children, className }: ObjectPageContentProps) {
+export function ObjectPageContent({ children, className, tourAnchor }: ObjectPageContentProps) {
   return (
     <section
       className={cn(
         'glass-subtle flex h-full min-h-0 w-full flex-1 flex-col overflow-hidden rounded-xl ring-1 ring-foreground/10',
         className,
       )}
+      {...(tourAnchor ? { 'data-tour': tourAnchor } : {})}
     >
       <div className="flex h-full min-h-0 w-full flex-1 flex-col overflow-auto p-4 md:p-6">
         {children}

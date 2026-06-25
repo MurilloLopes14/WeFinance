@@ -2,6 +2,7 @@ import type { AccountResponseDto } from '@/api/generated/models/accountResponseD
 import type { HouseholdResponseDto } from '@/api/generated/models/householdResponseDto'
 import type { TransactionsControllerFindAllType } from '@/api/generated/models/transactionsControllerFindAllType'
 import { ObjectHeader, type ObjectHeaderCreateAction } from '@/components/object/object-header'
+import { TransactionExportPopover } from '@/components/transactions/transaction-export-popover'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import {
@@ -61,6 +62,8 @@ export function TransactionHeader({
     <ObjectHeader
       title="Transações"
       description="Registre despesas, receitas e transferências. A listagem exibe as movimentações mais recentes primeiro."
+      tourAnchor="transactions-header"
+      toolbarTourAnchor="transactions-toolbar"
       searchValue={showToolbar ? searchValue : undefined}
       onSearchChange={showToolbar ? onSearchChange : undefined}
       searchPlaceholder="Buscar por descrição..."
@@ -74,6 +77,11 @@ export function TransactionHeader({
           type: 'all',
           accountId: 'all',
         })
+      }
+      headerActions={
+        showToolbar && filters.householdId ? (
+          <TransactionExportPopover householdId={filters.householdId} filters={filters} />
+        ) : undefined
       }
       createAction={createAction}
       filtersContent={

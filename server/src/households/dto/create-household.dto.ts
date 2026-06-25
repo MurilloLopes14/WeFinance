@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsEnum, IsOptional, IsString, Length, MaxLength } from 'class-validator';
+import { IsBoolean, IsEnum, IsNumber, IsOptional, IsString, Length, MaxLength, Min } from 'class-validator';
 
 export class CreateHouseholdDto {
   @ApiProperty({ example: 'Murillo & Partner' })
@@ -26,4 +26,22 @@ export class CreateHouseholdDto {
   @IsString()
   @MaxLength(20)
   color?: string;
+
+  @ApiPropertyOptional({
+    example: 5000,
+    description: 'Monthly budget for the current month (optional)',
+  })
+  @IsOptional()
+  @IsNumber({ maxDecimalPlaces: 2 })
+  @Min(0.01)
+  monthlyBudget?: number;
+
+  @ApiPropertyOptional({
+    example: true,
+    default: false,
+    description: 'Manter orçamento do grupo e categorias na virada do mês (copia automaticamente)',
+  })
+  @IsOptional()
+  @IsBoolean()
+  keepBudgets?: boolean;
 }

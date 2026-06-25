@@ -18,7 +18,7 @@ export class SavingsVsLastMonthRule implements InsightRule {
 
     const message = saved
       ? `Você economizou ${valor} a mais que no mês passado. Parabéns!`
-      : `Seu saldo ficou ${valor} abaixo do mês passado em relação ao mês anterior.`;
+      : `Seu saldo ficou ${valor} abaixo do mês passado.`;
 
     return {
       id: 'savings_vs_last_month:personal',

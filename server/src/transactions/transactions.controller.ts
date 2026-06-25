@@ -10,14 +10,18 @@ import {
   Patch,
   Post,
   Query,
+  Res,
+  StreamableFile,
   UseGuards,
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
   ApiOperation,
+  ApiProduces,
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
+import type { Response } from 'express';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import type { AuthenticatedUser } from '../common/types/jwt-payload.type';
@@ -29,6 +33,13 @@ import {
   TransactionResponseDto,
   TransactionSummaryResponseDto,
 } from './dto/transaction-response.dto';
+import {
+  BalanceHistoryResponseDto,
+  CategoryBreakdownResponseDto,
+  DailySummaryResponseDto,
+  PersonalSummaryResponseDto,
+} from './dto/dashboard-response.dto';
+import { FilterBalanceHistoryDto, FilterCategoryBreakdownDto, FilterExportDto } from './dto/filter-report.dto';
 import { TransactionsService } from './transactions.service';
 
 @ApiTags('Transactions')
@@ -60,9 +71,9 @@ export class TransactionsController {
     return this.transactionsService.findAll(householdId, user.id, filters);
   }
 
-  // Static route defined before :txId to avoid shadowing
+  // Static routes defined before :txId to avoid shadowing
   @Get('report/summary')
-  @ApiOperation({ summary: 'Monthly income/expense summary' })
+  @ApiOperation({ summary: 'Monthly household income/expense summary' })
   @ApiResponse({ status: 200, type: TransactionSummaryResponseDto })
   getSummary(
     @Param('householdId', ParseUUIDPipe) householdId: string,
@@ -70,6 +81,80 @@ export class TransactionsController {
     @CurrentUser() user: AuthenticatedUser,
   ) {
     return this.transactionsService.getSummary(householdId, user.id, month);
+  }
+
+  @Get('report/personal-summary')
+  @ApiOperation({ summary: 'Personal monthly summary (splits + direct transactions) + total accounts balance' })
+  @ApiResponse({ status: 200, type: PersonalSummaryResponseDto })
+  getPersonalSummary(
+    @Param('householdId', ParseUUIDPipe) householdId: string,
+    @Query('month') month: string | undefined,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    return this.transactionsService.getPersonalSummary(householdId, user.id, month);
+  }
+
+  @Get('report/category-breakdown')
+  @ApiOperation({ summary: 'Expense breakdown by category (household or personal scope)' })
+  @ApiResponse({ status: 200, type: CategoryBreakdownResponseDto })
+  getCategoryBreakdown(
+    @Param('householdId', ParseUUIDPipe) householdId: string,
+    @Query() query: FilterCategoryBreakdownDto,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    return this.transactionsService.getCategoryBreakdown(
+      householdId,
+      user.id,
+      query.scope ?? 'household',
+      query.month,
+    );
+  }
+
+  @Get('report/daily-summary')
+  @ApiOperation({ summary: 'Daily income/expense aggregation for calendar view' })
+  @ApiResponse({ status: 200, type: DailySummaryResponseDto })
+  getDailySummary(
+    @Param('householdId', ParseUUIDPipe) householdId: string,
+    @Query('month') month: string | undefined,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    return this.transactionsService.getDailySummary(householdId, user.id, month);
+  }
+
+  @Get('report/export')
+  @ApiOperation({ summary: 'Export transactions as CSV file' })
+  @ApiProduces('text/csv')
+  @ApiResponse({ status: 200, description: 'CSV file download' })
+  async exportCsv(
+    @Param('householdId', ParseUUIDPipe) householdId: string,
+    @Query() query: FilterExportDto,
+    @CurrentUser() user: AuthenticatedUser,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<StreamableFile> {
+    const csv = await this.transactionsService.exportCsv(householdId, user.id, query);
+    const datePart =
+      query.from && query.to
+        ? `${query.from}-a-${query.to}`
+        : new Date().toISOString().slice(0, 10);
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename="transacoes-${datePart}.csv"`);
+    return new StreamableFile(Buffer.from('﻿' + csv, 'utf-8'));
+  }
+
+  @Get('report/balance-history')
+  @ApiOperation({ summary: 'Monthly balance evolution over a range of months' })
+  @ApiResponse({ status: 200, type: BalanceHistoryResponseDto })
+  getBalanceHistory(
+    @Param('householdId', ParseUUIDPipe) householdId: string,
+    @Query() query: FilterBalanceHistoryDto,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    return this.transactionsService.getBalanceHistory(
+      householdId,
+      user.id,
+      query.months ?? 6,
+      query.endMonth,
+    );
   }
 
   @Get(':txId')
