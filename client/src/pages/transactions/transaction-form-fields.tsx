@@ -2,9 +2,12 @@ import type { AccountResponseDto } from '@/api/generated/models/accountResponseD
 import type { CategoryResponseDto } from '@/api/generated/models/categoryResponseDto'
 import type { HouseholdMemberResponseDto } from '@/api/generated/models/householdMemberResponseDto'
 import type { HouseholdResponseDto } from '@/api/generated/models/householdResponseDto'
+import type { PayeeResponseDto } from '@/api/generated/models/payeeResponseDto'
+import { PayeeSearchField } from '@/components/payees/payee-search-field'
 import { getHouseholdSplitTypeLabel } from '@/components/households/household-header'
 import { HouseholdComboboxField } from '@/components/households/household-combobox-field'
 import { HouseholdGatedFormSection } from '@/components/object/household-gated-form-section'
+import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import {
@@ -18,6 +21,7 @@ import {
 import { Textarea } from '@/components/ui/textarea'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import { formatAccountBalance } from '@/lib/account-helpers'
+import { getPayeePartyLabel } from '@/lib/payee-helpers'
 import { isFutureTransactionDate } from '@/lib/transaction-helpers'
 import { getUserInitials } from '@/lib/household-helpers'
 import {
@@ -49,10 +53,13 @@ type TransactionFormFieldsProps = {
   watch: UseFormWatch<TransactionFormValues>
   accounts: AccountResponseDto[]
   categories: CategoryResponseDto[]
+  payees: PayeeResponseDto[]
   members: HouseholdMemberResponseDto[]
   household: HouseholdResponseDto | undefined
   currentUserId?: string
   isLoadingMembers?: boolean
+  isQuickCreatingPayee?: boolean
+  onQuickCreatePayee?: () => void
   householdDisabled?: boolean
 }
 
@@ -64,16 +71,21 @@ export function TransactionFormFields({
   watch,
   accounts,
   categories,
+  payees,
   members,
   household,
   currentUserId,
   isLoadingMembers = false,
+  isQuickCreatingPayee = false,
+  onQuickCreatePayee,
   householdDisabled = false,
 }: TransactionFormFieldsProps) {
   const householdId = watch('householdId')
   const type = watch('type')
   const accountId = watch('accountId')
   const date = watch('date')
+  const hasPayee = watch('hasPayee')
+  const payeeId = watch('payeeId')
   const splitMode = watch('splitMode')
   const amount = watch('amount')
   const customSplits = watch('customSplits')
@@ -147,6 +159,9 @@ export function TransactionFormFields({
           setValue('accountId', '', { shouldValidate: true })
           setValue('categoryId', '', { shouldValidate: true })
           setValue('toAccountId', '', { shouldValidate: true })
+          setValue('hasPayee', false, { shouldValidate: true })
+          setValue('payeeId', '', { shouldValidate: true })
+          setValue('payeeName', '', { shouldValidate: true })
           setValue('customSplits', [], { shouldValidate: true })
         }}
         disabled={householdDisabled}
@@ -166,6 +181,9 @@ export function TransactionFormFields({
                 shouldValidate: true,
               })
               setValue('categoryId', '', { shouldValidate: true })
+              setValue('hasPayee', false, { shouldValidate: true })
+              setValue('payeeId', '', { shouldValidate: true })
+              setValue('payeeName', '', { shouldValidate: true })
             }}
             items={transactionTypeFormOptions.map((option) => ({
               value: option.value,
@@ -342,6 +360,61 @@ export function TransactionFormFields({
           <p className="text-sm text-destructive">{errors.description.message}</p>
         )}
       </div>
+
+      {!isTransfer && (
+        <div className="space-y-3 border-t border-foreground/10 pt-4">
+          <div className="flex items-start gap-2">
+            <Checkbox
+              id="transaction-has-payee"
+              checked={hasPayee}
+              disabled={fieldsDisabled}
+              onCheckedChange={(checked) => {
+                const enabled = checked === true
+                setValue('hasPayee', enabled, { shouldValidate: true })
+
+                if (!enabled) {
+                  setValue('payeeId', '', { shouldValidate: true })
+                  setValue('payeeName', '', { shouldValidate: true })
+                }
+              }}
+            />
+            <div className="space-y-1">
+              <Label htmlFor="transaction-has-payee" className="font-normal leading-snug">
+                Esta transação possui um {getPayeePartyLabel(type)}
+              </Label>
+              <p className="text-xs leading-relaxed text-muted-foreground">
+                Vincule quem recebeu ou pagou esta movimentação.
+              </p>
+            </div>
+          </div>
+
+          {hasPayee && (
+            <PayeeSearchField
+              payees={payees}
+              value={payeeId ?? ''}
+              onValueChange={(nextPayeeId) => {
+                setValue('payeeId', nextPayeeId, { shouldValidate: true })
+                const payee = payees.find((entry) => entry.id === nextPayeeId)
+                setValue('payeeName', payee?.name ?? '', { shouldValidate: true })
+
+                const defaultCategoryId = payee?.defaultCategoryId
+                if (typeof defaultCategoryId === 'string' && defaultCategoryId && !watch('categoryId')) {
+                  setValue('categoryId', defaultCategoryId, { shouldValidate: true })
+                }
+              }}
+              onQueryChange={(query) => {
+                setValue('payeeName', query, { shouldValidate: true })
+              }}
+              allowQuickCreate
+              onQuickCreate={onQuickCreatePayee}
+              isQuickCreating={isQuickCreatingPayee}
+              disabled={fieldsDisabled}
+              error={errors.payeeName?.message ?? errors.payeeId?.message}
+              label={`Buscar ${getPayeePartyLabel(type)}`}
+            />
+          )}
+        </div>
+      )}
 
       {showSplitSection && (
         <div className="space-y-3 border-t border-foreground/10 pt-4">

@@ -1,5 +1,7 @@
 import type { AccountResponseDto } from '@/api/generated/models/accountResponseDto'
 import type { CategoryResponseDto } from '@/api/generated/models/categoryResponseDto'
+import type { PayeeResponseDto } from '@/api/generated/models/payeeResponseDto'
+import { PayeeSearchField } from '@/components/payees/payee-search-field'
 import { HouseholdComboboxField } from '@/components/households/household-combobox-field'
 import { HouseholdGatedFormSection } from '@/components/object/household-gated-form-section'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -18,6 +20,7 @@ import {
   subscriptionTypeFormOptions,
   type SubscriptionFormValues,
 } from '@/pages/subscriptions/subscription-form-schema'
+import { getPayeePartyLabel } from '@/lib/payee-helpers'
 import type { FieldErrors, UseFormRegister, UseFormSetValue, UseFormWatch } from 'react-hook-form'
 import { useMemo } from 'react'
 
@@ -28,6 +31,8 @@ type SubscriptionFormFieldsProps = {
   watch: UseFormWatch<SubscriptionFormValues>
   accounts: AccountResponseDto[]
   categories: CategoryResponseDto[]
+  payees?: PayeeResponseDto[]
+  showPayeeField?: boolean
   householdDisabled?: boolean
 }
 
@@ -38,12 +43,16 @@ export function SubscriptionFormFields({
   watch,
   accounts,
   categories,
+  payees = [],
+  showPayeeField = false,
   householdDisabled = false,
 }: SubscriptionFormFieldsProps) {
   const householdId = watch('householdId')
   const type = watch('type')
   const accountId = watch('accountId')
   const active = watch('active')
+  const hasPayee = watch('hasPayee')
+  const payeeId = watch('payeeId')
   const fieldsDisabled = !householdId
 
   const filteredCategories = useMemo(
@@ -197,6 +206,53 @@ export function SubscriptionFormFields({
           </Select>
         </div>
       </div>
+
+      {showPayeeField && (
+        <div className="space-y-3 border-t border-foreground/10 pt-4">
+          <div className="flex items-start gap-2">
+            <Checkbox
+              id="subscription-has-payee"
+              checked={hasPayee}
+              disabled={fieldsDisabled}
+              onCheckedChange={(checked) => {
+                const enabled = checked === true
+                setValue('hasPayee', enabled, { shouldValidate: true })
+
+                if (!enabled) {
+                  setValue('payeeId', '', { shouldValidate: true })
+                }
+              }}
+            />
+            <div className="space-y-1">
+              <Label htmlFor="subscription-has-payee" className="font-normal leading-snug">
+                Este fixo possui um {getPayeePartyLabel(type)} vinculado
+              </Label>
+              <p className="text-xs leading-relaxed text-muted-foreground">
+                Selecione um beneficiário já cadastrado no grupo.
+              </p>
+            </div>
+          </div>
+
+          {hasPayee && (
+            <PayeeSearchField
+              payees={payees}
+              value={payeeId ?? ''}
+              onValueChange={(nextPayeeId) => {
+                setValue('payeeId', nextPayeeId, { shouldValidate: true })
+
+                const payee = payees.find((entry) => entry.id === nextPayeeId)
+                const defaultCategoryId = payee?.defaultCategoryId
+                if (typeof defaultCategoryId === 'string' && defaultCategoryId && !watch('categoryId')) {
+                  setValue('categoryId', defaultCategoryId, { shouldValidate: true })
+                }
+              }}
+              disabled={fieldsDisabled}
+              error={errors.payeeId?.message}
+              label={`Alterar ${getPayeePartyLabel(type)}`}
+            />
+          )}
+        </div>
+      )}
 
       <div className="grid min-w-0 gap-4 sm:grid-cols-3">
         <div className="space-y-2">

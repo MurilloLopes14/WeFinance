@@ -5,6 +5,11 @@ import {
   useHouseholdsControllerFindMembers,
 } from '@/api/generated/households/households'
 import {
+  getPayeesControllerFindAllQueryKey,
+  payeesControllerCreate,
+  usePayeesControllerFindAll,
+} from '@/api/generated/payees/payees'
+import {
   getTransactionsControllerFindAllQueryKey,
   useTransactionsControllerCreate,
 } from '@/api/generated/transactions/transactions'
@@ -34,7 +39,7 @@ import {
 import { CreateTransactionDtoType } from '@/api/generated/models/createTransactionDtoType'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Loader2 } from 'lucide-react'
-import { useEffect, useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { toast } from 'sonner'
 import { useQueryClient } from '@tanstack/react-query'
@@ -52,6 +57,7 @@ export function TransactionCreateModal({
 }: TransactionCreateModalProps) {
   const queryClient = useQueryClient()
   const { data: currentUser } = useAuthSession({ enabled: open })
+  const [isQuickCreatingPayee, setIsQuickCreatingPayee] = useState(false)
 
   const {
     register,
@@ -59,6 +65,7 @@ export function TransactionCreateModal({
     reset,
     setValue,
     watch,
+    getValues,
     control,
     formState: { errors },
   } = useForm<TransactionFormValues>({
@@ -87,6 +94,10 @@ export function TransactionCreateModal({
     query: { enabled: open && Boolean(formHouseholdId) },
   })
 
+  const { data: payees = [] } = usePayeesControllerFindAll(formHouseholdId, undefined, {
+    query: { enabled: open && Boolean(formHouseholdId) },
+  })
+
   const {
     data: members = [],
     isLoading: isLoadingMembers,
@@ -98,6 +109,7 @@ export function TransactionCreateModal({
     if (!open) return
 
     reset(createDefaultTransactionFormValues(defaultHouseholdId ?? ''))
+    setIsQuickCreatingPayee(false)
   }, [defaultHouseholdId, open, reset])
 
   useEffect(() => {
@@ -118,6 +130,7 @@ export function TransactionCreateModal({
         })
         toast.success('Transação criada com sucesso')
         reset(createDefaultTransactionFormValues())
+        setIsQuickCreatingPayee(false)
         onOpenChange(false)
       },
       onError: (error) => {
@@ -126,10 +139,47 @@ export function TransactionCreateModal({
     },
   })
 
-  const onSubmit = handleSubmit((values) => {
+  const resolvePayeeId = async (values: TransactionFormValues): Promise<string | undefined> => {
+    if (!values.hasPayee || values.type === CreateTransactionDtoType.transfer) {
+      return undefined
+    }
+
+    if (values.payeeId) return values.payeeId
+
+    const name = values.payeeName?.trim()
+    if (!name || !values.householdId) return undefined
+
+    const created = await payeesControllerCreate(values.householdId, {
+      name,
+      defaultCategoryId: values.categoryId || undefined,
+    })
+
+    await queryClient.invalidateQueries({
+      queryKey: getPayeesControllerFindAllQueryKey(values.householdId),
+    })
+
+    return created.id
+  }
+
+  const submitTransaction = async (values: TransactionFormValues) => {
     if (!values.householdId || !currentUser?.id) return
 
     const isTransfer = values.type === CreateTransactionDtoType.transfer
+
+    let payeeId: string | undefined
+    if (values.hasPayee && !isTransfer) {
+      try {
+        payeeId = await resolvePayeeId(values)
+      } catch (error) {
+        toast.error(getApiErrorMessage(error, 'Não foi possível cadastrar o beneficiário'))
+        return
+      }
+
+      if (!payeeId) {
+        toast.error('Selecione ou cadastre um beneficiário')
+        return
+      }
+    }
 
     const split =
       !isTransfer && selectedHousehold
@@ -152,6 +202,7 @@ export function TransactionCreateModal({
         date: values.date,
         categoryId: values.categoryId || undefined,
         description: values.description || undefined,
+        payeeId,
         transfer:
           isTransfer && values.toAccountId
             ? { toAccountId: values.toAccountId }
@@ -159,14 +210,54 @@ export function TransactionCreateModal({
         split,
       },
     })
+  }
+
+  const onSubmit = handleSubmit((values) => {
+    void submitTransaction(values)
   })
+
+  const handleQuickCreatePayee = async () => {
+    const values = getValues()
+    const name = values.payeeName?.trim()
+
+    if (!values.householdId || !name) return
+
+    setIsQuickCreatingPayee(true)
+
+    try {
+      const created = await payeesControllerCreate(values.householdId, {
+        name,
+        defaultCategoryId: values.categoryId || undefined,
+      })
+
+      await queryClient.invalidateQueries({
+        queryKey: getPayeesControllerFindAllQueryKey(values.householdId),
+      })
+
+      setValue('payeeId', created.id, { shouldValidate: true })
+      setValue('payeeName', created.name, { shouldValidate: true })
+
+      if (created.defaultCategoryId && typeof created.defaultCategoryId === 'string' && !values.categoryId) {
+        setValue('categoryId', created.defaultCategoryId, { shouldValidate: true })
+      }
+
+      toast.success('Beneficiário cadastrado')
+    } catch (error) {
+      toast.error(getApiErrorMessage(error, 'Não foi possível cadastrar o beneficiário'))
+    } finally {
+      setIsQuickCreatingPayee(false)
+    }
+  }
 
   const handleOpenChange = (nextOpen: boolean) => {
     if (!nextOpen) {
       reset(createDefaultTransactionFormValues())
+      setIsQuickCreatingPayee(false)
     }
     onOpenChange(nextOpen)
   }
+
+  const isBusy = createMutation.isPending || isQuickCreatingPayee
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
@@ -188,10 +279,13 @@ export function TransactionCreateModal({
               watch={watch}
               accounts={accounts}
               categories={categories}
+              payees={payees}
               members={members}
               household={selectedHousehold}
               currentUserId={currentUser?.id}
               isLoadingMembers={isLoadingMembers}
+              isQuickCreatingPayee={isQuickCreatingPayee}
+              onQuickCreatePayee={() => void handleQuickCreatePayee()}
               householdDisabled={Boolean(defaultHouseholdId)}
             />
           </form>
@@ -203,7 +297,7 @@ export function TransactionCreateModal({
             variant="ghost"
             className="rounded-xl"
             onClick={() => handleOpenChange(false)}
-            disabled={createMutation.isPending}
+            disabled={isBusy}
           >
             Cancelar
           </Button>
@@ -211,9 +305,9 @@ export function TransactionCreateModal({
             type="submit"
             form="transaction-create-form"
             className="glow-primary rounded-xl"
-            disabled={createMutation.isPending}
+            disabled={isBusy}
           >
-            {createMutation.isPending && <Loader2 className="size-4 animate-spin" />}
+            {isBusy && <Loader2 className="size-4 animate-spin" />}
             Criar transação
           </Button>
         </FormDialogFooter>

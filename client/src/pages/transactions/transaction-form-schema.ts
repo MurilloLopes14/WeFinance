@@ -35,6 +35,14 @@ export const transactionFormSchema = z
       .optional()
       .or(z.literal('')),
     toAccountId: z.string().optional().or(z.literal('')),
+    hasPayee: z.boolean(),
+    payeeId: z.string().optional().or(z.literal('')),
+    payeeName: z
+      .string()
+      .trim()
+      .max(120, 'O nome deve ter no máximo 120 caracteres')
+      .optional()
+      .or(z.literal('')),
     splitMode: z.enum(transactionSplitModeValues),
     customSplits: z.array(customSplitEntrySchema),
   })
@@ -54,6 +62,19 @@ export const transactionFormSchema = z
         })
       }
       return
+    }
+
+    if (values.hasPayee) {
+      const hasSelectedPayee = Boolean(values.payeeId)
+      const hasQuickCreateName = Boolean(values.payeeName?.trim())
+
+      if (!hasSelectedPayee && !hasQuickCreateName) {
+        context.addIssue({
+          code: 'custom',
+          path: ['payeeName'],
+          message: 'Selecione um beneficiário ou informe um nome para cadastrar',
+        })
+      }
     }
 
     if (values.splitMode !== 'custom') return
@@ -104,6 +125,9 @@ export function createDefaultTransactionFormValues(
     categoryId: '',
     description: '',
     toAccountId: '',
+    hasPayee: false,
+    payeeId: '',
+    payeeName: '',
     splitMode: 'none',
     customSplits: [],
   }

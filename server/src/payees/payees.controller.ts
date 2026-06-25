@@ -9,6 +9,7 @@ import {
   ParseUUIDPipe,
   Patch,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import {
@@ -22,6 +23,7 @@ import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import type { AuthenticatedUser } from '../common/types/jwt-payload.type';
 import { PayeeResponseDto } from './dto/payee-response.dto';
 import { CreatePayeeDto } from './dto/create-payee.dto';
+import { FilterPayeesDto } from './dto/filter-payees.dto';
 import { UpdatePayeeDto } from './dto/update-payee.dto';
 import { PayeesService } from './payees.service';
 
@@ -44,13 +46,14 @@ export class PayeesController {
   }
 
   @Get()
-  @ApiOperation({ summary: 'List all payees in a household' })
+  @ApiOperation({ summary: 'List payees in a household, optionally filtered by name' })
   @ApiResponse({ status: 200, type: [PayeeResponseDto] })
   findAll(
     @Param('householdId', ParseUUIDPipe) householdId: string,
+    @Query() filters: FilterPayeesDto,
     @CurrentUser() user: AuthenticatedUser,
   ) {
-    return this.payeesService.findAll(householdId, user.id);
+    return this.payeesService.findAll(householdId, user.id, filters);
   }
 
   @Get(':payeeId')

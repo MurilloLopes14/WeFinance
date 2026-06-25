@@ -39,7 +39,7 @@ const tourRegistry: Record<TourKey, Step[]> = {
     {
       target: '[data-tour="tour-nav-groups"]',
       title: 'Gestão de grupos',
-      content: 'Grupos, categorias, orçamentos, contas, fixos e rateios ficam aqui.',
+      content: 'Grupos, categorias, orçamentos, contas, fixos, pagadores e rateios ficam aqui.',
       placement: 'right',
       skipBeacon: true,
     },
@@ -198,6 +198,33 @@ const tourRegistry: Record<TourKey, Step[]> = {
       target: '[data-tour="subscriptions-list"]',
       title: 'Seus fixos',
       content: 'Acompanhe recorrências ativas e inativas, valores e próximas cobranças. Filtre por grupo, tipo ou status.',
+      placement: 'top',
+      skipBeacon: true,
+    },
+  ],
+
+  payees: [
+    {
+      target: pageHeader('payees'),
+      title: 'Pagadores e recebedores',
+      content:
+        'Cadastre quem paga ou recebe nas transações do grupo. Você também pode criar rapidamente ao registrar uma transação.',
+      placement: 'bottom',
+      skipBeacon: true,
+    },
+    {
+      target: '[data-tour="payees-toolbar"]',
+      title: 'Busca e filtros',
+      content:
+        'Encontre pagadores por nome ou filtre por grupo. Proprietários podem cadastrar novos registros pelo botão no canto.',
+      placement: 'bottom',
+      skipBeacon: true,
+    },
+    {
+      target: '[data-tour="payees-list"]',
+      title: 'Lista de pagadores',
+      content:
+        'Veja nome, categoria padrão e regras de importação CSV. Edite ou exclua registros diretamente na tabela.',
       placement: 'top',
       skipBeacon: true,
     },

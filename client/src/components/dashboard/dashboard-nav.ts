@@ -2,6 +2,7 @@ import type { LucideIcon } from 'lucide-react'
 import {
   ArrowLeftRight,
   CalendarClock,
+  Contact,
   FolderKanban,
   HelpCircle,
   Landmark,
@@ -60,6 +61,11 @@ export const dashboardGroupsNav: DashboardNavGroup = {
       title: 'Fixos',
       url: '/dashboard/fixos',
       icon: CalendarClock,
+    },
+    {
+      title: 'Pagadores',
+      url: '/dashboard/pagadores',
+      icon: Contact,
     },
     {
       title: 'Rateios',

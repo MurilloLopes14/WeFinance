@@ -11,6 +11,7 @@ import { ProfilePage } from '@/pages/profile/profile-page'
 import { HouseholdPage } from '@/pages/households/household-page'
 import { BudgetPage } from '@/pages/budgets/budget-page'
 import { HelpPage } from '@/pages/help/help-page'
+import { PayeePage } from '@/pages/payees/payee-page'
 import { TransactionPage } from '@/pages/transactions/transaction-page'
 import {
   dashboardGroupsNav,
@@ -84,6 +85,8 @@ export function AppRouter() {
                     <AccountPage />
                   ) : item.url === '/dashboard/fixos' ? (
                     <SubscriptionPage />
+                  ) : item.url === '/dashboard/pagadores' ? (
+                    <PayeePage />
                   ) : item.url === '/dashboard/rateios' ? (
                     <SplitPage />
                   ) : (

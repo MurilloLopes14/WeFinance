@@ -15,6 +15,8 @@ export const subscriptionFormSchema = z.object({
     .min(0.01, 'O valor deve ser maior que zero'),
   accountId: z.string().uuid('Selecione uma conta'),
   categoryId: z.string().optional().or(z.literal('')),
+  hasPayee: z.boolean(),
+  payeeId: z.string().optional().or(z.literal('')),
   cadenceUnit: z.enum([
     CreateSubscriptionDtoCadenceUnit.day,
     CreateSubscriptionDtoCadenceUnit.week,
@@ -30,6 +32,14 @@ export const subscriptionFormSchema = z.object({
     .trim()
     .regex(/^\d{4}-\d{2}-\d{2}$/, 'Informe uma data válida'),
   active: z.boolean(),
+}).superRefine((values, context) => {
+  if (values.hasPayee && !values.payeeId) {
+    context.addIssue({
+      code: 'custom',
+      path: ['payeeId'],
+      message: 'Selecione um beneficiário',
+    })
+  }
 })
 
 export type SubscriptionFormValues = z.infer<typeof subscriptionFormSchema>
@@ -48,6 +58,8 @@ export const defaultSubscriptionFormValues: SubscriptionFormValues = {
   amount: 0,
   accountId: '',
   categoryId: '',
+  hasPayee: false,
+  payeeId: '',
   cadenceUnit: CreateSubscriptionDtoCadenceUnit.month,
   cadenceEvery: 1,
   nextRunAt: getDefaultNextRunAt(),

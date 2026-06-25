@@ -17,14 +17,15 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { FilterUsersDto } from './dto/filter-users.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UpdateOnboardingDto } from './dto/update-onboarding.dto';
+import { TourKey } from './tour-keys.constants';
 
 type User = typeof users.$inferSelect;
 type SafeUser = Omit<User, 'password'>;
 
 export interface OnboardingData {
   toursEnabled: boolean;
-  completedTours: string[];
-  dismissedTours: string[];
+  completedTours: TourKey[];
+  dismissedTours: TourKey[];
   lastTourCompletedAt: string | null;
 }
 

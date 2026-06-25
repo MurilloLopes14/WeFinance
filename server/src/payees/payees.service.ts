@@ -4,7 +4,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { and, eq } from 'drizzle-orm';
+import { and, eq, ilike } from 'drizzle-orm';
 import { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import { DRIZZLE } from '../database/database.constants';
 import * as schema from '../database/schema';
@@ -12,6 +12,7 @@ import { categories, payees } from '../database/schema';
 import { HouseholdsService } from '../households/households.service';
 import { PayeeResponseDto } from './dto/payee-response.dto';
 import { CreatePayeeDto } from './dto/create-payee.dto';
+import { FilterPayeesDto } from './dto/filter-payees.dto';
 import { UpdatePayeeDto } from './dto/update-payee.dto';
 
 type Payee = typeof payees.$inferSelect;
@@ -54,13 +55,17 @@ export class PayeesService {
   async findAll(
     householdId: string,
     requesterId: string,
+    filters: FilterPayeesDto = {},
   ): Promise<PayeeResponseDto[]> {
     await this.householdsService.assertMember(householdId, requesterId);
+
+    const conditions = [eq(payees.householdId, householdId)];
+    if (filters.name) conditions.push(ilike(payees.name, `%${filters.name}%`));
 
     const rows = await this.db
       .select()
       .from(payees)
-      .where(eq(payees.householdId, householdId));
+      .where(and(...conditions));
 
     return rows.map(this.format);
   }

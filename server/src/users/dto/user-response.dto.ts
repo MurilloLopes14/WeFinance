@@ -1,14 +1,17 @@
 ﻿import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { TOUR_KEYS, TourKey } from '../tour-keys.constants';
+
+const TOUR_KEY_VALUES = Object.values(TOUR_KEYS);
 
 export class OnboardingDto {
   @ApiProperty()
   toursEnabled: boolean;
 
-  @ApiProperty({ type: [String] })
-  completedTours: string[];
+  @ApiProperty({ enum: TOUR_KEY_VALUES, isArray: true })
+  completedTours: TourKey[];
 
-  @ApiProperty({ type: [String] })
-  dismissedTours: string[];
+  @ApiProperty({ enum: TOUR_KEY_VALUES, isArray: true })
+  dismissedTours: TourKey[];
 
   @ApiPropertyOptional({ nullable: true })
   lastTourCompletedAt: string | null;
