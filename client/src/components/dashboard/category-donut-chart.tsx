@@ -36,11 +36,13 @@ export function CategoryDonutChart({
 }: CategoryDonutChartProps) {
   const slices: ChartSlice[] =
     data?.categories.map((category, index) => ({
-      key: category.categoryId ?? `uncategorized-${index}`,
+      key: (category.categoryId as string | null) ?? `uncategorized-${index}`,
       name: category.categoryName,
       value: category.amount,
       percentage: category.percentage,
-      fill: category.color ?? CHART_FALLBACK_COLORS[index % CHART_FALLBACK_COLORS.length],
+      fill:
+        (category.color as string | null) ??
+        CHART_FALLBACK_COLORS[index % CHART_FALLBACK_COLORS.length],
     })) ?? []
 
   const chartConfig = slices.reduce<ChartConfig>((config, slice) => {

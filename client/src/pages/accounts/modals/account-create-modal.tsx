@@ -20,11 +20,12 @@ import {
   buildInvestmentAccountPayload,
   defaultAccountFormValues,
   accountFormSchema,
+  type AccountEditFormValues,
   type AccountFormValues,
 } from '@/pages/accounts/account-form-schema'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Loader2 } from 'lucide-react'
-import { useForm } from 'react-hook-form'
+import { useForm, type UseFormSetValue } from 'react-hook-form'
 import { toast } from 'sonner'
 import { useQueryClient } from '@tanstack/react-query'
 
@@ -102,7 +103,11 @@ export function AccountCreateModal({ open, onOpenChange }: AccountCreateModalPro
             <AccountFormFields
               register={register}
               errors={errors}
-              setValue={setValue}
+              setValue={
+                setValue as UseFormSetValue<
+                  AccountFormValues | AccountEditFormValues
+                >
+              }
               watch={watch}
             />
           </form>

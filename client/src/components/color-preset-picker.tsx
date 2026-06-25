@@ -6,7 +6,7 @@ import {
 import { cn } from '@/lib/utils'
 
 type ColorPresetPickerProps = {
-  value: string
+  value: string | undefined
   onChange: (color: string) => void
   presets?: readonly PresetColor[]
   className?: string
@@ -27,7 +27,7 @@ export function ColorPresetPicker({
       aria-label="Cores padrão"
     >
       {presets.map((preset) => {
-        const selected = isSameHexColor(value, preset.value)
+        const selected = isSameHexColor(value ?? '', preset.value)
 
         return (
           <button

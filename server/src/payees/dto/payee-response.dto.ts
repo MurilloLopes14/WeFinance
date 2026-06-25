@@ -7,13 +7,13 @@ export class PayeeResponseDto {
   @ApiProperty()
   householdId: string;
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiPropertyOptional({ type: String, nullable: true })
   defaultCategoryId: string | null;
 
   @ApiProperty({ example: 'Supermercado Extra' })
   name: string;
 
-  @ApiPropertyOptional({ nullable: true, example: 'extra|supermercado' })
+  @ApiPropertyOptional({ type: String, nullable: true, example: 'extra|supermercado' })
   regexRule: string | null;
 
   @ApiProperty()

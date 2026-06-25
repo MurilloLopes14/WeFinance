@@ -1,6 +1,6 @@
 import { getHouseholdSplitTypeLabel } from '@/components/households/household-header'
 import { ColoredObjectIcon } from '@/components/object/colored-object-icon'
-import { ObjectCardActionsMenu } from '@/components/object/object-card-actions-menu'
+import { ObjectCardActionsMenu, type ObjectCardAction } from '@/components/object/object-card-actions-menu'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardTitle } from '@/components/ui/card'
 import type { HouseholdResponseDto } from '@/api/generated/models/householdResponseDto'
@@ -32,7 +32,7 @@ export function HouseholdCard({
   const memberCount = household.members?.length ?? 0
   const householdColor = household.color ?? DEFAULT_PRESET_COLOR
 
-  const actions = [
+  const actions: ObjectCardAction[] = [
     {
       id: 'members',
       label: 'Gerenciar membros',
@@ -45,16 +45,17 @@ export function HouseholdCard({
       icon: Pencil,
       onClick: () => onEdit(household),
     },
-    onDelete
-      ? {
-          id: 'delete',
-          label: `Excluir ${household.name}`,
-          icon: Trash2,
-          variant: 'destructive' as const,
-          onClick: () => onDelete(household),
-        }
-      : null,
-  ].filter(Boolean)
+  ]
+
+  if (onDelete) {
+    actions.push({
+      id: 'delete',
+      label: `Excluir ${household.name}`,
+      icon: Trash2,
+      variant: 'destructive',
+      onClick: () => onDelete(household),
+    })
+  }
 
   return (
     <Card

@@ -7,7 +7,7 @@ export class TransactionOwnerDto {
   @ApiProperty()
   name: string;
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiPropertyOptional({ type: String, nullable: true })
   avatarUrl: string | null;
 }
 
@@ -18,7 +18,7 @@ export class SplitMemberPreviewDto {
   @ApiProperty()
   name: string;
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiPropertyOptional({ type: String, nullable: true })
   avatarUrl: string | null;
 }
 
@@ -43,7 +43,7 @@ export class TransactionSplitResponseDto {
   @ApiProperty()
   share: number;
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiPropertyOptional({ type: String, nullable: true })
   categoryId: string | null;
 }
 
@@ -57,10 +57,10 @@ export class TransactionResponseDto {
   @ApiProperty()
   accountId: string;
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiPropertyOptional({ type: String, nullable: true })
   payeeId: string | null;
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiPropertyOptional({ type: String, nullable: true })
   categoryId: string | null;
 
   @ApiProperty({ enum: ['expense', 'income', 'transfer'] })
@@ -69,7 +69,7 @@ export class TransactionResponseDto {
   @ApiProperty()
   amount: number;
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiPropertyOptional({ type: String, nullable: true })
   description: string | null;
 
   @ApiProperty({ example: '2025-10-15' })
@@ -78,10 +78,10 @@ export class TransactionResponseDto {
   @ApiProperty({ enum: ['draft', 'cleared', 'reconciled'] })
   status: 'draft' | 'cleared' | 'reconciled';
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiPropertyOptional({ type: String, nullable: true })
   transferToId: string | null;
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiPropertyOptional({ type: String, nullable: true })
   transferLinkId: string | null;
 
   @ApiPropertyOptional({ nullable: true })

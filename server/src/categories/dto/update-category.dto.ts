@@ -23,7 +23,7 @@ export class UpdateCategoryDto {
   @IsEnum(['expense', 'income', 'transfer'])
   kind?: 'expense' | 'income' | 'transfer';
 
-  @ApiPropertyOptional({ nullable: true, description: 'Set to null to make this a root category' })
+  @ApiPropertyOptional({ type: String, nullable: true, description: 'Set to null to make this a root category' })
   @IsOptional()
   @IsUUID()
   parentId?: string | null;
@@ -33,7 +33,7 @@ export class UpdateCategoryDto {
   @IsBoolean()
   isFixed?: boolean;
 
-  @ApiPropertyOptional({ example: '#FF5733', nullable: true })
+  @ApiPropertyOptional({ type: String, example: '#FF5733', nullable: true })
   @IsOptional()
   @IsString()
   @MaxLength(20)

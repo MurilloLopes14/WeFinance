@@ -150,22 +150,44 @@ export function parseYieldPercentForApi(value: string | undefined): number | und
   return amount
 }
 
+type InvestmentPayloadInput = {
+  type: CreateAccountDtoType
+  yieldPercent?: string
+  yieldGranularity?: CreateAccountDtoYieldGranularity | ''
+  maturityDate?: string
+}
+
+type InvestmentPayload = {
+  yieldPercent?: number
+  yieldGranularity?: CreateAccountDtoYieldGranularity
+  maturityDate?: string
+}
+
+type InvestmentClearPayload = {
+  yieldPercent: null
+  yieldGranularity: null
+  maturityDate: null
+}
+
 export function buildInvestmentAccountPayload(
-  values: {
-    type: CreateAccountDtoType
-    yieldPercent?: string
-    yieldGranularity?: string
-    maturityDate?: string
-  },
+  values: InvestmentPayloadInput,
+  options: { clearWhenNotInvestment: true },
+): InvestmentPayload | InvestmentClearPayload
+export function buildInvestmentAccountPayload(
+  values: InvestmentPayloadInput,
   options?: { clearWhenNotInvestment?: boolean },
-) {
+): InvestmentPayload
+export function buildInvestmentAccountPayload(
+  values: InvestmentPayloadInput,
+  options?: { clearWhenNotInvestment?: boolean },
+): InvestmentPayload | InvestmentClearPayload {
   if (values.type !== CreateAccountDtoType.investment) {
     if (options?.clearWhenNotInvestment) {
       return {
         yieldPercent: null,
         yieldGranularity: null,
         maturityDate: null,
-      } as const
+      }
     }
     return {}
   }

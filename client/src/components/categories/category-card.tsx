@@ -1,6 +1,6 @@
 import type { CategoryResponseDto } from "@/api/generated/models/categoryResponseDto";
 import { ColoredObjectIcon } from "@/components/object/colored-object-icon";
-import { ObjectCardActionsMenu } from "@/components/object/object-card-actions-menu";
+import { ObjectCardActionsMenu, type ObjectCardAction } from "@/components/object/object-card-actions-menu";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardTitle } from "@/components/ui/card";
 import { getCategoryKindLabel } from "@/lib/category-helpers";
@@ -31,25 +31,26 @@ export function CategoryCard({
 }: CategoryCardProps) {
   const categoryColor = category.color ?? DEFAULT_PRESET_COLOR;
 
-  const actions = [
-    onEdit
-      ? {
-          id: "edit",
-          label: `Editar ${category.name}`,
-          icon: Pencil,
-          onClick: () => onEdit(category),
-        }
-      : null,
-    onDelete
-      ? {
-          id: "delete",
-          label: `Excluir ${category.name}`,
-          icon: Trash2,
-          variant: "destructive" as const,
-          onClick: () => onDelete(category),
-        }
-      : null,
-  ].filter(Boolean);
+  const actions: ObjectCardAction[] = [];
+
+  if (onEdit) {
+    actions.push({
+      id: "edit",
+      label: `Editar ${category.name}`,
+      icon: Pencil,
+      onClick: () => onEdit(category),
+    });
+  }
+
+  if (onDelete) {
+    actions.push({
+      id: "delete",
+      label: `Excluir ${category.name}`,
+      icon: Trash2,
+      variant: "destructive",
+      onClick: () => onDelete(category),
+    });
+  }
 
   return (
     <Card

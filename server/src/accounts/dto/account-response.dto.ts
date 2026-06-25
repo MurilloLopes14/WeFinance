@@ -7,7 +7,7 @@ export class AccountResponseDto {
   @ApiProperty()
   householdId: string;
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiPropertyOptional({ type: String, nullable: true })
   userId: string | null;
 
   @ApiProperty({ example: 'Nubank Crédito' })
@@ -16,22 +16,22 @@ export class AccountResponseDto {
   @ApiProperty({ enum: ['checking', 'savings', 'credit', 'cash', 'investment'] })
   type: 'checking' | 'savings' | 'credit' | 'cash' | 'investment';
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiPropertyOptional({ type: String, nullable: true })
   institution: string | null;
 
   @ApiProperty({ example: 1500.0 })
   balanceManual: number;
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiPropertyOptional({ type: String, nullable: true })
   color: string | null;
 
-  @ApiPropertyOptional({ nullable: true, example: 13.5 })
+  @ApiPropertyOptional({ type: Number, nullable: true, example: 13.5 })
   yieldPercent: number | null;
 
   @ApiPropertyOptional({ nullable: true, enum: ['daily', 'monthly', 'annual'] })
   yieldGranularity: 'daily' | 'monthly' | 'annual' | null;
 
-  @ApiPropertyOptional({ nullable: true, example: '2028-06-23' })
+  @ApiPropertyOptional({ type: String, nullable: true, example: '2028-06-23' })
   maturityDate: string | null;
 
   @ApiProperty()

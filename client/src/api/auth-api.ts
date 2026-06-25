@@ -1,6 +1,6 @@
 import { customInstance } from './axios-instance'
 import type { MeResponseDto } from './generated/models/meResponseDto'
-import type { UpdateOnboardingDto } from './generated/models/onboardingDto'
+import type { UpdateOnboardingDto } from './generated/models/updateOnboardingDto'
 
 export function fetchCurrentUser() {
   return customInstance<MeResponseDto>({

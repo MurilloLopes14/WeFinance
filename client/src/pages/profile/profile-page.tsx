@@ -70,7 +70,7 @@ export function ProfilePage() {
             <ProfileAvatarSection
               name={user.name}
               email={user.email}
-              avatarUrl={user.avatarUrl}
+              avatarUrl={user.avatarUrl as string | null | undefined}
             />
           </ProfileSection>
 

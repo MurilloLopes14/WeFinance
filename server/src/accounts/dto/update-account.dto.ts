@@ -24,12 +24,12 @@ export class UpdateAccountDto {
   @IsEnum(['checking', 'savings', 'credit', 'cash', 'investment'])
   type?: 'checking' | 'savings' | 'credit' | 'cash' | 'investment';
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiPropertyOptional({ type: String, nullable: true })
   @IsOptional()
   @IsUUID()
   userId?: string | null;
 
-  @ApiPropertyOptional({ example: 'Nubank', nullable: true })
+  @ApiPropertyOptional({ type: String, example: 'Nubank', nullable: true })
   @IsOptional()
   @IsString()
   @Length(1, 100)
@@ -41,13 +41,13 @@ export class UpdateAccountDto {
   @Min(0)
   balanceManual?: number;
 
-  @ApiPropertyOptional({ example: '#10B981', nullable: true })
+  @ApiPropertyOptional({ type: String, example: '#10B981', nullable: true })
   @IsOptional()
   @IsString()
   @MaxLength(20)
   color?: string | null;
 
-  @ApiPropertyOptional({ example: 13.5, nullable: true, description: 'Taxa de rendimento anual (%). null para remover.' })
+  @ApiPropertyOptional({ type: Number, example: 13.5, nullable: true, description: 'Taxa de rendimento anual (%). null para remover.' })
   @IsOptional()
   @IsNumber({ maxDecimalPlaces: 4 })
   @Min(0)
@@ -59,7 +59,7 @@ export class UpdateAccountDto {
   @IsEnum(['daily', 'monthly', 'annual'])
   yieldGranularity?: 'daily' | 'monthly' | 'annual' | null;
 
-  @ApiPropertyOptional({ example: '2028-06-23', nullable: true })
+  @ApiPropertyOptional({ type: String, example: '2028-06-23', nullable: true })
   @IsOptional()
   @IsDateString()
   maturityDate?: string | null;

@@ -42,9 +42,10 @@ type HouseholdEditModalProps = {
 function toFormValues(household: HouseholdResponseDto): HouseholdFormValues {
   return {
     name: household.name,
-    currency: household.currency,
+    currency: household.currency as HouseholdFormValues['currency'],
     defaultSplitType: household.defaultSplitType,
-    color: household.color ?? defaultHouseholdFormValues.color,
+    color:
+      (household.color as string | null) ?? defaultHouseholdFormValues.color,
     keepBudgets: household.keepBudgets,
   }
 }

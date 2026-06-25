@@ -3,7 +3,6 @@ import { DashboardPanel } from '@/components/dashboard/dashboard-panel'
 import { TransactionOwnerAvatar } from '@/components/transactions/transaction-owner-avatar'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
-import { formatAccountBalance } from '@/lib/account-helpers'
 import {
   formatTransactionAmount,
   formatTransactionDate,

@@ -19,7 +19,7 @@ export class UpdateHouseholdDto {
   @IsEnum(['equal', 'percent'])
   defaultSplitType?: 'equal' | 'percent';
 
-  @ApiPropertyOptional({ example: '#4F46E5', nullable: true })
+  @ApiPropertyOptional({ type: String, example: '#4F46E5', nullable: true })
   @IsOptional()
   @IsString()
   @MaxLength(20)

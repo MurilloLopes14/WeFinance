@@ -10,7 +10,7 @@ export class SubscriptionResponseDto {
   @ApiProperty()
   accountId: string;
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiPropertyOptional({ type: String, nullable: true })
   categoryId: string | null;
 
   @ApiProperty()

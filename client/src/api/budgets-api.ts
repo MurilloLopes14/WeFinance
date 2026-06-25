@@ -139,11 +139,11 @@ export function useCopyBudgetsFromPrevious(
   return useMutation({
     ...options,
     mutationFn: ({ householdId }) => copyBudgetsFromPrevious(householdId),
-    onSuccess: async (data, variables, context) => {
+    onSuccess: async (data, variables, onMutateResult, context) => {
       await queryClient.invalidateQueries({
         queryKey: getBudgetsMonthQueryKey(variables.householdId, variables.month),
       })
-      await options?.onSuccess?.(data, variables, context)
+      await options?.onSuccess?.(data, variables, onMutateResult, context)
     },
   })
 }
@@ -161,11 +161,11 @@ export function useUpsertGroupBudget(
     ...options,
     mutationFn: ({ householdId, month, amount }) =>
       upsertGroupBudget(householdId, { month, amount }),
-    onSuccess: async (data, variables, context) => {
+    onSuccess: async (data, variables, onMutateResult, context) => {
       await queryClient.invalidateQueries({
         queryKey: getBudgetsMonthQueryKey(variables.householdId, variables.month),
       })
-      await options?.onSuccess?.(data, variables, context)
+      await options?.onSuccess?.(data, variables, onMutateResult, context)
     },
   })
 }
@@ -183,11 +183,11 @@ export function useUpsertCategoryBudget(
     ...options,
     mutationFn: ({ householdId, categoryId, month, amount }) =>
       upsertCategoryBudget(householdId, categoryId, { month, amount }),
-    onSuccess: async (data, variables, context) => {
+    onSuccess: async (data, variables, onMutateResult, context) => {
       await queryClient.invalidateQueries({
         queryKey: getBudgetsMonthQueryKey(variables.householdId, variables.month),
       })
-      await options?.onSuccess?.(data, variables, context)
+      await options?.onSuccess?.(data, variables, onMutateResult, context)
     },
   })
 }
@@ -204,11 +204,11 @@ export function useDeleteGroupBudget(
   return useMutation({
     ...options,
     mutationFn: ({ householdId, month }) => deleteGroupBudget(householdId, month),
-    onSuccess: async (_data, variables, context) => {
+    onSuccess: async (_data, variables, onMutateResult, context) => {
       await queryClient.invalidateQueries({
         queryKey: getBudgetsMonthQueryKey(variables.householdId, variables.month),
       })
-      await options?.onSuccess?.(_data, variables, context)
+      await options?.onSuccess?.(_data, variables, onMutateResult, context)
     },
   })
 }
@@ -226,11 +226,11 @@ export function useDeleteCategoryBudget(
     ...options,
     mutationFn: ({ householdId, categoryId, month }) =>
       deleteCategoryBudget(householdId, categoryId, month),
-    onSuccess: async (_data, variables, context) => {
+    onSuccess: async (_data, variables, onMutateResult, context) => {
       await queryClient.invalidateQueries({
         queryKey: getBudgetsMonthQueryKey(variables.householdId, variables.month),
       })
-      await options?.onSuccess?.(_data, variables, context)
+      await options?.onSuccess?.(_data, variables, onMutateResult, context)
     },
   })
 }

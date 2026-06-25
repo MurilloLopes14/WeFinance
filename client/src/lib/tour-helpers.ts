@@ -22,19 +22,22 @@ export function shouldRunTour(
   tourKey: string,
 ): boolean {
   if (!onboarding.toursEnabled) return false
-  return !onboarding.completedTours.includes(tourKey)
+  return !(onboarding.completedTours as string[]).includes(tourKey)
 }
 
 export function withCompletedTour(
   onboarding: OnboardingDto,
   tourKey: string,
 ): OnboardingDto {
-  if (onboarding.completedTours.includes(tourKey)) {
+  if ((onboarding.completedTours as string[]).includes(tourKey)) {
     return onboarding
   }
 
   return {
     ...onboarding,
-    completedTours: [...onboarding.completedTours, tourKey],
+    completedTours: [
+      ...onboarding.completedTours,
+      tourKey,
+    ] as OnboardingDto['completedTours'],
   }
 }

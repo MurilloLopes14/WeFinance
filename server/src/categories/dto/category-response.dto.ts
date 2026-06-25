@@ -7,7 +7,7 @@ export class CategoryResponseDto {
   @ApiProperty()
   householdId: string;
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiPropertyOptional({ type: String, nullable: true })
   parentId: string | null;
 
   @ApiProperty({ example: 'Alimentação' })
@@ -19,7 +19,7 @@ export class CategoryResponseDto {
   @ApiProperty()
   isFixed: boolean;
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiPropertyOptional({ type: String, nullable: true })
   color: string | null;
 
   @ApiProperty()

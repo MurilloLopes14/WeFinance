@@ -19,13 +19,13 @@ function useMonthReportQuery<T>(
   queryFn: (signal?: AbortSignal) => Promise<T>,
   enabled: boolean,
 ) {
-  return useQuery(
-    defaultQueryOptions({
-      queryKey,
+  return useQuery({
+    ...defaultQueryOptions({
       queryFn: ({ signal }) => queryFn(signal),
       enabled,
     }),
-  )
+    queryKey,
+  })
 }
 
 export function useDashboardData(

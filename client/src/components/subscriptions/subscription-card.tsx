@@ -2,7 +2,7 @@ import type { SubscriptionResponseDto } from '@/api/generated/models/subscriptio
 
 import { ColoredObjectIcon } from '@/components/object/colored-object-icon'
 
-import { ObjectCardActionsMenu } from '@/components/object/object-card-actions-menu'
+import { ObjectCardActionsMenu, type ObjectCardAction } from '@/components/object/object-card-actions-menu'
 
 import { Badge } from '@/components/ui/badge'
 
@@ -84,43 +84,26 @@ export function SubscriptionCard({
 
 
 
-  const actions = [
+  const actions: ObjectCardAction[] = []
 
-    onEdit
+  if (onEdit) {
+    actions.push({
+      id: 'edit',
+      label: `Editar ${subscription.name}`,
+      icon: Pencil,
+      onClick: () => onEdit(subscription),
+    })
+  }
 
-      ? {
-
-          id: 'edit',
-
-          label: `Editar ${subscription.name}`,
-
-          icon: Pencil,
-
-          onClick: () => onEdit(subscription),
-
-        }
-
-      : null,
-
-    onDelete
-
-      ? {
-
-          id: 'delete',
-
-          label: `Excluir ${subscription.name}`,
-
-          icon: Trash2,
-
-          variant: 'destructive' as const,
-
-          onClick: () => onDelete(subscription),
-
-        }
-
-      : null,
-
-  ].filter(Boolean)
+  if (onDelete) {
+    actions.push({
+      id: 'delete',
+      label: `Excluir ${subscription.name}`,
+      icon: Trash2,
+      variant: 'destructive',
+      onClick: () => onDelete(subscription),
+    })
+  }
 
 
 

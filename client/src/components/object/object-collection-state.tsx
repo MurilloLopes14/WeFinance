@@ -1,4 +1,4 @@
-import { ObjectEmptyState, type ObjectEmptyAction } from '@/components/object/object-empty-state'
+import type { ObjectEmptyAction } from '@/components/object/object-empty-state'
 import { Button } from '@/components/ui/button'
 import {
   Empty,

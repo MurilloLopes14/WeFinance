@@ -28,11 +28,13 @@ export function toBirthDateInputValue(birthDate?: string | null): string {
 }
 
 export function toProfileBasicInfoValues(user: UserResponseDto) {
+  const phoneNumber = user.phoneNumber as string | null | undefined
+
   return {
     name: user.name,
     email: user.email,
-    birthDate: toBirthDateInputValue(user.birthDate),
-    phoneNumber: user.phoneNumber ? formatPhoneInput(user.phoneNumber) : '',
+    birthDate: toBirthDateInputValue(user.birthDate as string | null | undefined),
+    phoneNumber: phoneNumber ? formatPhoneInput(phoneNumber) : '',
   }
 }
 

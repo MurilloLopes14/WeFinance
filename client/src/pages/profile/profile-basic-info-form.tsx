@@ -147,8 +147,8 @@ export function ProfileBasicInfoForm({ user }: ProfileBasicInfoFormProps) {
                 }}
                 disabled={(date) => date > new Date()}
                 defaultMonth={selectedBirthDate}
-                fromYear={1940}
-                toYear={new Date().getFullYear()}
+                startMonth={new Date(1940, 0)}
+                endMonth={new Date()}
               />
             </PopoverContent>
           </Popover>

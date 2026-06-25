@@ -1,6 +1,6 @@
 import type { AccountResponseDto } from '@/api/generated/models/accountResponseDto'
 import { ColoredObjectIcon } from '@/components/object/colored-object-icon'
-import { ObjectCardActionsMenu } from '@/components/object/object-card-actions-menu'
+import { ObjectCardActionsMenu, type ObjectCardAction } from '@/components/object/object-card-actions-menu'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardTitle } from '@/components/ui/card'
 import {
@@ -36,25 +36,26 @@ export function AccountCard({
   const accountColor = account.color ?? DEFAULT_PRESET_COLOR
   const currency = getAccountCurrency(account, householdCurrencyById)
 
-  const actions = [
-    onEdit
-      ? {
-          id: 'edit',
-          label: `Editar ${account.name}`,
-          icon: Pencil,
-          onClick: () => onEdit(account),
-        }
-      : null,
-    onDelete
-      ? {
-          id: 'delete',
-          label: `Excluir ${account.name}`,
-          icon: Trash2,
-          variant: 'destructive' as const,
-          onClick: () => onDelete(account),
-        }
-      : null,
-  ].filter(Boolean)
+  const actions: ObjectCardAction[] = []
+
+  if (onEdit) {
+    actions.push({
+      id: 'edit',
+      label: `Editar ${account.name}`,
+      icon: Pencil,
+      onClick: () => onEdit(account),
+    })
+  }
+
+  if (onDelete) {
+    actions.push({
+      id: 'delete',
+      label: `Excluir ${account.name}`,
+      icon: Trash2,
+      variant: 'destructive',
+      onClick: () => onDelete(account),
+    })
+  }
 
   return (
     <Card
