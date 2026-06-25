@@ -11,9 +11,7 @@ async function bootstrap() {
 
   validateEnvironment(configService);
 
-  const apiPrefix = configService.get<string>('api.prefix') || 'api';
-  const apiVersion = configService.get<string>('api.version') || 'v1';
-  const globalPrefix = `${apiPrefix}/${apiVersion}`;
+  const globalPrefix = 'api/v1';
   app.setGlobalPrefix(globalPrefix);
 
   app.useGlobalPipes(

@@ -32,12 +32,6 @@ export default () => ({
     credentials: process.env.CORS_CREDENTIALS !== 'false',
   },
 
-  // API Configuration
-  api: {
-    prefix: process.env.API_PREFIX || 'api',
-    version: process.env.API_VERSION || 'v1',
-  },
-
   // Swagger Configuration
   swagger: {
     enabled: process.env.SWAGGER_ENABLED !== 'false',
