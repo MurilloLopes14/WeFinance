@@ -49,9 +49,13 @@ type SubscriptionEditModalProps = {
   onOpenChange: (open: boolean) => void
 }
 
+function normalizeDateField(value: string): string {
+  return value.slice(0, 10)
+}
+
 function toFormValues(
   subscription: SubscriptionResponseDto,
-  payees: PayeeResponseDto[],
+  payees: PayeeResponseDto[] = [],
 ): SubscriptionFormValues {
   const matchedPayee = findPayeeByName(payees, subscription.name)
 
@@ -66,7 +70,7 @@ function toFormValues(
     payeeId: matchedPayee?.id ?? '',
     cadenceUnit: subscription.cadenceUnit,
     cadenceEvery: subscription.cadenceEvery,
-    nextRunAt: subscription.nextRunAt,
+    nextRunAt: normalizeDateField(subscription.nextRunAt),
     active: subscription.active,
   }
 }
@@ -107,8 +111,22 @@ export function SubscriptionEditModal({
   useEffect(() => {
     if (!subscription || !open) return
 
-    reset(toFormValues(subscription, payees))
-  }, [subscription, open, payees, reset])
+    reset(toFormValues(subscription))
+  }, [subscription, open, reset])
+
+  useEffect(() => {
+    if (!subscription || !open || payees.length === 0) return
+
+    const matchedPayee = findPayeeByName(payees, subscription.name)
+    setValue('hasPayee', Boolean(matchedPayee), { shouldValidate: true })
+    setValue('payeeId', matchedPayee?.id ?? '', { shouldValidate: true })
+  }, [subscription, open, payees, setValue])
+
+  useEffect(() => {
+    if (!open) {
+      setDeleteConfirmOpen(false)
+    }
+  }, [open])
 
   const updateMutation = useSubscriptionsControllerUpdate({
     mutation: {
@@ -181,71 +199,78 @@ export function SubscriptionEditModal({
     }
   })
 
+  if (!open || !subscription) {
+    return null
+  }
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <FormDialogContent size="wide">
-        <FormDialogHeader>
-          <DialogTitle>Editar fixo</DialogTitle>
-          <DialogDescription>
-            Atualize as informações do fixo {subscription?.name ?? ''}.
-          </DialogDescription>
-        </FormDialogHeader>
+    <>
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <FormDialogContent size="wide">
+          <FormDialogHeader>
+            <DialogTitle>Editar fixo</DialogTitle>
+            <DialogDescription>
+              Atualize as informações do fixo {subscription.name}.
+            </DialogDescription>
+          </FormDialogHeader>
 
-        <FormDialogBody>
-          <form id="subscription-edit-form" onSubmit={onSubmit}>
-            <SubscriptionFormFields
-              register={register}
-              errors={errors}
-              setValue={setValue}
-              watch={watch}
-              accounts={accounts}
-              categories={categories}
-              payees={payees}
-              showPayeeField
-              householdDisabled
-            />
-          </form>
-        </FormDialogBody>
+          <FormDialogBody>
+            <form id="subscription-edit-form" onSubmit={onSubmit}>
+              <SubscriptionFormFields
+                register={register}
+                errors={errors}
+                setValue={setValue}
+                watch={watch}
+                accounts={accounts}
+                categories={categories}
+                payees={payees}
+                showPayeeField
+                householdDisabled
+              />
+            </form>
+          </FormDialogBody>
 
-        <FormDialogFooter className={formDialogEditFooterClassName}>
-          <Button
-            type="button"
-            variant="ghost"
-            className="rounded-xl text-destructive hover:text-destructive"
-            onClick={() => setDeleteConfirmOpen(true)}
-            disabled={isBusy || !subscription}
-          >
-            <Trash2 className="size-4" />
-            Excluir
-          </Button>
-          <div className="flex gap-2">            <Button
+          <FormDialogFooter className={formDialogEditFooterClassName}>
+            <Button
               type="button"
               variant="ghost"
-              className="rounded-xl"
-              onClick={() => onOpenChange(false)}
+              className="rounded-xl text-destructive hover:text-destructive"
+              onClick={() => setDeleteConfirmOpen(true)}
               disabled={isBusy}
             >
-              Cancelar
+              <Trash2 className="size-4" />
+              Excluir
             </Button>
-            <Button
-              type="submit"
-              form="subscription-edit-form"
-              className="glow-primary rounded-xl"
-              disabled={isBusy || !subscription}
-            >
-              {updateMutation.isPending && <Loader2 className="size-4 animate-spin" />}
-              Salvar alterações
-            </Button>
-          </div>
-        </FormDialogFooter>
-      </FormDialogContent>
+            <div className="flex gap-2">
+              <Button
+                type="button"
+                variant="ghost"
+                className="rounded-xl"
+                onClick={() => onOpenChange(false)}
+                disabled={isBusy}
+              >
+                Cancelar
+              </Button>
+              <Button
+                type="submit"
+                form="subscription-edit-form"
+                className="glow-primary rounded-xl"
+                disabled={isBusy}
+              >
+                {updateMutation.isPending && <Loader2 className="size-4 animate-spin" />}
+                Salvar alterações
+              </Button>
+            </div>
+          </FormDialogFooter>
+        </FormDialogContent>
+      </Dialog>
+
       <ObjectDeleteConfirmDialog
         open={deleteConfirmOpen}
         onOpenChange={setDeleteConfirmOpen}
         title="Excluir fixo"
-        description={`Tem certeza que deseja excluir "${subscription?.name}"? Esta ação não pode ser desfeita.`}
+        description={`Tem certeza que deseja excluir "${subscription.name}"? Esta ação não pode ser desfeita.`}
         onConfirm={() => {
-          if (!subscription) return
           deleteMutation.mutate({
             householdId: subscription.householdId,
             subId: subscription.id,
@@ -253,6 +278,6 @@ export function SubscriptionEditModal({
         }}
         isPending={deleteMutation.isPending}
       />
-    </Dialog>
+    </>
   )
 }

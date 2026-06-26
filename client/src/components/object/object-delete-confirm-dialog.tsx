@@ -31,25 +31,27 @@ export function ObjectDeleteConfirmDialog({
 }: ObjectDeleteConfirmDialogProps) {
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
-      <AlertDialogContent className="glass-strong glow-border">
-        <AlertDialogHeader>
-          <AlertDialogTitle>{title}</AlertDialogTitle>
-          <AlertDialogDescription>{description}</AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel className="rounded-xl" disabled={isPending}>
-            Cancelar
-          </AlertDialogCancel>
-          <AlertDialogAction
-            className="rounded-xl bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            onClick={onConfirm}
-            disabled={isPending}
-          >
-            {isPending && <Loader2 className="size-4 animate-spin" />}
-            {confirmLabel}
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
+      {open ? (
+        <AlertDialogContent className="glass-strong glow-border">
+          <AlertDialogHeader>
+            <AlertDialogTitle>{title}</AlertDialogTitle>
+            <AlertDialogDescription>{description}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="rounded-xl" disabled={isPending}>
+              Cancelar
+            </AlertDialogCancel>
+            <AlertDialogAction
+              className="rounded-xl bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={onConfirm}
+              disabled={isPending}
+            >
+              {isPending && <Loader2 className="size-4 animate-spin" />}
+              {confirmLabel}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      ) : null}
     </AlertDialog>
   )
 }

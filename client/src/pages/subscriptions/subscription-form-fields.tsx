@@ -92,6 +92,7 @@ export function SubscriptionFormFields({
           <Select
             value={type}
             disabled={fieldsDisabled}
+            modal={false}
             onValueChange={(value) => {
               if (!value) return
               setValue('type', value as SubscriptionFormValues['type'], {
@@ -144,6 +145,7 @@ export function SubscriptionFormFields({
           <Select
             value={accountId}
             disabled={fieldsDisabled}
+            modal={false}
             onValueChange={(value) => {
               if (!value) return
               setValue('accountId', value, { shouldValidate: true })
@@ -176,6 +178,7 @@ export function SubscriptionFormFields({
           <Select
             value={watch('categoryId') || 'none'}
             disabled={fieldsDisabled}
+            modal={false}
             onValueChange={(value) => {
               if (!value) return
               setValue('categoryId', value === 'none' ? '' : value, {
@@ -276,6 +279,7 @@ export function SubscriptionFormFields({
           <Select
             value={watch('cadenceUnit')}
             disabled={fieldsDisabled}
+            modal={false}
             onValueChange={(value) => {
               if (!value) return
               setValue('cadenceUnit', value as SubscriptionFormValues['cadenceUnit'], {

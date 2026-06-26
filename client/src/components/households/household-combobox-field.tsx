@@ -46,7 +46,7 @@ export function HouseholdComboboxField({
   )
 
   const { data: allHouseholds } = useHouseholdsControllerFindAll(householdsListParams, {
-    query: { enabled: !disabled && Boolean(value) },
+    query: { enabled: Boolean(value) },
   })
 
   const items = useMemo(() => {
@@ -64,6 +64,11 @@ export function HouseholdComboboxField({
     items.find((household) => household.id === value) ??
     allHouseholds?.find((household) => household.id === value) ??
     null
+
+  useEffect(() => {
+    if (!disabled || !selectedItem) return
+    setInputValue(selectedItem.name)
+  }, [disabled, selectedItem])
 
   return (
     <div className={cn('space-y-2', className)}>
