@@ -7,6 +7,7 @@ import {
 } from '@/lib/tour-helpers'
 import { getTourKeyFromPath, type TourKey } from '@/lib/tour-keys'
 import { AUTH_SESSION_QUERY_KEY, useAuthSession } from '@/hooks/use-auth-session'
+import type { MeResponseDto } from '@/api/generated/models/meResponseDto'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useLocation } from 'react-router-dom'
@@ -35,6 +36,28 @@ export function AppTourProvider({ children }: AppTourProviderProps) {
 
   const completeTourMutation = useMutation({
     mutationFn: updateUserOnboarding,
+    onMutate: async (payload) => {
+      await queryClient.cancelQueries({ queryKey: AUTH_SESSION_QUERY_KEY })
+
+      const previousUser = queryClient.getQueryData<MeResponseDto>(AUTH_SESSION_QUERY_KEY)
+
+      if (previousUser && payload.completedTours) {
+        queryClient.setQueryData(AUTH_SESSION_QUERY_KEY, {
+          ...previousUser,
+          onboarding: {
+            ...resolveOnboarding(previousUser.onboarding),
+            completedTours: payload.completedTours,
+          },
+        })
+      }
+
+      return { previousUser }
+    },
+    onError: (_error, _payload, context) => {
+      if (context?.previousUser) {
+        queryClient.setQueryData(AUTH_SESSION_QUERY_KEY, context.previousUser)
+      }
+    },
     onSuccess: (me) => {
       queryClient.setQueryData(AUTH_SESSION_QUERY_KEY, me)
     },

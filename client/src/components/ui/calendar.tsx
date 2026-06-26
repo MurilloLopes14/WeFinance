@@ -53,21 +53,21 @@ function CalendarDropdown({
       value={selectedValue}
       onValueChange={handleValueChange}
       disabled={disabled}
-      modal={false}
+      modal
       items={items}
     >
       <SelectTrigger
         aria-label={ariaLabel}
         size="sm"
         className={cn(
-          "glass-subtle h-8 min-w-[5.25rem] cursor-pointer rounded-lg border-input/70 px-2 font-medium shadow-none focus-visible:glow-sm",
+          "h-8 min-w-[5.25rem] cursor-pointer rounded-lg border border-border/70 bg-popover px-2 font-medium shadow-sm focus-visible:glow-sm",
           className,
         )}
       >
         <SelectValue />
       </SelectTrigger>
       <SelectContent
-        className="glass-strong glow-border z-[100] max-h-60 border-border/60"
+        className="z-[260] max-h-60 border border-border/70 bg-popover shadow-lg"
         alignItemWithTrigger={false}
       >
         <SelectGroup>
@@ -106,7 +106,7 @@ function Calendar({
     <DayPicker
       showOutsideDays={showOutsideDays}
       className={cn(
-        "group/calendar bg-background p-2 [--cell-radius:var(--radius-md)] [--cell-size:--spacing(7)] in-data-[slot=card-content]:bg-transparent in-data-[slot=popover-content]:bg-transparent",
+        "group/calendar bg-popover p-2 [--cell-radius:var(--radius-md)] [--cell-size:--spacing(7)] in-data-[slot=card-content]:bg-transparent",
         String.raw`rtl:**:[.rdp-button\_next>svg]:rotate-180`,
         String.raw`rtl:**:[.rdp-button\_previous>svg]:rotate-180`,
         className
@@ -126,29 +126,29 @@ function Calendar({
         ),
         month: cn("flex w-full flex-col gap-4", defaultClassNames.month),
         nav: cn(
-          "absolute inset-x-0 top-0 flex w-full items-center justify-between gap-1",
+          "pointer-events-none absolute inset-x-0 top-0 flex w-full items-center justify-between gap-1",
           defaultClassNames.nav
         ),
         button_previous: cn(
           buttonVariants({ variant: buttonVariant }),
-          "size-(--cell-size) p-0 select-none aria-disabled:opacity-50",
+          "pointer-events-auto size-(--cell-size) z-0 p-0 select-none aria-disabled:opacity-50",
           defaultClassNames.button_previous
         ),
         button_next: cn(
           buttonVariants({ variant: buttonVariant }),
-          "size-(--cell-size) p-0 select-none aria-disabled:opacity-50",
+          "pointer-events-auto size-(--cell-size) z-0 p-0 select-none aria-disabled:opacity-50",
           defaultClassNames.button_next
         ),
         month_caption: cn(
-          "flex h-(--cell-size) w-full items-center justify-center px-(--cell-size)",
+          "relative z-20 flex h-(--cell-size) w-full items-center justify-center px-(--cell-size)",
           defaultClassNames.month_caption
         ),
         dropdowns: cn(
-          "flex h-(--cell-size) w-full items-center justify-center gap-2 text-sm font-medium",
+          "relative z-20 flex h-(--cell-size) w-full items-center justify-center gap-2 text-sm font-medium",
           defaultClassNames.dropdowns
         ),
         dropdown_root: cn(
-          "relative rounded-(--cell-radius)",
+          "relative z-20 rounded-(--cell-radius)",
           defaultClassNames.dropdown_root
         ),
         dropdown: cn("hidden", defaultClassNames.dropdown),

@@ -11,5 +11,15 @@ export type OnboardingDtoCompletedToursItem = typeof OnboardingDtoCompletedTours
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const OnboardingDtoCompletedToursItem = {
+  dashboard: 'dashboard',
+  transactions: 'transactions',
+  households: 'households',
+  categories: 'categories',
+  budgets: 'budgets',
+  accounts: 'accounts',
+  subscriptions: 'subscriptions',
   payees: 'payees',
+  splits: 'splits',
+  profile: 'profile',
+  help: 'help',
 } as const;

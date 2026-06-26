@@ -77,6 +77,15 @@ export function DashboardPerspectiveTabs({
         />
         <KpiCardsColumn
           data={householdSummary}
+          accountBalances={
+            householdSummary
+              ? {
+                  available: householdSummary.availableBalance,
+                  invested: householdSummary.investedBalance,
+                  total: householdSummary.totalNetWorth,
+                }
+              : undefined
+          }
           currency={currency}
           isLoading={isLoading}
         />

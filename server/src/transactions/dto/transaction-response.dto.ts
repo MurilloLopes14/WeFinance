@@ -138,4 +138,13 @@ export class TransactionSummaryResponseDto {
 
   @ApiProperty()
   transactionCount: number;
+
+  @ApiProperty({ description: 'Sum of checking/savings/cash/credit accounts — liquid funds' })
+  availableBalance: number;
+
+  @ApiProperty({ description: 'Sum of investment accounts' })
+  investedBalance: number;
+
+  @ApiProperty({ description: 'Total net worth (availableBalance + investedBalance)' })
+  totalNetWorth: number;
 }

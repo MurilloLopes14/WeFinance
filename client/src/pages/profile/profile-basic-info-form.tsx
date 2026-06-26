@@ -131,7 +131,10 @@ export function ProfileBasicInfoForm({ user }: ProfileBasicInfoFormProps) {
               </span>
               <CalendarIcon className="size-4 shrink-0 opacity-70" />
             </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="start">
+            <PopoverContent
+              className="w-auto border border-border/70 bg-popover p-0 shadow-lg"
+              align="start"
+            >
               <Calendar
                 mode="single"
                 locale={ptBR}

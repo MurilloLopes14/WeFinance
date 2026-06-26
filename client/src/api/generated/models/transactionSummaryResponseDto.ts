@@ -12,4 +12,10 @@ export interface TransactionSummaryResponseDto {
   totalExpenses: number;
   balance: number;
   transactionCount: number;
+  /** Sum of checking/savings/cash/credit accounts — liquid funds */
+  availableBalance: number;
+  /** Sum of investment accounts */
+  investedBalance: number;
+  /** Total net worth (availableBalance + investedBalance) */
+  totalNetWorth: number;
 }

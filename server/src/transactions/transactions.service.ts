@@ -412,27 +412,42 @@ export class TransactionsService {
     const targetMonth = month ?? currentMonth();
     const { startDate, endDate } = monthDateRange(targetMonth);
 
-    const rows = await this.db
-      .select({
-        type: transactions.type,
-        total: sum(transactions.amount),
-        txCount: count(),
-      })
-      .from(transactions)
-      .where(
-        and(
-          eq(transactions.householdId, householdId),
-          gte(transactions.date, startDate),
-          lt(transactions.date, endDate),
-          ne(transactions.type, 'transfer'),
-        ),
-      )
-      .groupBy(transactions.type);
+    const [rows, accountRows] = await Promise.all([
+      this.db
+        .select({
+          type: transactions.type,
+          total: sum(transactions.amount),
+          txCount: count(),
+        })
+        .from(transactions)
+        .where(
+          and(
+            eq(transactions.householdId, householdId),
+            gte(transactions.date, startDate),
+            lt(transactions.date, endDate),
+            ne(transactions.type, 'transfer'),
+          ),
+        )
+        .groupBy(transactions.type),
+
+      this.db
+        .select({ type: accounts.type, total: sum(accounts.balanceManual) })
+        .from(accounts)
+        .where(eq(accounts.householdId, householdId))
+        .groupBy(accounts.type),
+    ]);
 
     const income = rows.find((r) => r.type === 'income');
     const expense = rows.find((r) => r.type === 'expense');
     const totalIncome = parseFloat(income?.total ?? '0');
     const totalExpenses = parseFloat(expense?.total ?? '0');
+
+    const investedBalance = accountRows
+      .filter((r) => r.type === 'investment')
+      .reduce((acc, r) => acc + parseFloat(r.total ?? '0'), 0);
+    const availableBalance = accountRows
+      .filter((r) => r.type !== 'investment')
+      .reduce((acc, r) => acc + parseFloat(r.total ?? '0'), 0);
 
     return {
       month: targetMonth,
@@ -440,6 +455,9 @@ export class TransactionsService {
       totalExpenses,
       balance: parseFloat((totalIncome - totalExpenses).toFixed(2)),
       transactionCount: Number(income?.txCount ?? 0) + Number(expense?.txCount ?? 0),
+      availableBalance: parseFloat(availableBalance.toFixed(2)),
+      investedBalance: parseFloat(investedBalance.toFixed(2)),
+      totalNetWorth: parseFloat((availableBalance + investedBalance).toFixed(2)),
     };
   }
 
