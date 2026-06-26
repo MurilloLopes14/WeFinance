@@ -115,6 +115,11 @@
   --glass-blur-strong: 24px;
   --glass-saturate: 1.35;
 
+  /* dropdown overlays — light frosted glass on desktop */
+  --overlay-surface-bg: oklch(1 0 0 / 55%);
+  --overlay-surface-blur: 24px;
+  --overlay-item-highlight: oklch(0.92 0.04 210 / 36%);
+
   /* glow */
   --glow-primary: oklch(0.55 0.16 250);
   --glow-accent: oklch(0.62 0.18 285);
@@ -162,6 +167,10 @@
     0 4px 16px oklch(0.55 0.16 250 / 15%);
   --shadow-inset-reflect: inset 0 1px 0 oklch(1 0 0 / 55%),
     inset 0 -1px 0 oklch(1 0 0 / 12%);
+
+  /* opaque surfaces for mobile/PWA overlays */
+  --surface-solid: oklch(0.98 0.008 255);
+  --surface-solid-elevated: oklch(1 0 0);
 }
 
 /* ─── Dark mode (primary Web3 canvas) ────────────────────────────────────── */
@@ -195,6 +204,10 @@
   --glass-blur: 20px;
   --glass-blur-strong: 32px;
   --glass-saturate: 1.6;
+
+  --overlay-surface-bg: oklch(1 0 0 / 9%);
+  --overlay-surface-blur: 52px;
+  --overlay-item-highlight: oklch(1 0 0 / 7%);
 
   --glow-primary: oklch(0.78 0.16 195);
   --glow-accent: oklch(0.72 0.22 285);
@@ -237,6 +250,9 @@
     0 4px 16px oklch(0.78 0.16 195 / 12%);
   --shadow-inset-reflect: inset 0 1px 0 oklch(1 0 0 / 12%),
     inset 0 -1px 0 oklch(1 0 0 / 4%);
+
+  --surface-solid: oklch(0.16 0.028 265);
+  --surface-solid-elevated: oklch(0.19 0.03 265);
 }
 
 /* ─── Keyframes ──────────────────────────────────────────────────────────── */
@@ -477,6 +493,30 @@
     box-shadow: var(--shadow-glass), var(--shadow-inset-reflect);
   }
 
+  .overlay-surface {
+    background: var(--overlay-surface-bg);
+    backdrop-filter: blur(var(--overlay-surface-blur)) saturate(var(--glass-saturate));
+    -webkit-backdrop-filter: blur(var(--overlay-surface-blur))
+      saturate(var(--glass-saturate));
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--shadow-glass), var(--shadow-inset-reflect);
+  }
+
+  /* Select / combobox — frosted panels on desktop */
+  @media (min-width: 768px) {
+    [data-slot='select-content'],
+    [data-slot='select-scroll-up-button'],
+    [data-slot='select-scroll-down-button'],
+    [data-slot='combobox-content'],
+    .overlay-surface {
+      background: var(--overlay-surface-bg) !important;
+      backdrop-filter: blur(var(--overlay-surface-blur)) saturate(var(--glass-saturate)) !important;
+      -webkit-backdrop-filter: blur(var(--overlay-surface-blur))
+        saturate(var(--glass-saturate)) !important;
+      box-shadow: var(--shadow-glass), var(--shadow-inset-reflect);
+    }
+  }
+
   .glass-subtle {
     background: var(--glass-bg);
     backdrop-filter: blur(calc(var(--glass-blur) * 0.65))
@@ -485,6 +525,21 @@
       saturate(var(--glass-saturate));
     border: 1px solid var(--glass-border-subtle);
     box-shadow: var(--shadow-inset-reflect);
+  }
+
+  /* Opaque overlays on mobile/PWA — glass stays on md+ */
+  @media (max-width: 767px) {
+    .max-md-solid-surface {
+      background-color: var(--surface-solid-elevated) !important;
+      backdrop-filter: none !important;
+      -webkit-backdrop-filter: none !important;
+    }
+
+    .max-md-solid-surface-subtle {
+      background-color: var(--surface-solid) !important;
+      backdrop-filter: none !important;
+      -webkit-backdrop-filter: none !important;
+    }
   }
 
   .glass-interactive {

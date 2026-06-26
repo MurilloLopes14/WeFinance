@@ -86,7 +86,7 @@ export function HouseholdComboboxField({
           disabled={disabled}
           showClear={!disabled}
         />
-        <ComboboxContent className="glass-strong glow-border">
+        <ComboboxContent className="glow-border">
           <ComboboxList>
             {isFetching && (
               <div className="flex items-center justify-center gap-2 py-3 text-sm text-muted-foreground">

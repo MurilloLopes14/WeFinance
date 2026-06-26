@@ -40,7 +40,9 @@ export function LandingNavbar() {
     <header
       className={cn(
         'fixed inset-x-0 top-0 z-50 transition-all duration-500',
-        scrolled || mobileOpen ? 'glass-strong py-2.5 shadow-lg sm:py-3' : 'bg-transparent py-4 sm:py-5',
+        scrolled || mobileOpen
+          ? 'glass-strong max-md-solid-surface py-2.5 shadow-lg sm:py-3'
+          : 'bg-transparent py-4 sm:py-5',
       )}
     >
       <PageContainer as="nav" className="flex items-center justify-between gap-3">
@@ -102,7 +104,7 @@ export function LandingNavbar() {
         )}
       >
         <PageContainer className="pt-2">
-          <div className="glass-strong rounded-2xl p-3 sm:p-4">
+          <div className="glass-strong max-md-solid-surface rounded-2xl p-3 sm:p-4">
             <div className="flex flex-col gap-1">
               {navLinks.map((link) => (
                 <a

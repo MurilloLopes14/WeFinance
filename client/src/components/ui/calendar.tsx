@@ -60,14 +60,14 @@ function CalendarDropdown({
         aria-label={ariaLabel}
         size="sm"
         className={cn(
-          "h-8 min-w-[5.25rem] cursor-pointer rounded-lg border border-border/70 bg-popover px-2 font-medium shadow-sm focus-visible:glow-sm",
+          "h-8 min-w-[5.25rem] cursor-pointer rounded-lg border border-border/70 bg-popover max-md-solid-surface-subtle px-2 font-medium shadow-sm focus-visible:glow-sm",
           className,
         )}
       >
         <SelectValue />
       </SelectTrigger>
       <SelectContent
-        className="z-[260] max-h-60 border border-border/70 bg-popover shadow-lg"
+        className="z-[260] max-h-60 border border-border/70 overlay-surface max-md-solid-surface shadow-lg"
         alignItemWithTrigger={false}
       >
         <SelectGroup>
@@ -106,7 +106,7 @@ function Calendar({
     <DayPicker
       showOutsideDays={showOutsideDays}
       className={cn(
-        "group/calendar bg-popover p-2 [--cell-radius:var(--radius-md)] [--cell-size:--spacing(7)] in-data-[slot=card-content]:bg-transparent",
+        "group/calendar max-md-solid-surface bg-popover p-2 [--cell-radius:var(--radius-md)] [--cell-size:--spacing(7)] in-data-[slot=card-content]:bg-transparent",
         String.raw`rtl:**:[.rdp-button\_next>svg]:rotate-180`,
         String.raw`rtl:**:[.rdp-button\_previous>svg]:rotate-180`,
         className

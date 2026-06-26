@@ -100,7 +100,7 @@ export function PayeeSearchField({
           disabled={disabled || isQuickCreating}
           showClear={!disabled && !isQuickCreating}
         />
-        <ComboboxContent className="glass-strong glow-border">
+        <ComboboxContent className="glow-border">
           <ComboboxList>
             {filteredPayees.length === 0 && !showQuickCreate ? (
               <ComboboxEmpty>Nenhum beneficiário encontrado</ComboboxEmpty>

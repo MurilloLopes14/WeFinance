@@ -275,7 +275,7 @@ return (
                   </PopoverTrigger>
                   <PopoverContent
                     align="start"
-                    className="glass-strong glow-border w-auto p-0"
+                    className="w-auto p-0 max-md-solid-surface md:glass-strong md:glow-border"
                   >
                     <Calendar
                       mode="single"
@@ -409,14 +409,14 @@ return (
         </AnimatePresence>
       </div>
 
-      <div className="mt-6 flex flex-col-reverse gap-3 sm:mt-8 sm:flex-row sm:items-center sm:justify-between">
+      <div className="mt-6 flex flex-row items-center justify-between gap-3 sm:mt-8">
         {step > 0 ? (
           <Button
             type="button"
             variant="ghost"
             onClick={goBack}
             disabled={registerMutation.isPending}
-            className="h-11 rounded-xl px-4"
+            className="h-11 shrink-0 rounded-xl px-4"
           >
             <ArrowLeft className="size-4" />
             Voltar
@@ -429,7 +429,7 @@ return (
           <Button
             type="button"
             onClick={() => void goNext()}
-            className="glow-primary h-11 flex-1 rounded-xl sm:min-w-40 sm:flex-none"
+            className="glow-primary h-11 min-w-0 flex-1 rounded-xl sm:min-w-40 sm:flex-none"
           >
             Continuar
             <ArrowRight className="size-4" />
@@ -438,7 +438,7 @@ return (
           <Button
             type="submit"
             disabled={registerMutation.isPending}
-            className="glow-primary h-11 flex-1 rounded-xl sm:min-w-40 sm:flex-none"
+            className="glow-primary h-11 min-w-0 flex-1 rounded-xl sm:min-w-40 sm:flex-none"
           >
             {registerMutation.isPending ? (
               <>
