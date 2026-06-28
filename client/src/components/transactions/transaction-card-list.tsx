@@ -21,20 +21,26 @@ export function TransactionCardList({
 
   return (
     <ul className="flex w-full flex-col gap-2.5">
-      {transactions.map((transaction) => (
-        <li key={transaction.id}>
-          <TransactionCard
-            transaction={transaction}
-            currency={meta.currency}
-            accountName={meta.accountNameById[transaction.accountId]}
-            categoryName={
-              transaction.categoryId
-                ? meta.categoryNameById[transaction.categoryId]
-                : undefined
-            }
-          />
-        </li>
-      ))}
+      {transactions.map((transaction) => {
+        const canMutate = meta.canMutateTransaction(transaction)
+
+        return (
+          <li key={transaction.id}>
+            <TransactionCard
+              transaction={transaction}
+              currency={meta.currency}
+              accountName={meta.accountNameById[transaction.accountId]}
+              categoryName={
+                transaction.categoryId
+                  ? meta.categoryNameById[transaction.categoryId]
+                  : undefined
+              }
+              onEdit={canMutate ? meta.onEdit : undefined}
+              onDelete={canMutate ? meta.onDelete : undefined}
+            />
+          </li>
+        )
+      })}
     </ul>
   )
 }

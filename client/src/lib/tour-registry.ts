@@ -105,7 +105,8 @@ const tourRegistry: Record<TourKey, Step[]> = {
     {
       target: '[data-tour="transactions-table"]',
       title: 'Tabela de transações',
-      content: 'Todas as movimentações do grupo aparecem aqui, com paginação. Edite ou exclua registros diretamente na linha.',
+      content:
+        'Todas as movimentações do grupo aparecem aqui, com paginação. Edite ou exclua registros pelo menu de ações de cada linha. Transações só podem ser editadas ou excluídas nas primeiras 24 horas após a criação.',
       placement: 'top',
       skipBeacon: true,
     },

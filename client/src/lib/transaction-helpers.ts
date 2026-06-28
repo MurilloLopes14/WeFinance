@@ -1,5 +1,20 @@
+import type { TransactionResponseDto } from '@/api/generated/models/transactionResponseDto'
 import type { TransactionResponseDtoType } from '@/api/generated/models/transactionResponseDtoType'
 import { formatAccountBalance } from '@/lib/account-helpers'
+
+export const TRANSACTION_EDIT_WINDOW_MS = 24 * 60 * 60 * 1000
+
+export function canMutateTransaction(
+  transaction: TransactionResponseDto,
+  currentUserId?: string,
+): boolean {
+  if (!currentUserId) return false
+  if (transaction.status === 'reconciled') return false
+  if (transaction.createdById !== currentUserId) return false
+
+  const ageMs = Date.now() - new Date(transaction.createdAt).getTime()
+  return ageMs <= TRANSACTION_EDIT_WINDOW_MS
+}
 
 export function getTransactionTypeLabel(type: TransactionResponseDtoType): string {
   switch (type) {

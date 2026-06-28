@@ -1,4 +1,5 @@
 import type { TransactionResponseDto } from '@/api/generated/models/transactionResponseDto'
+import { ObjectCardActionsMenu, type ObjectCardAction } from '@/components/object/object-card-actions-menu'
 import { TransactionOwnerAvatar } from '@/components/transactions/transaction-owner-avatar'
 import { Badge } from '@/components/ui/badge'
 import { Card } from '@/components/ui/card'
@@ -9,12 +10,15 @@ import {
   getTransactionTypeLabel,
 } from '@/lib/transaction-helpers'
 import { cn } from '@/lib/utils'
+import { Pencil, Trash2 } from 'lucide-react'
 
 type TransactionCardProps = {
   transaction: TransactionResponseDto
   accountName?: string
   categoryName?: string
   currency: string
+  onEdit?: (transaction: TransactionResponseDto) => void
+  onDelete?: (transaction: TransactionResponseDto) => void
   className?: string
 }
 
@@ -23,10 +27,33 @@ export function TransactionCard({
   accountName,
   categoryName,
   currency,
+  onEdit,
+  onDelete,
   className,
 }: TransactionCardProps) {
   const description =
     transaction.description?.trim() || getTransactionTypeLabel(transaction.type)
+
+  const actions: ObjectCardAction[] = []
+
+  if (onEdit) {
+    actions.push({
+      id: 'edit',
+      label: `Editar ${description}`,
+      icon: Pencil,
+      onClick: () => onEdit(transaction),
+    })
+  }
+
+  if (onDelete) {
+    actions.push({
+      id: 'delete',
+      label: `Excluir ${description}`,
+      icon: Trash2,
+      variant: 'destructive',
+      onClick: () => onDelete(transaction),
+    })
+  }
 
   return (
     <Card
@@ -39,14 +66,17 @@ export function TransactionCard({
         <div className="min-w-0 flex-1">
           <div className="flex items-start justify-between gap-3">
             <p className="line-clamp-2 text-sm font-medium leading-snug">{description}</p>
-            <p
-              className={cn(
-                'shrink-0 text-sm font-semibold tabular-nums',
-                getTransactionAmountClassName(transaction.type),
-              )}
-            >
-              {formatTransactionAmount(transaction.amount, transaction.type, currency)}
-            </p>
+            <div className="flex shrink-0 items-start gap-1">
+              <p
+                className={cn(
+                  'text-sm font-semibold tabular-nums',
+                  getTransactionAmountClassName(transaction.type),
+                )}
+              >
+                {formatTransactionAmount(transaction.amount, transaction.type, currency)}
+              </p>
+              {actions.length > 0 ? <ObjectCardActionsMenu actions={actions} /> : null}
+            </div>
           </div>
 
           <p className="mt-1 text-xs tabular-nums text-muted-foreground">

@@ -1,4 +1,5 @@
 import type { TransactionResponseDto } from '@/api/generated/models/transactionResponseDto'
+import { ObjectCardActionsMenu } from '@/components/object/object-card-actions-menu'
 import { Badge } from '@/components/ui/badge'
 import { TransactionOwnerAvatar } from '@/components/transactions/transaction-owner-avatar'
 import {
@@ -8,12 +9,16 @@ import {
   getTransactionTypeLabel,
 } from '@/lib/transaction-helpers'
 import { cn } from '@/lib/utils'
+import { Pencil, Trash2 } from 'lucide-react'
 import type { ColumnDef } from '@tanstack/react-table'
 
 export type TransactionTableMeta = {
   accountNameById: Record<string, string | undefined>
   categoryNameById: Record<string, string | undefined>
   currency: string
+  canMutateTransaction: (transaction: TransactionResponseDto) => boolean
+  onEdit: (transaction: TransactionResponseDto) => void
+  onDelete: (transaction: TransactionResponseDto) => void
 }
 
 export function createTransactionColumns(
@@ -85,6 +90,38 @@ export function createTransactionColumns(
           {formatTransactionAmount(row.original.amount, row.original.type, meta.currency)}
         </span>
       ),
+    },
+    {
+      id: 'actions',
+      header: () => <span className="sr-only">Ações</span>,
+      cell: ({ row }) => {
+        if (!meta.canMutateTransaction(row.original)) return null
+
+        const label =
+          row.original.description?.trim() || getTransactionTypeLabel(row.original.type)
+
+        return (
+          <div className="flex justify-end">
+            <ObjectCardActionsMenu
+              actions={[
+                {
+                  id: 'edit',
+                  label: `Editar ${label}`,
+                  icon: Pencil,
+                  onClick: () => meta.onEdit(row.original),
+                },
+                {
+                  id: 'delete',
+                  label: `Excluir ${label}`,
+                  icon: Trash2,
+                  variant: 'destructive',
+                  onClick: () => meta.onDelete(row.original),
+                },
+              ]}
+            />
+          </div>
+        )
+      },
     },
   ]
 }

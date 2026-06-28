@@ -201,9 +201,7 @@ export class TransactionsService {
     await this.householdsService.assertMember(householdId, requesterId);
     const existing = await this.findTransaction(txId, householdId);
 
-    if (existing.status === 'reconciled') {
-      throw new ForbiddenException('Transações conciliadas não podem ser editadas');
-    }
+    this.assertEditable(existing, requesterId, 'editada');
 
     if (dto.accountId && existing.transferLinkId) {
       throw new BadRequestException(
@@ -336,9 +334,7 @@ export class TransactionsService {
     await this.householdsService.assertMember(householdId, requesterId);
     const existing = await this.findTransaction(txId, householdId);
 
-    if (existing.status === 'reconciled') {
-      throw new ForbiddenException('Transações conciliadas não podem ser excluídas');
-    }
+    this.assertEditable(existing, requesterId, 'excluída');
 
     await this.db.transaction(async (trx) => {
       if (existing.transferLinkId) {
@@ -969,6 +965,21 @@ export class TransactionsService {
     }
 
     return lines.join('\r\n');
+  }
+
+  // ─── Private — edit / delete guard ───────────────────────────────────────
+
+  private assertEditable(tx: Transaction, requesterId: string, verb: string): void {
+    if (tx.status === 'reconciled') {
+      throw new ForbiddenException(`Transações conciliadas não podem ser ${verb}`);
+    }
+    if (tx.createdById !== requesterId) {
+      throw new ForbiddenException(`Apenas quem criou a transação pode ${verb === 'editada' ? 'editá-la' : 'excluí-la'}`);
+    }
+    const ageMs = Date.now() - new Date(tx.createdAt).getTime();
+    if (ageMs > 24 * 60 * 60 * 1000) {
+      throw new ForbiddenException(`Transações só podem ser ${verb} nas primeiras 24 horas após a criação`);
+    }
   }
 
   // ─── Private — account balance maintenance ───────────────────────────────

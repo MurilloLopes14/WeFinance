@@ -153,6 +153,10 @@ export const HELP: HelpModule[] = [
         body: 'Ao criar uma transação de despesa, ative o rateio para dividir o custo entre membros do grupo. Defina a porcentagem de cada pessoa — o total deve ser 100%. A transação aparecerá na tela de Rateios com o resumo de quem deve a quem.',
       },
       {
+        title: 'Edição e exclusão',
+        body: 'Transações podem ser editadas ou excluídas pelo menu de ações na tabela (ou no card, no mobile). Apenas quem criou a transação pode alterá-la, e somente nas primeiras 24 horas após a criação. Depois desse prazo, o registro fica bloqueado para edição e exclusão.',
+      },
+      {
         title: 'Exportação para CSV',
         body: 'Clique no ícone de download na barra de filtros para exportar as transações do período atual para CSV. O arquivo pode ser aberto no Excel, Google Sheets ou qualquer planilha.',
       },
@@ -161,6 +165,7 @@ export const HELP: HelpModule[] = [
       'Selecione o mês correto antes de criar a transação — ela ficará vinculada à data informada.',
       'Use categorias sempre que possível: os orçamentos e relatórios só funcionam bem com transações categorizadas.',
       'Transferências entre contas não devem ser classificadas como despesa — isso evita dupla contagem no saldo.',
+      'Transações só podem ser editadas ou excluídas nas primeiras 24 horas após a criação, e apenas por quem as registrou.',
       'Insights aparecem automaticamente abaixo dos filtros. São análises do mês do grupo selecionado.',
       'A exportação CSV inclui somente as transações do mês e grupo filtrados no momento do download.',
     ],

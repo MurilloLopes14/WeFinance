@@ -61,6 +61,7 @@ type TransactionFormFieldsProps = {
   isQuickCreatingPayee?: boolean
   onQuickCreatePayee?: () => void
   householdDisabled?: boolean
+  mode?: 'create' | 'edit'
 }
 
 export function TransactionFormFields({
@@ -79,6 +80,7 @@ export function TransactionFormFields({
   isQuickCreatingPayee = false,
   onQuickCreatePayee,
   householdDisabled = false,
+  mode = 'create',
 }: TransactionFormFieldsProps) {
   const householdId = watch('householdId')
   const type = watch('type')
@@ -90,6 +92,7 @@ export function TransactionFormFields({
   const amount = watch('amount')
   const customSplits = watch('customSplits')
   const fieldsDisabled = !householdId
+  const isEditMode = mode === 'edit'
 
   const { fields, append, remove } = useFieldArray({
     control,
@@ -99,6 +102,10 @@ export function TransactionFormFields({
   const isTransfer = type === CreateTransactionDtoType.transfer
   const showSplitSection = !isTransfer
   const isFutureDate = isFutureTransactionDate(date)
+  const transferAccountsLocked = isEditMode && isTransfer
+  const typeFieldDisabled = fieldsDisabled || isEditMode
+  const accountFieldDisabled = fieldsDisabled || transferAccountsLocked
+  const toAccountFieldDisabled = fieldsDisabled || transferAccountsLocked
 
   const filteredCategories = useMemo(() => {
     if (isTransfer) {
@@ -174,7 +181,7 @@ export function TransactionFormFields({
           <Label htmlFor="transaction-type">Tipo</Label>
           <Select
             value={type}
-            disabled={fieldsDisabled}
+            disabled={typeFieldDisabled}
             modal={false}
             onValueChange={(value) => {
               if (!value) return
@@ -233,7 +240,7 @@ export function TransactionFormFields({
           </Label>
           <Select
             value={accountId}
-            disabled={fieldsDisabled}
+            disabled={accountFieldDisabled}
             modal={false}
             onValueChange={(value) => {
               if (!value) return
@@ -286,7 +293,7 @@ export function TransactionFormFields({
           <Label htmlFor="transaction-to-account">Conta de destino</Label>
           <Select
             value={watch('toAccountId')}
-            disabled={fieldsDisabled}
+            disabled={toAccountFieldDisabled}
             modal={false}
             onValueChange={(value) => {
               if (!value) return

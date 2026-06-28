@@ -69,8 +69,8 @@ async function bootstrap() {
       .addTag('Subscriptions', 'Recurring subscription management')
       .addTag('Events', 'Audit log endpoints')
       .addTag('Imports', 'CSV import endpoints')
-      .addServer(`http://localhost:${port}/${globalPrefix}`, 'Local Development')
-      .addServer(`https://api.wefinance.com/${globalPrefix}`, 'Production')
+      .addServer(`http://localhost:${port}`, 'Local Development')
+      .addServer(`https://api.wefinance.com`, 'Production')
       .build();
 
     const document = SwaggerModule.createDocument(app, swaggerConfig);
