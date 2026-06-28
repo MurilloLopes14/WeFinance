@@ -4,6 +4,7 @@ import type { HouseholdMemberResponseDto } from '@/api/generated/models/househol
 import type { HouseholdResponseDto } from '@/api/generated/models/householdResponseDto'
 import type { PayeeResponseDto } from '@/api/generated/models/payeeResponseDto'
 import { PayeeSearchField } from '@/components/payees/payee-search-field'
+import { TransactionAmountInput } from '@/components/transactions/transaction-amount-input'
 import { getHouseholdSplitTypeLabel } from '@/components/households/household-header'
 import { HouseholdComboboxField } from '@/components/households/household-combobox-field'
 import { HouseholdGatedFormSection } from '@/components/object/household-gated-form-section'
@@ -38,6 +39,7 @@ import { Loader2, Plus, Trash2 } from 'lucide-react'
 import { useMemo } from 'react'
 import {
   useFieldArray,
+  Controller,
   type Control,
   type FieldErrors,
   type UseFormRegister,
@@ -274,15 +276,20 @@ export function TransactionFormFields({
 
         <div className="space-y-2">
           <Label htmlFor="transaction-amount">Valor</Label>
-          <Input
-            id="transaction-amount"
-            type="number"
-            min={0.01}
-            step="0.01"
-            placeholder="0,00"
-            className="rounded-xl"
-            disabled={fieldsDisabled}
-            {...register('amount', { valueAsNumber: true })}
+          <Controller
+            name="amount"
+            control={control}
+            render={({ field }) => (
+              <TransactionAmountInput
+                value={field.value}
+                onChange={(nextValue) => {
+                  field.onChange(nextValue)
+                }}
+                onBlur={field.onBlur}
+                disabled={fieldsDisabled}
+                type={type}
+              />
+            )}
           />
           {errors.amount && <p className="text-sm text-destructive">{errors.amount.message}</p>}
         </div>

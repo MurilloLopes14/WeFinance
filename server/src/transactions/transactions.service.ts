@@ -422,6 +422,7 @@ export class TransactionsService {
             gte(transactions.date, startDate),
             lt(transactions.date, endDate),
             ne(transactions.type, 'transfer'),
+            ne(transactions.status, 'draft'),
           ),
         )
         .groupBy(transactions.type),
@@ -484,6 +485,7 @@ export class TransactionsService {
             gte(transactions.date, startDate),
             lt(transactions.date, endDate),
             ne(transactions.type, 'transfer'),
+            ne(transactions.status, 'draft'),
           ),
         ),
 
@@ -498,6 +500,7 @@ export class TransactionsService {
             gte(transactions.date, startDate),
             lt(transactions.date, endDate),
             ne(transactions.type, 'transfer'),
+            ne(transactions.status, 'draft'),
           ),
         ),
 
@@ -510,6 +513,7 @@ export class TransactionsService {
             eq(transactions.householdId, householdId),
             gte(transactions.date, startDate),
             lt(transactions.date, endDate),
+            ne(transactions.status, 'draft'),
           ),
         ),
 

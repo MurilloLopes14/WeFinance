@@ -111,6 +111,8 @@ export * from './transactionsControllerFindAllType';
 export * from './transactionsControllerGetBalanceHistoryParams';
 export * from './transactionsControllerGetCategoryBreakdownParams';
 export * from './transactionsControllerGetCategoryBreakdownScope';
+export * from './transactionsControllerGetPersonalSummaryParams';
+export * from './transactionsControllerGetSummaryParams';
 export * from './transferInputDto';
 export * from './updateAccountDto';
 export * from './updateAccountDtoType';

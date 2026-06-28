@@ -37,6 +37,8 @@ import type {
   TransactionsControllerFindAllParams,
   TransactionsControllerGetBalanceHistoryParams,
   TransactionsControllerGetCategoryBreakdownParams,
+  TransactionsControllerGetPersonalSummaryParams,
+  TransactionsControllerGetSummaryParams,
   UpdateTransactionDto
 } from '.././models';
 
@@ -219,12 +221,14 @@ export function useTransactionsControllerFindAll<TData = Awaited<ReturnType<type
  */
 export const transactionsControllerGetSummary = (
     householdId: string,
+    params?: TransactionsControllerGetSummaryParams,
  options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
 ) => {
       
       
       return customInstance<TransactionSummaryResponseDto>(
-      {url: `/api/v1/households/${householdId}/transactions/report/summary`, method: 'GET', signal
+      {url: `/api/v1/households/${householdId}/transactions/report/summary`, method: 'GET',
+        params, signal
     },
       options);
     }
@@ -232,23 +236,25 @@ export const transactionsControllerGetSummary = (
 
 
 
-export const getTransactionsControllerGetSummaryQueryKey = (householdId?: string,) => {
+export const getTransactionsControllerGetSummaryQueryKey = (householdId?: string,
+    params?: TransactionsControllerGetSummaryParams,) => {
     return [
-    `/api/v1/households/${householdId}/transactions/report/summary`
+    `/api/v1/households/${householdId}/transactions/report/summary`, ...(params ? [params]: [])
     ] as const;
     }
 
     
-export const useTransactionsControllerGetSummaryQueryOptions = <TData = Awaited<ReturnType<typeof transactionsControllerGetSummary>>, TError = ErrorType<unknown>>(householdId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof transactionsControllerGetSummary>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+export const useTransactionsControllerGetSummaryQueryOptions = <TData = Awaited<ReturnType<typeof transactionsControllerGetSummary>>, TError = ErrorType<unknown>>(householdId: string,
+    params?: TransactionsControllerGetSummaryParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof transactionsControllerGetSummary>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
 
-  const queryKey =  queryOptions?.queryKey ?? getTransactionsControllerGetSummaryQueryKey(householdId);
+  const queryKey =  queryOptions?.queryKey ?? getTransactionsControllerGetSummaryQueryKey(householdId,params);
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof transactionsControllerGetSummary>>> = ({ signal }) => transactionsControllerGetSummary(householdId, requestOptions, signal);
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof transactionsControllerGetSummary>>> = ({ signal }) => transactionsControllerGetSummary(householdId,params, requestOptions, signal);
 
       
 
@@ -262,7 +268,8 @@ export type TransactionsControllerGetSummaryQueryError = ErrorType<unknown>
 
 
 export function useTransactionsControllerGetSummary<TData = Awaited<ReturnType<typeof transactionsControllerGetSummary>>, TError = ErrorType<unknown>>(
- householdId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof transactionsControllerGetSummary>>, TError, TData>> & Pick<
+ householdId: string,
+    params: undefined |  TransactionsControllerGetSummaryParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof transactionsControllerGetSummary>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof transactionsControllerGetSummary>>,
           TError,
@@ -272,7 +279,8 @@ export function useTransactionsControllerGetSummary<TData = Awaited<ReturnType<t
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 export function useTransactionsControllerGetSummary<TData = Awaited<ReturnType<typeof transactionsControllerGetSummary>>, TError = ErrorType<unknown>>(
- householdId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof transactionsControllerGetSummary>>, TError, TData>> & Pick<
+ householdId: string,
+    params?: TransactionsControllerGetSummaryParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof transactionsControllerGetSummary>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof transactionsControllerGetSummary>>,
           TError,
@@ -282,7 +290,8 @@ export function useTransactionsControllerGetSummary<TData = Awaited<ReturnType<t
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 export function useTransactionsControllerGetSummary<TData = Awaited<ReturnType<typeof transactionsControllerGetSummary>>, TError = ErrorType<unknown>>(
- householdId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof transactionsControllerGetSummary>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ householdId: string,
+    params?: TransactionsControllerGetSummaryParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof transactionsControllerGetSummary>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
@@ -290,11 +299,12 @@ export function useTransactionsControllerGetSummary<TData = Awaited<ReturnType<t
  */
 
 export function useTransactionsControllerGetSummary<TData = Awaited<ReturnType<typeof transactionsControllerGetSummary>>, TError = ErrorType<unknown>>(
- householdId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof transactionsControllerGetSummary>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ householdId: string,
+    params?: TransactionsControllerGetSummaryParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof transactionsControllerGetSummary>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
  , queryClient?: QueryClient 
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
-  const queryOptions = useTransactionsControllerGetSummaryQueryOptions(householdId,options)
+  const queryOptions = useTransactionsControllerGetSummaryQueryOptions(householdId,params,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
@@ -311,12 +321,14 @@ export function useTransactionsControllerGetSummary<TData = Awaited<ReturnType<t
  */
 export const transactionsControllerGetPersonalSummary = (
     householdId: string,
+    params?: TransactionsControllerGetPersonalSummaryParams,
  options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
 ) => {
       
       
       return customInstance<PersonalSummaryResponseDto>(
-      {url: `/api/v1/households/${householdId}/transactions/report/personal-summary`, method: 'GET', signal
+      {url: `/api/v1/households/${householdId}/transactions/report/personal-summary`, method: 'GET',
+        params, signal
     },
       options);
     }
@@ -324,23 +336,25 @@ export const transactionsControllerGetPersonalSummary = (
 
 
 
-export const getTransactionsControllerGetPersonalSummaryQueryKey = (householdId?: string,) => {
+export const getTransactionsControllerGetPersonalSummaryQueryKey = (householdId?: string,
+    params?: TransactionsControllerGetPersonalSummaryParams,) => {
     return [
-    `/api/v1/households/${householdId}/transactions/report/personal-summary`
+    `/api/v1/households/${householdId}/transactions/report/personal-summary`, ...(params ? [params]: [])
     ] as const;
     }
 
     
-export const useTransactionsControllerGetPersonalSummaryQueryOptions = <TData = Awaited<ReturnType<typeof transactionsControllerGetPersonalSummary>>, TError = ErrorType<unknown>>(householdId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof transactionsControllerGetPersonalSummary>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+export const useTransactionsControllerGetPersonalSummaryQueryOptions = <TData = Awaited<ReturnType<typeof transactionsControllerGetPersonalSummary>>, TError = ErrorType<unknown>>(householdId: string,
+    params?: TransactionsControllerGetPersonalSummaryParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof transactionsControllerGetPersonalSummary>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
 
-  const queryKey =  queryOptions?.queryKey ?? getTransactionsControllerGetPersonalSummaryQueryKey(householdId);
+  const queryKey =  queryOptions?.queryKey ?? getTransactionsControllerGetPersonalSummaryQueryKey(householdId,params);
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof transactionsControllerGetPersonalSummary>>> = ({ signal }) => transactionsControllerGetPersonalSummary(householdId, requestOptions, signal);
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof transactionsControllerGetPersonalSummary>>> = ({ signal }) => transactionsControllerGetPersonalSummary(householdId,params, requestOptions, signal);
 
       
 
@@ -354,7 +368,8 @@ export type TransactionsControllerGetPersonalSummaryQueryError = ErrorType<unkno
 
 
 export function useTransactionsControllerGetPersonalSummary<TData = Awaited<ReturnType<typeof transactionsControllerGetPersonalSummary>>, TError = ErrorType<unknown>>(
- householdId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof transactionsControllerGetPersonalSummary>>, TError, TData>> & Pick<
+ householdId: string,
+    params: undefined |  TransactionsControllerGetPersonalSummaryParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof transactionsControllerGetPersonalSummary>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof transactionsControllerGetPersonalSummary>>,
           TError,
@@ -364,7 +379,8 @@ export function useTransactionsControllerGetPersonalSummary<TData = Awaited<Retu
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 export function useTransactionsControllerGetPersonalSummary<TData = Awaited<ReturnType<typeof transactionsControllerGetPersonalSummary>>, TError = ErrorType<unknown>>(
- householdId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof transactionsControllerGetPersonalSummary>>, TError, TData>> & Pick<
+ householdId: string,
+    params?: TransactionsControllerGetPersonalSummaryParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof transactionsControllerGetPersonalSummary>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof transactionsControllerGetPersonalSummary>>,
           TError,
@@ -374,7 +390,8 @@ export function useTransactionsControllerGetPersonalSummary<TData = Awaited<Retu
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 export function useTransactionsControllerGetPersonalSummary<TData = Awaited<ReturnType<typeof transactionsControllerGetPersonalSummary>>, TError = ErrorType<unknown>>(
- householdId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof transactionsControllerGetPersonalSummary>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ householdId: string,
+    params?: TransactionsControllerGetPersonalSummaryParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof transactionsControllerGetPersonalSummary>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
@@ -382,11 +399,12 @@ export function useTransactionsControllerGetPersonalSummary<TData = Awaited<Retu
  */
 
 export function useTransactionsControllerGetPersonalSummary<TData = Awaited<ReturnType<typeof transactionsControllerGetPersonalSummary>>, TError = ErrorType<unknown>>(
- householdId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof transactionsControllerGetPersonalSummary>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ householdId: string,
+    params?: TransactionsControllerGetPersonalSummaryParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof transactionsControllerGetPersonalSummary>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
  , queryClient?: QueryClient 
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
-  const queryOptions = useTransactionsControllerGetPersonalSummaryQueryOptions(householdId,options)
+  const queryOptions = useTransactionsControllerGetPersonalSummaryQueryOptions(householdId,params,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 

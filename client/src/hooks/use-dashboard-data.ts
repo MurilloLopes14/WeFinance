@@ -42,18 +42,14 @@ export function useDashboardData(
   const summary = useMonthReportQuery(
     ['dashboard', 'summary', householdId, month] as const,
     (signal) =>
-      transactionsControllerGetSummary(householdId, { params: { month } }, signal),
+      transactionsControllerGetSummary(householdId, { month }, undefined, signal),
     enabled,
   )
 
   const personalSummary = useMonthReportQuery(
     ['dashboard', 'personal-summary', householdId, month] as const,
     (signal) =>
-      transactionsControllerGetPersonalSummary(
-        householdId,
-        { params: { month } },
-        signal,
-      ),
+      transactionsControllerGetPersonalSummary(householdId, { month }, undefined, signal),
     enabled,
   )
 

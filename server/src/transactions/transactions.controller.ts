@@ -18,6 +18,7 @@ import {
   ApiBearerAuth,
   ApiOperation,
   ApiProduces,
+  ApiQuery,
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
@@ -74,6 +75,7 @@ export class TransactionsController {
   // Static routes defined before :txId to avoid shadowing
   @Get('report/summary')
   @ApiOperation({ summary: 'Monthly household income/expense summary' })
+  @ApiQuery({ name: 'month', required: false, example: '2026-06', description: 'Month in YYYY-MM format. Defaults to current month.' })
   @ApiResponse({ status: 200, type: TransactionSummaryResponseDto })
   getSummary(
     @Param('householdId', ParseUUIDPipe) householdId: string,
@@ -85,6 +87,7 @@ export class TransactionsController {
 
   @Get('report/personal-summary')
   @ApiOperation({ summary: 'Personal monthly summary (splits + direct transactions) + total accounts balance' })
+  @ApiQuery({ name: 'month', required: false, example: '2026-06', description: 'Month in YYYY-MM format. Defaults to current month.' })
   @ApiResponse({ status: 200, type: PersonalSummaryResponseDto })
   getPersonalSummary(
     @Param('householdId', ParseUUIDPipe) householdId: string,
