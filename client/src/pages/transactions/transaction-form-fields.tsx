@@ -175,6 +175,7 @@ export function TransactionFormFields({
           <Select
             value={type}
             disabled={fieldsDisabled}
+            modal={false}
             onValueChange={(value) => {
               if (!value) return
               setValue('type', value as TransactionFormValues['type'], {
@@ -193,7 +194,7 @@ export function TransactionFormFields({
             <SelectTrigger id="transaction-type" className="w-full rounded-xl">
               <SelectValue placeholder="Selecione o tipo" />
             </SelectTrigger>
-            <SelectContent className="glass-strong">
+            <SelectContent className="glass-strong" align="start" sideOffset={4}>
               <SelectGroup>
                 {transactionTypeFormOptions.map((option) => (
                   <SelectItem key={option.value} value={option.value}>
@@ -233,6 +234,7 @@ export function TransactionFormFields({
           <Select
             value={accountId}
             disabled={fieldsDisabled}
+            modal={false}
             onValueChange={(value) => {
               if (!value) return
               setValue('accountId', value, { shouldValidate: true })
@@ -248,7 +250,7 @@ export function TransactionFormFields({
             <SelectTrigger id="transaction-account" className="w-full rounded-xl">
               <SelectValue placeholder="Selecione a conta" />
             </SelectTrigger>
-            <SelectContent className="glass-strong">
+            <SelectContent className="glass-strong" align="start" sideOffset={4}>
               <SelectGroup>
                 {accounts.map((account) => (
                   <SelectItem key={account.id} value={account.id}>
@@ -285,6 +287,7 @@ export function TransactionFormFields({
           <Select
             value={watch('toAccountId')}
             disabled={fieldsDisabled}
+            modal={false}
             onValueChange={(value) => {
               if (!value) return
               setValue('toAccountId', value, { shouldValidate: true })
@@ -297,7 +300,7 @@ export function TransactionFormFields({
             <SelectTrigger id="transaction-to-account" className="w-full rounded-xl">
               <SelectValue placeholder="Selecione a conta de destino" />
             </SelectTrigger>
-            <SelectContent className="glass-strong">
+            <SelectContent className="glass-strong" align="start" sideOffset={4}>
               <SelectGroup>
                 {destinationAccounts.map((account) => (
                   <SelectItem key={account.id} value={account.id}>
@@ -319,6 +322,7 @@ export function TransactionFormFields({
           <Select
             value={watch('categoryId')}
             disabled={fieldsDisabled}
+            modal={false}
             onValueChange={(value) => {
               setValue('categoryId', value ?? '', { shouldValidate: true })
             }}
@@ -333,7 +337,7 @@ export function TransactionFormFields({
             <SelectTrigger id="transaction-category" className="w-full rounded-xl">
               <SelectValue placeholder="Selecione a categoria" />
             </SelectTrigger>
-            <SelectContent className="glass-strong">
+            <SelectContent className="glass-strong" align="start" sideOffset={4}>
               <SelectGroup>
                 <SelectItem value="">Sem categoria</SelectItem>
                 {filteredCategories.map((category) => (
@@ -500,6 +504,7 @@ export function TransactionFormFields({
                             <Select
                               value={customSplits[index]?.userId ?? ''}
                               disabled={fieldsDisabled}
+                              modal={false}
                               onValueChange={(value) => {
                                 if (!value) return
                                 setValue(`customSplits.${index}.userId`, value, {
@@ -526,7 +531,7 @@ export function TransactionFormFields({
                                   ) : null}
                                 </SelectValue>
                               </SelectTrigger>
-                              <SelectContent className="glass-strong">
+                              <SelectContent className="glass-strong" align="start" sideOffset={4}>
                                 <SelectGroup>
                                   {rowMemberOptions.map((member) => (
                                     <SelectItem key={member.userId} value={member.userId}>

@@ -1,10 +1,17 @@
 import { AuthSessionLoading } from '@/components/auth/auth-session-loading'
-import { isAuthenticated } from '@/api/auth-storage'
+import { clearAccessToken, isAuthenticated } from '@/api/auth-storage'
 import { useAuthSession } from '@/hooks/use-auth-session'
+import { useEffect } from 'react'
 import { Navigate, Outlet } from 'react-router-dom'
 
 function GuestRouteGuard() {
-  const { data, isLoading } = useAuthSession()
+  const { data, isLoading, isError } = useAuthSession()
+
+  useEffect(() => {
+    if (isError) {
+      clearAccessToken()
+    }
+  }, [isError])
 
   if (isLoading) {
     return <AuthSessionLoading />
