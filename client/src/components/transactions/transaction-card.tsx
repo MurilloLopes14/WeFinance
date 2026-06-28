@@ -9,6 +9,7 @@ import {
   getTransactionAmountClassName,
   getTransactionTypeLabel,
 } from '@/lib/transaction-helpers'
+import { SensitiveValue } from '@/components/privacy/sensitive-value'
 import { cn } from '@/lib/utils'
 import { Pencil, Trash2 } from 'lucide-react'
 
@@ -67,14 +68,15 @@ export function TransactionCard({
           <div className="flex items-start justify-between gap-3">
             <p className="line-clamp-2 text-sm font-medium leading-snug">{description}</p>
             <div className="flex shrink-0 items-start gap-1">
-              <p
+              <SensitiveValue
+                size="md"
                 className={cn(
                   'text-sm font-semibold tabular-nums',
                   getTransactionAmountClassName(transaction.type),
                 )}
               >
                 {formatTransactionAmount(transaction.amount, transaction.type, currency)}
-              </p>
+              </SensitiveValue>
               {actions.length > 0 ? <ObjectCardActionsMenu actions={actions} /> : null}
             </div>
           </div>

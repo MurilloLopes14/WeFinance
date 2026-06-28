@@ -8,6 +8,7 @@ import {
   getTransactionAmountClassName,
   getTransactionTypeLabel,
 } from '@/lib/transaction-helpers'
+import { SensitiveValue } from '@/components/privacy/sensitive-value'
 import { cn } from '@/lib/utils'
 import { Pencil, Trash2 } from 'lucide-react'
 import type { ColumnDef } from '@tanstack/react-table'
@@ -81,14 +82,15 @@ export function createTransactionColumns(
       accessorKey: 'amount',
       header: () => <span className="block text-right">Valor</span>,
       cell: ({ row }) => (
-        <span
+        <SensitiveValue
+          size="md"
           className={cn(
             'block text-right font-medium tabular-nums',
             getTransactionAmountClassName(row.original.type),
           )}
         >
           {formatTransactionAmount(row.original.amount, row.original.type, meta.currency)}
-        </span>
+        </SensitiveValue>
       ),
     },
     {

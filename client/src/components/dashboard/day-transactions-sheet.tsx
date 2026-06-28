@@ -17,6 +17,7 @@ import {
   getTransactionAmountClassName,
   getTransactionTypeLabel,
 } from '@/lib/transaction-helpers'
+import { SensitiveValue } from '@/components/privacy/sensitive-value'
 import { cn } from '@/lib/utils'
 import { useMemo } from 'react'
 
@@ -115,14 +116,15 @@ export function DayTransactionsSheet({
                       </div>
                     </div>
                   </div>
-                  <span
+                  <SensitiveValue
+                    size="md"
                     className={cn(
                       'shrink-0 font-medium tabular-nums',
                       getTransactionAmountClassName(transaction.type),
                     )}
                   >
                     {formatTransactionAmount(transaction.amount, transaction.type, currency)}
-                  </span>
+                  </SensitiveValue>
                 </div>
               </article>
             ))
@@ -132,7 +134,7 @@ export function DayTransactionsSheet({
         {!isLoading && dayTransactions.length > 0 && (
           <div className="mt-4 border-t border-border/60 pt-3 text-sm text-muted-foreground">
             Total líquido:{' '}
-            <span className="font-medium text-foreground">
+            <SensitiveValue className="font-medium text-foreground" size="md">
               {formatAccountBalance(
                 dayTransactions.reduce((sum, transaction) => {
                   if (transaction.type === 'income') return sum + transaction.amount
@@ -141,7 +143,7 @@ export function DayTransactionsSheet({
                 }, 0),
                 currency,
               )}
-            </span>
+            </SensitiveValue>
           </div>
         )}
       </SheetContent>

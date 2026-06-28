@@ -10,6 +10,7 @@ import {
   getSubscriptionTypeLabel,
 } from '@/lib/subscription-helpers'
 import { getTransactionAmountClassName } from '@/lib/transaction-helpers'
+import { SensitiveValue } from '@/components/privacy/sensitive-value'
 import { cn } from '@/lib/utils'
 import { ArrowRight, CalendarClock } from 'lucide-react'
 import { useMemo } from 'react'
@@ -89,14 +90,15 @@ export function UpcomingFixosPanel({
                   {formatSubscriptionNextRun(subscription.nextRunAt)}
                 </p>
               </div>
-              <p
+              <SensitiveValue
+                size="md"
                 className={cn(
                   'shrink-0 text-sm font-semibold tabular-nums',
                   getTransactionAmountClassName(subscription.type),
                 )}
               >
                 {formatAccountBalance(subscription.amount, currency)}
-              </p>
+              </SensitiveValue>
             </li>
           ))}
         </ul>

@@ -1,4 +1,5 @@
 import { formatAccountBalance } from '@/lib/account-helpers'
+import { SensitiveValue } from '@/components/privacy/sensitive-value'
 import { cn } from '@/lib/utils'
 
 type KpiCardProps = {
@@ -48,14 +49,15 @@ export function KpiCard({ label, value, currency, variant }: KpiCardProps) {
   return (
     <div className="glass-subtle flex min-w-0 flex-col rounded-xl px-3 py-3 ring-1 ring-foreground/10 sm:px-4">
       <p className="text-[11px] font-medium text-muted-foreground sm:text-xs">{label}</p>
-      <p
+      <SensitiveValue
+        size="lg"
         className={cn(
-          'mt-1 min-w-0 font-heading text-sm font-semibold leading-tight tabular-nums tracking-tight sm:text-xl',
+          'mt-1 block min-w-0 font-heading text-sm font-semibold leading-tight tracking-tight sm:text-xl',
           valueClassName,
         )}
       >
         {formatted}
-      </p>
+      </SensitiveValue>
     </div>
   )
 }

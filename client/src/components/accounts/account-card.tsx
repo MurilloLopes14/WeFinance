@@ -8,6 +8,7 @@ import {
   getAccountCurrency,
   getAccountTypeLabel,
 } from '@/lib/account-helpers'
+import { SensitiveValue } from '@/components/privacy/sensitive-value'
 import { DEFAULT_PRESET_COLOR } from '@/lib/color-helpers'
 import { cn } from '@/lib/utils'
 import { Pencil, Trash2, Wallet } from 'lucide-react'
@@ -79,9 +80,12 @@ export function AccountCard({
             {account.name}
           </CardTitle>
 
-          <p className="mt-1.5 truncate text-lg leading-none font-semibold tracking-tight tabular-nums">
+          <SensitiveValue
+            size="lg"
+            className="mt-1.5 block truncate text-lg leading-none font-semibold tracking-tight tabular-nums"
+          >
             {formatAccountBalance(account.balanceManual, currency)}
-          </p>
+          </SensitiveValue>
 
           <div className="mt-2.5 flex min-w-0 items-center gap-1.5 overflow-hidden">
             {householdName && (

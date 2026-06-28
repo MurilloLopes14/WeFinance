@@ -9,6 +9,7 @@ import {
   getInsightToneStyles,
   isBudgetInsight,
 } from '@/lib/insight-helpers'
+import { SensitiveValue } from '@/components/privacy/sensitive-value'
 import { cn } from '@/lib/utils'
 import { User, Users } from 'lucide-react'
 
@@ -102,7 +103,9 @@ export function InsightCard({
                   />
                 </div>
               )}
-              <p className="text-xs text-muted-foreground">{budgetSummary}</p>
+              <SensitiveValue className="text-xs text-muted-foreground" size="sm">
+                {budgetSummary}
+              </SensitiveValue>
             </div>
           )}
         </div>

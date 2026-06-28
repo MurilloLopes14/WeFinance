@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge'
 import { Card, CardTitle } from '@/components/ui/card'
 
 import { formatAccountBalance } from '@/lib/account-helpers'
+import { SensitiveValue } from '@/components/privacy/sensitive-value'
 
 import {
 
@@ -169,21 +170,15 @@ export function SubscriptionCard({
 
 
 
-        <p
-
+        <SensitiveValue
+          size="lg"
           className={cn(
-
-            'truncate text-lg font-semibold leading-none tracking-tight tabular-nums sm:text-xl',
-
+            'block truncate text-lg font-semibold leading-none tracking-tight tabular-nums sm:text-xl',
             getTransactionAmountClassName(subscription.type),
-
           )}
-
         >
-
           {formatAccountBalance(subscription.amount, currency)}
-
-        </p>
+        </SensitiveValue>
 
 
 

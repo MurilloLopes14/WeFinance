@@ -9,6 +9,7 @@ import {
   getTransactionAmountClassName,
   getTransactionTypeLabel,
 } from '@/lib/transaction-helpers'
+import { SensitiveValue } from '@/components/privacy/sensitive-value'
 import { getUserInitials } from '@/lib/household-helpers'
 import { cn } from '@/lib/utils'
 import type { ColumnDef } from '@tanstack/react-table'
@@ -82,7 +83,8 @@ export function createSplitColumns(meta: SplitTableMeta): ColumnDef<SplitTableRo
       header: () => <span className="block text-right">Valor total</span>,
       cell: ({ row }) =>
         row.original.isFirstInGroup ? (
-          <span
+          <SensitiveValue
+            size="md"
             className={cn(
               'block text-right font-medium tabular-nums',
               getTransactionAmountClassName(row.original.type),
@@ -93,7 +95,7 @@ export function createSplitColumns(meta: SplitTableMeta): ColumnDef<SplitTableRo
               row.original.type,
               meta.currency,
             )}
-          </span>
+          </SensitiveValue>
         ) : (
           <span className="block text-right text-transparent select-none" aria-hidden>
             —
@@ -127,9 +129,9 @@ export function createSplitColumns(meta: SplitTableMeta): ColumnDef<SplitTableRo
       accessorKey: 'share',
       header: () => <span className="block text-right">Parte</span>,
       cell: ({ row }) => (
-        <span className="block text-right font-medium tabular-nums">
+        <SensitiveValue size="md" className="block text-right font-medium tabular-nums">
           {formatAccountBalance(row.original.share, meta.currency)}
-        </span>
+        </SensitiveValue>
       ),
     },
     {

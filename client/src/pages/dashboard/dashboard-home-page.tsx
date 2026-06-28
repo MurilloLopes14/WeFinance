@@ -23,6 +23,7 @@ import { RecentTransactionsPanel } from '@/components/dashboard/recent-transacti
 import { UpcomingFixosPanel } from '@/components/dashboard/upcoming-fixos-panel'
 
 import { InsightsSection } from '@/components/insights/insights-section'
+import { PrivacyToggleButton } from '@/components/privacy/privacy-toggle-button'
 
 import { ObjectPageLayout } from '@/components/object/object-page-layout'
 
@@ -182,15 +183,21 @@ export function DashboardHomePage() {
 
       <header className="space-y-4" data-tour="dashboard-header">
 
-        <div className="space-y-1.5">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
 
-          <h1 className="font-heading text-2xl font-semibold tracking-tight">Dashboard</h1>
+          <div className="space-y-1.5">
 
-          <p className="max-w-2xl text-sm leading-relaxed text-muted-foreground">
+            <h1 className="font-heading text-2xl font-semibold tracking-tight">Dashboard</h1>
 
-            Visão geral das suas finanças com indicadores pessoais e do grupo.
+            <p className="max-w-2xl text-sm leading-relaxed text-muted-foreground">
 
-          </p>
+              Visão geral das suas finanças com indicadores pessoais e do grupo.
+
+            </p>
+
+          </div>
+
+          <PrivacyToggleButton className="sm:mt-0.5" />
 
         </div>
 

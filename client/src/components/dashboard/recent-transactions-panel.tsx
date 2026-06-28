@@ -9,6 +9,7 @@ import {
   getTransactionAmountClassName,
   getTransactionTypeLabel,
 } from '@/lib/transaction-helpers'
+import { SensitiveValue } from '@/components/privacy/sensitive-value'
 import { cn } from '@/lib/utils'
 import { ArrowLeftRight, ArrowRight } from 'lucide-react'
 import { Link } from 'react-router-dom'
@@ -81,14 +82,15 @@ export function RecentTransactionsPanel({
                   {formatTransactionDate(transaction.date)} · {getTransactionTypeLabel(transaction.type)}
                 </p>
               </div>
-              <p
+              <SensitiveValue
+                size="md"
                 className={cn(
                   'shrink-0 text-sm font-semibold tabular-nums',
                   getTransactionAmountClassName(transaction.type),
                 )}
               >
                 {formatTransactionAmount(transaction.amount, transaction.type, currency)}
-              </p>
+              </SensitiveValue>
             </li>
           ))}
         </ul>

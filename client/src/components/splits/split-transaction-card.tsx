@@ -11,6 +11,7 @@ import {
   getTransactionAmountClassName,
   getTransactionTypeLabel,
 } from '@/lib/transaction-helpers'
+import { SensitiveValue } from '@/components/privacy/sensitive-value'
 import { cn } from '@/lib/utils'
 
 type SplitTransactionCardProps = {
@@ -55,14 +56,15 @@ export function SplitTransactionCard({
             </div>
           </div>
 
-          <p
+          <SensitiveValue
+            size="md"
             className={cn(
               'shrink-0 text-sm font-semibold tabular-nums',
               getTransactionAmountClassName(header.type),
             )}
           >
             {formatTransactionAmount(header.transactionAmount, header.type, currency)}
-          </p>
+          </SensitiveValue>
         </div>
 
         {header.splitPreview ? (
@@ -101,9 +103,9 @@ export function SplitTransactionCard({
               </div>
 
               <div className="shrink-0 text-right">
-                <p className="text-sm font-medium tabular-nums">
+                <SensitiveValue size="sm" className="block text-sm font-medium tabular-nums">
                   {formatAccountBalance(row.share, currency)}
-                </p>
+                </SensitiveValue>
                 <p className="text-xs tabular-nums text-muted-foreground">
                   {row.sharePercent.toLocaleString('pt-BR', {
                     maximumFractionDigits: 1,

@@ -23,7 +23,9 @@ import {
   isDailyBalanceHistoryRange,
   type BalanceHistoryRange,
 } from '@/lib/dashboard-helpers'
-import { formatAccountBalance } from '@/lib/account-helpers'
+import { usePrivacyMode } from '@/contexts/privacy-mode-context'
+import { SENSITIVE_MASK_LABEL } from '@/components/privacy/sensitive-value'
+import { useSensitiveCurrencyFormatter, useSensitiveCurrencyText } from '@/hooks/use-sensitive-currency-formatter'
 import { formatTransactionDate } from '@/lib/transaction-helpers'
 import { cn } from '@/lib/utils'
 import { CartesianGrid, Line, LineChart, ReferenceLine, XAxis, YAxis } from 'recharts'
@@ -56,6 +58,9 @@ export function BalanceEvolutionChart({
   isLoading,
   className,
 }: BalanceEvolutionChartProps) {
+  const formatCurrencyAxis = useSensitiveCurrencyFormatter(currency)
+  const formatCurrencyText = useSensitiveCurrencyText(currency)
+  const { amountsHidden } = usePrivacyMode()
   const isDaily = isDailyBalanceHistoryRange(historyRange)
   const monthlyPoints = buildMonthlyBalanceSeries(monthlyData)
   const dailyPoints = buildDailyBalanceSeries(dailyMonth, dailyData?.days ?? [])
@@ -141,9 +146,7 @@ export function BalanceEvolutionChart({
               axisLine={false}
               tickMargin={8}
               width={72}
-              tickFormatter={(value: number) =>
-                formatAccountBalance(value, currency).replace(/\s/g, '\u00a0')
-              }
+              tickFormatter={(value: number) => formatCurrencyAxis(value)}
             />
             <ReferenceLine y={0} stroke="var(--border)" strokeDasharray="4 4" />
             <ChartTooltip
@@ -161,16 +164,18 @@ export function BalanceEvolutionChart({
                     return ''
                   }}
                   formatter={(value, _name, item) => {
+                    if (amountsHidden) return SENSITIVE_MASK_LABEL
+
                     if (isDaily && 'dailyBalance' in item.payload) {
                       const point = item.payload as (typeof dailyPoints)[number]
-                      const accumulated = formatAccountBalance(Number(value), currency)
-                      const daily = formatAccountBalance(point.dailyBalance, currency)
+                      const accumulated = formatCurrencyText(Number(value))
+                      const daily = formatCurrencyText(point.dailyBalance)
                       return `Acumulado: ${accumulated} · Dia: ${daily}`
                     }
 
                     const point = item.payload as (typeof monthlyPoints)[number]
-                    const accumulated = formatAccountBalance(Number(value), currency)
-                    const monthly = formatAccountBalance(point.netBalance, currency)
+                    const accumulated = formatCurrencyText(Number(value))
+                    const monthly = formatCurrencyText(point.netBalance)
                     return `Acumulado: ${accumulated} · Mês: ${monthly}`
                   }}
                 />
@@ -190,4 +195,4 @@ export function BalanceEvolutionChart({
     </div>
   )
 }
-
+

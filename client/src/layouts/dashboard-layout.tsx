@@ -2,11 +2,13 @@ import { AppBrandMark } from '@/components/brand/app-brand-mark'
 import { AppSidebar } from '@/components/dashboard/app-sidebar'
 import { SidebarInset, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar'
 import { TransactionCreateProvider } from '@/contexts/transaction-create-context'
+import { PrivacyModeProvider } from '@/contexts/privacy-mode-context'
 import { AppTourProvider } from '@/components/tour/app-tour-provider'
 import { Outlet } from 'react-router-dom'
 export function DashboardLayout() {
   return (
     <SidebarProvider className="dashboard-shell">
+      <PrivacyModeProvider>
       <TransactionCreateProvider>
         <AppTourProvider>
         <AppSidebar />
@@ -28,6 +30,7 @@ export function DashboardLayout() {
         </SidebarInset>
         </AppTourProvider>
       </TransactionCreateProvider>
+      </PrivacyModeProvider>
     </SidebarProvider>
   )
 }

@@ -1,4 +1,5 @@
 import { AppBrandMark } from '@/components/brand/app-brand-mark'
+import { PrivacyToggleButton } from '@/components/privacy/privacy-toggle-button'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -86,21 +87,20 @@ export function ObjectHeader({
             </div>
           </div>
 
-          {(headerActions || createAction) && (
-            <div className="flex shrink-0 flex-wrap items-center gap-2 lg:self-start">
-              {headerActions}
-              {createAction && (
-                <Button
-                  type="button"
-                  onClick={createAction.onClick}
-                  className="glow-primary h-10 rounded-xl px-4"
-                >
-                  <Plus className="size-4" />
-                  {createAction.label}
-                </Button>
-              )}
-            </div>
-          )}
+          <div className="flex shrink-0 flex-wrap items-center gap-2 lg:self-start">
+            <PrivacyToggleButton />
+            {headerActions}
+            {createAction && (
+              <Button
+                type="button"
+                onClick={createAction.onClick}
+                className="glow-primary h-10 rounded-xl px-4"
+              >
+                <Plus className="size-4" />
+                {createAction.label}
+              </Button>
+            )}
+          </div>
         </div>
 
         {(onSearchChange || hasFilters) && (

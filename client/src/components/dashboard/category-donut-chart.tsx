@@ -7,7 +7,9 @@ import {
 } from '@/components/ui/chart'
 import { Skeleton } from '@/components/ui/skeleton'
 import { CHART_FALLBACK_COLORS } from '@/lib/dashboard-helpers'
-import { formatAccountBalance } from '@/lib/account-helpers'
+import { useSensitiveCurrencyText } from '@/hooks/use-sensitive-currency-formatter'
+import { usePrivacyMode } from '@/contexts/privacy-mode-context'
+import { SENSITIVE_MASK_LABEL } from '@/components/privacy/sensitive-value'
 import { cn } from '@/lib/utils'
 import { Cell, Pie, PieChart } from 'recharts'
 
@@ -34,6 +36,8 @@ export function CategoryDonutChart({
   title,
   className,
 }: CategoryDonutChartProps) {
+  const formatCurrencyText = useSensitiveCurrencyText(currency)
+  const { amountsHidden } = usePrivacyMode()
   const slices: ChartSlice[] =
     data?.categories.map((category, index) => ({
       key: (category.categoryId as string | null) ?? `uncategorized-${index}`,
@@ -85,11 +89,19 @@ export function CategoryDonutChart({
                     hideLabel
                     formatter={(value, _name, item) => {
                       const slice = item.payload as ChartSlice
+                      if (amountsHidden) {
+                        return (
+                          <div className="flex w-full items-center justify-between gap-4">
+                            <span>{slice.name}</span>
+                            <span>{SENSITIVE_MASK_LABEL}</span>
+                          </div>
+                        )
+                      }
                       return (
                         <div className="flex w-full items-center justify-between gap-4">
                           <span>{slice.name}</span>
                           <span className="font-mono tabular-nums">
-                            {formatAccountBalance(Number(value), currency)} ({slice.percentage.toFixed(1)}%)
+                            {formatCurrencyText(Number(value))} ({slice.percentage.toFixed(1)}%)
                           </span>
                         </div>
                       )
