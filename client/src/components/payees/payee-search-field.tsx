@@ -51,11 +51,15 @@ export function PayeeSearchField({
   )
 
   useEffect(() => {
+    if (!value) {
+      setInputValue('')
+      return
+    }
+
     if (selectedPayee) {
       setInputValue(selectedPayee.name)
-      onQueryChange?.(selectedPayee.name)
     }
-  }, [selectedPayee, onQueryChange])
+  }, [value, selectedPayee?.id, selectedPayee?.name])
 
   const filteredPayees = useMemo(
     () => filterPayeesByQuery(payees, inputValue),

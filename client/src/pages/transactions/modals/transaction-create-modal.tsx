@@ -125,13 +125,14 @@ export function TransactionCreateModal({
   const createMutation = useTransactionsControllerCreate({
     mutation: {
       onSuccess: async (_data, variables) => {
+        toast.success('Transação criada com sucesso')
+        setIsQuickCreatingPayee(false)
+        onOpenChange(false)
+        reset(createDefaultTransactionFormValues())
+
         await queryClient.invalidateQueries({
           queryKey: getTransactionsControllerFindAllQueryKey(variables.householdId),
         })
-        toast.success('Transação criada com sucesso')
-        reset(createDefaultTransactionFormValues())
-        setIsQuickCreatingPayee(false)
-        onOpenChange(false)
       },
       onError: (error) => {
         toast.error(getApiErrorMessage(error, 'Não foi possível criar a transação'))
