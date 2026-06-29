@@ -26,6 +26,12 @@ export interface AccountResponseDto {
   yieldGranularity?: AccountResponseDtoYieldGranularity;
   /** @nullable */
   maturityDate?: string | null;
+  /** @nullable */
+  creditLimit?: number | null;
+  /** @nullable */
+  invoiceClosingDay?: number | null;
+  /** @nullable */
+  invoiceDueDay?: number | null;
   createdAt: string;
   updatedAt: string;
 }

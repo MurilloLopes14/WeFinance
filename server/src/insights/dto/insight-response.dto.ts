@@ -26,6 +26,8 @@ export class InsightMetadataDto {
   @ApiPropertyOptional() accountId?: string;
   @ApiPropertyOptional() projectedBalance?: number;
   @ApiPropertyOptional() projectedYield?: number;
+  @ApiPropertyOptional() invoiceClosingDay?: number;
+  @ApiPropertyOptional() invoiceDueDay?: number | null;
 }
 
 export class InsightDto {

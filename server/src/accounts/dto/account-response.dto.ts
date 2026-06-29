@@ -34,6 +34,15 @@ export class AccountResponseDto {
   @ApiPropertyOptional({ type: String, nullable: true, example: '2028-06-23' })
   maturityDate: string | null;
 
+  @ApiPropertyOptional({ type: Number, nullable: true, example: 5000 })
+  creditLimit: number | null;
+
+  @ApiPropertyOptional({ type: Number, nullable: true, example: 15 })
+  invoiceClosingDay: number | null;
+
+  @ApiPropertyOptional({ type: Number, nullable: true, example: 22, description: 'Dia de vencimento (invoiceClosingDay + 7, calculado automaticamente)' })
+  invoiceDueDay: number | null;
+
   @ApiProperty()
   createdAt: Date;
 

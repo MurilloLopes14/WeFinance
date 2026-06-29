@@ -64,6 +64,9 @@ export function DashboardPerspectiveTabs({
                 }
               : undefined
           }
+          creditAccounts={
+            isLoading ? [] : (personalSummary?.creditAccounts ?? [])
+          }
           currency={currency}
           isLoading={isLoading}
         />

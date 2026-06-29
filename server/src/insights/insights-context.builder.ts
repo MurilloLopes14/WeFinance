@@ -18,6 +18,7 @@ import {
   BudgetMetrics,
   CategoryBucket,
   CategoryBudgetItem,
+  CreditAccountItem,
   HouseholdPeriodMetrics,
   InsightsContext,
   InvestmentAccountItem,
@@ -196,6 +197,25 @@ export class InsightsContextBuilder {
         maturityDate: r.maturityDate ?? null,
       }));
 
+    const creditRows = await this.db
+      .select({
+        id: accounts.id,
+        name: accounts.name,
+        creditLimit: accounts.creditLimit,
+        invoiceClosingDay: accounts.invoiceClosingDay,
+      })
+      .from(accounts)
+      .where(and(eq(accounts.householdId, householdId), eq(accounts.type, 'credit')));
+
+    const creditAccounts: CreditAccountItem[] = creditRows
+      .filter((r) => r.creditLimit != null && r.invoiceClosingDay != null)
+      .map((r) => ({
+        id: r.id,
+        name: r.name,
+        creditLimit: parseFloat(r.creditLimit!),
+        invoiceClosingDay: r.invoiceClosingDay!,
+      }));
+
     return {
       householdId,
       userId,
@@ -217,6 +237,7 @@ export class InsightsContextBuilder {
       },
       budgets,
       investmentAccounts,
+      creditAccounts,
     };
   }
 

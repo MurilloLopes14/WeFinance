@@ -2,6 +2,7 @@ import { ApiPropertyOptional } from '@nestjs/swagger';
 import {
   IsDateString,
   IsEnum,
+  IsInt,
   IsNumber,
   IsOptional,
   IsString,
@@ -63,4 +64,18 @@ export class UpdateAccountDto {
   @IsOptional()
   @IsDateString()
   maturityDate?: string | null;
+
+  @ApiPropertyOptional({ type: Number, example: 5000, nullable: true, description: 'Limite de crédito do cartão. null para remover.' })
+  @IsOptional()
+  @IsNumber({ maxDecimalPlaces: 2 })
+  @Min(0)
+  creditLimit?: number | null;
+
+  @ApiPropertyOptional({ type: Number, example: 15, nullable: true, description: 'Dia de fechamento da fatura (1–28). null para remover.' })
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  @Max(28)
+  invoiceClosingDay?: number | null;
+
 }

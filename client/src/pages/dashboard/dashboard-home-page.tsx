@@ -16,6 +16,8 @@ import {
 
 import { FinancialCalendar } from '@/components/dashboard/financial-calendar'
 
+import { CreditAccountsPanel } from '@/components/dashboard/credit-accounts-panel'
+
 import { MonthSelector } from '@/components/dashboard/month-selector'
 
 import { RecentTransactionsPanel } from '@/components/dashboard/recent-transactions-panel'
@@ -38,6 +40,8 @@ import { householdsListParams } from '@/lib/household-api-helpers'
 import type { BalanceHistoryRange } from '@/lib/dashboard-helpers'
 
 import { getCurrentMonthParam } from '@/lib/transaction-helpers'
+
+import { cn } from '@/lib/utils'
 
 import { useEffect, useMemo, useState } from 'react'
 
@@ -175,6 +179,16 @@ export function DashboardHomePage() {
 
     perspective === 'personal' ? personalBreakdown.data : householdBreakdown.data
 
+  const creditAccounts = personalSummary.data?.creditAccounts ?? []
+
+  const showCreditPanel =
+
+    perspective === 'personal' &&
+
+    (isLoadingDashboard || creditAccounts.length > 0)
+
+  const dashboardSidePanelClassName = 'min-h-0 max-lg:min-h-52 lg:h-full'
+
 
 
   return (
@@ -275,52 +289,59 @@ export function DashboardHomePage() {
 
 
 
-          <div className="order-2 grid grid-cols-1 gap-4 lg:order-3 lg:grid-cols-2">
+          <div className="order-2 grid grid-cols-1 gap-4 lg:grid-cols-2 lg:items-stretch">
+            <div
+              className={cn(
+                'flex min-h-0 flex-col gap-4',
+                showCreditPanel
+                  ? 'lg:grid lg:h-full lg:grid-rows-3 lg:gap-4'
+                  : 'lg:grid lg:h-full lg:grid-rows-2 lg:gap-4',
+              )}
+            >
+              <RecentTransactionsPanel
+                className={dashboardSidePanelClassName}
+                transactions={recentTransactions}
+                currency={currency}
+                isLoading={isLoadingTransactions}
+                isError={isErrorTransactions}
+                onRetry={() => {
+                  void refetchTransactions()
+                }}
+              />
 
-            <RecentTransactionsPanel
+              <UpcomingFixosPanel
+                className={dashboardSidePanelClassName}
+                subscriptions={subscriptions}
+                currency={currency}
+                isLoading={isLoadingSubscriptions}
+                isError={isErrorSubscriptions}
+                onRetry={() => {
+                  void refetchSubscriptions()
+                }}
+              />
 
-              transactions={recentTransactions}
+              {showCreditPanel ? (
+                <CreditAccountsPanel
+                  variant="compact"
+                  className={dashboardSidePanelClassName}
+                  accounts={isLoadingDashboard ? [] : creditAccounts}
+                  currency={currency}
+                  isLoading={isLoadingDashboard}
+                />
+              ) : null}
+            </div>
 
-              currency={currency}
-
-              isLoading={isLoadingTransactions}
-
-              isError={isErrorTransactions}
-
-              onRetry={() => {
-
-                void refetchTransactions()
-
-              }}
-
+            <FinancialCalendar
+              data={dailySummary.data}
+              month={month}
+              isLoading={isLoadingDashboard}
+              onDayClick={setSelectedDay}
+              className="min-h-0 lg:h-full"
             />
-
-            <UpcomingFixosPanel
-
-              subscriptions={subscriptions}
-
-              currency={currency}
-
-              isLoading={isLoadingSubscriptions}
-
-              isError={isErrorSubscriptions}
-
-              onRetry={() => {
-
-                void refetchSubscriptions()
-
-              }}
-
-            />
-
           </div>
 
-
-
           <div className="order-3 flex flex-col gap-4 lg:order-2" data-tour="dashboard-reports">
-
             <div className="grid grid-cols-1 gap-4 lg:grid-cols-12">
-
             <BalanceEvolutionChart
 
               className="lg:col-span-7"
@@ -356,21 +377,6 @@ export function DashboardHomePage() {
             />
 
             </div>
-
-
-
-            <FinancialCalendar
-
-              data={dailySummary.data}
-
-              month={month}
-
-              isLoading={isLoadingDashboard}
-
-              onDayClick={setSelectedDay}
-
-            />
-
           </div>
 
 

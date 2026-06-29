@@ -5,6 +5,7 @@ import type { HouseholdResponseDto } from '@/api/generated/models/householdRespo
 import { formatAccountBalance } from '@/lib/account-helpers'
 import {
   AlertTriangle,
+  CreditCard,
   Lightbulb,
   Sparkles,
   TrendingUp,
@@ -13,6 +14,7 @@ import {
 } from 'lucide-react'
 
 export const BUDGET_INSIGHT_RULE = 'budget_overview'
+export const CREDIT_INVOICE_INSIGHT_RULE = 'credit_invoice'
 
 export type EnrichedInsight = InsightDto & {
   householdId: string
@@ -22,6 +24,10 @@ export type EnrichedInsight = InsightDto & {
 
 export function isBudgetInsight(insight: Pick<InsightDto, 'rule'>): boolean {
   return insight.rule === BUDGET_INSIGHT_RULE
+}
+
+export function isCreditInvoiceInsight(insight: Pick<InsightDto, 'rule'>): boolean {
+  return insight.rule === CREDIT_INVOICE_INSIGHT_RULE
 }
 
 export function shuffleInsights<T>(items: T[]): T[] {
@@ -65,6 +71,7 @@ export function getInsightToneIcon(tone: InsightDtoTone): LucideIcon {
 
 export function getInsightIcon(insight: Pick<InsightDto, 'rule' | 'tone'>): LucideIcon {
   if (isBudgetInsight(insight)) return Wallet
+  if (isCreditInvoiceInsight(insight)) return CreditCard
   return getInsightToneIcon(insight.tone)
 }
 

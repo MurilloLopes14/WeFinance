@@ -22,10 +22,12 @@ import { getApiErrorMessage } from '@/lib/get-api-error-message'
 import { AccountFormFields } from '@/pages/accounts/account-form-fields'
 import {
   accountEditFormSchema,
+  buildCreditAccountPayload,
   buildInvestmentAccountPayload,
   defaultAccountEditFormValues,
   type AccountEditFormValues,
 } from '@/pages/accounts/account-form-schema'
+import { formatAmountToCurrencyInput } from '@/lib/currency-input-helpers'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Loader2, Trash2 } from 'lucide-react'
 import { useEffect, useState } from 'react'
@@ -50,6 +52,12 @@ function toFormValues(account: AccountResponseDto): AccountEditFormValues {
       account.yieldPercent != null ? String(account.yieldPercent) : '',
     yieldGranularity: account.yieldGranularity ?? '',
     maturityDate: account.maturityDate ?? '',
+    creditLimit:
+      account.creditLimit != null
+        ? formatAmountToCurrencyInput(account.creditLimit)
+        : '',
+    invoiceClosingDay:
+      account.invoiceClosingDay != null ? String(account.invoiceClosingDay) : '',
   }
 }
 
@@ -129,6 +137,7 @@ export function AccountEditModal({
         institution: values.institution || null,
         color: values.color || undefined,
         ...buildInvestmentAccountPayload(values, { clearWhenNotInvestment: true }),
+        ...buildCreditAccountPayload(values, { clearWhenNotCredit: true }),
       },
     })
   })

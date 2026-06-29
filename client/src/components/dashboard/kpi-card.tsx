@@ -6,8 +6,10 @@ type KpiCardProps = {
   label: string
   value: number
   currency: string
-  variant: 'income' | 'expense' | 'balance' | 'available' | 'invested' | 'total'
+  variant: 'income' | 'expense' | 'balance' | 'available' | 'invested' | 'total' | 'toBePaid'
 }
+
+export type { KpiCardProps }
 
 export function KpiCard({ label, value, currency, variant }: KpiCardProps) {
   const formatted = formatAccountBalance(value, currency)
@@ -40,6 +42,12 @@ export function KpiCard({ label, value, currency, variant }: KpiCardProps) {
       }
       if (value > 0) {
         return 'text-primary'
+      }
+      return 'text-foreground'
+    }
+    if (variant === 'toBePaid') {
+      if (value > 0) {
+        return 'text-amber-600 dark:text-amber-400'
       }
       return 'text-foreground'
     }

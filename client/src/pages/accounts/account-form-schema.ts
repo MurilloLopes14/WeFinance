@@ -62,6 +62,58 @@ function validateInvestmentFields(
   }
 }
 
+function validateCreditFields(
+  values: {
+    type: CreateAccountDtoType
+    creditLimit?: string
+    invoiceClosingDay?: string
+  },
+  context: z.RefinementCtx,
+) {
+  if (values.type !== CreateAccountDtoType.credit) return
+
+  const limitTrimmed = values.creditLimit?.trim() ?? ''
+  if (!limitTrimmed) {
+    context.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'Informe o limite de crédito',
+      path: ['creditLimit'],
+    })
+  } else {
+    const limit = Number(limitTrimmed.replace(/\./g, '').replace(',', '.'))
+    if (Number.isNaN(limit) || limit <= 0) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Informe um limite maior que zero',
+        path: ['creditLimit'],
+      })
+    }
+  }
+
+  const closingTrimmed = values.invoiceClosingDay?.trim() ?? ''
+  if (!closingTrimmed) {
+    context.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'Informe o dia de fechamento',
+      path: ['invoiceClosingDay'],
+    })
+  } else {
+    const closingDay = Number(closingTrimmed)
+    if (!Number.isInteger(closingDay) || closingDay < 1 || closingDay > 28) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'O fechamento deve ser entre 1 e 28',
+        path: ['invoiceClosingDay'],
+      })
+    }
+  }
+}
+
+const creditFieldsSchema = z.object({
+  creditLimit: z.string().optional().or(z.literal('')),
+  invoiceClosingDay: z.string().optional().or(z.literal('')),
+})
+
 const accountBaseFormSchema = z
   .object({
     householdId: z.string().uuid('Selecione um grupo'),
@@ -91,6 +143,15 @@ const accountBaseFormSchema = z
       .or(z.literal('')),
   })
   .merge(investmentFieldsSchema)
+  .merge(creditFieldsSchema)
+
+function validateAccountFields(
+  values: z.infer<typeof accountBaseFormSchema>,
+  context: z.RefinementCtx,
+) {
+  validateInvestmentFields(values, context)
+  validateCreditFields(values, context)
+}
 
 export const accountFormSchema = accountBaseFormSchema
   .extend({
@@ -98,10 +159,10 @@ export const accountFormSchema = accountBaseFormSchema
       .number({ error: 'Informe um saldo válido' })
       .min(0, 'O saldo não pode ser negativo'),
   })
-  .superRefine(validateInvestmentFields)
+  .superRefine(validateAccountFields)
 
 export const accountEditFormSchema = accountBaseFormSchema.superRefine(
-  validateInvestmentFields,
+  validateAccountFields,
 )
 
 export type AccountFormValues = z.infer<typeof accountFormSchema>
@@ -113,6 +174,11 @@ const investmentDefaultFields = {
   maturityDate: '',
 }
 
+const creditDefaultFields = {
+  creditLimit: '',
+  invoiceClosingDay: '',
+}
+
 export const defaultAccountFormValues: AccountFormValues = {
   householdId: '',
   name: '',
@@ -121,6 +187,7 @@ export const defaultAccountFormValues: AccountFormValues = {
   balanceManual: 0,
   color: DEFAULT_PRESET_COLOR,
   ...investmentDefaultFields,
+  ...creditDefaultFields,
 }
 
 export const defaultAccountEditFormValues: AccountEditFormValues = {
@@ -130,6 +197,7 @@ export const defaultAccountEditFormValues: AccountEditFormValues = {
   institution: '',
   color: DEFAULT_PRESET_COLOR,
   ...investmentDefaultFields,
+  ...creditDefaultFields,
 }
 
 export const accountTypeFormOptions = [
@@ -148,6 +216,26 @@ export function parseYieldPercentForApi(value: string | undefined): number | und
   if (Number.isNaN(amount)) return undefined
 
   return amount
+}
+
+export function parseCreditLimitForApi(value: string | undefined): number | undefined {
+  const trimmed = value?.trim()
+  if (!trimmed) return undefined
+
+  const amount = Number(trimmed.replace(/\./g, '').replace(',', '.'))
+  if (Number.isNaN(amount)) return undefined
+
+  return amount
+}
+
+export function parseDayForApi(value: string | undefined): number | undefined {
+  const trimmed = value?.trim()
+  if (!trimmed) return undefined
+
+  const day = Number(trimmed)
+  if (!Number.isInteger(day)) return undefined
+
+  return day
 }
 
 type InvestmentPayloadInput = {
@@ -199,5 +287,54 @@ export function buildInvestmentAccountPayload(
     ...(yieldPercent !== undefined && { yieldPercent }),
     ...(values.yieldGranularity && { yieldGranularity: values.yieldGranularity }),
     ...(maturityDate && { maturityDate }),
+  }
+}
+
+type CreditPayloadInput = {
+  type: CreateAccountDtoType
+  creditLimit?: string
+  invoiceClosingDay?: string
+}
+
+type CreditPayload = {
+  creditLimit?: number
+  invoiceClosingDay?: number
+}
+
+type CreditClearPayload = {
+  creditLimit: null
+  invoiceClosingDay: null
+  invoiceDueDay: null
+}
+
+export function buildCreditAccountPayload(
+  values: CreditPayloadInput,
+  options: { clearWhenNotCredit: true },
+): CreditPayload | CreditClearPayload
+export function buildCreditAccountPayload(
+  values: CreditPayloadInput,
+  options?: { clearWhenNotCredit?: boolean },
+): CreditPayload
+export function buildCreditAccountPayload(
+  values: CreditPayloadInput,
+  options?: { clearWhenNotCredit?: boolean },
+): CreditPayload | CreditClearPayload {
+  if (values.type !== CreateAccountDtoType.credit) {
+    if (options?.clearWhenNotCredit) {
+      return {
+        creditLimit: null,
+        invoiceClosingDay: null,
+        invoiceDueDay: null,
+      }
+    }
+    return {}
+  }
+
+  const creditLimit = parseCreditLimitForApi(values.creditLimit)
+  const invoiceClosingDay = parseDayForApi(values.invoiceClosingDay)
+
+  return {
+    ...(creditLimit !== undefined && { creditLimit }),
+    ...(invoiceClosingDay !== undefined && { invoiceClosingDay }),
   }
 }

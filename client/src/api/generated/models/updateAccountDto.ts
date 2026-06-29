@@ -27,4 +27,19 @@ export interface UpdateAccountDto {
   yieldGranularity?: UpdateAccountDtoYieldGranularity;
   /** @nullable */
   maturityDate?: string | null;
+  /**
+   * Limite de crédito do cartão. null para remover.
+   * @nullable
+   */
+  creditLimit?: number | null;
+  /**
+   * Dia de fechamento da fatura (1–28). null para remover.
+   * @nullable
+   */
+  invoiceClosingDay?: number | null;
+  /**
+   * Dia de vencimento da fatura (1–31). null para remover.
+   * @nullable
+   */
+  invoiceDueDay?: number | null;
 }

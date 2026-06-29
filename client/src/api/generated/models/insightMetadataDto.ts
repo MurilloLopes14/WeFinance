@@ -5,6 +5,7 @@
  * Shared Finance Management API
  * OpenAPI spec version: 1.0
  */
+import type { InsightMetadataDtoInvoiceDueDay } from './insightMetadataDtoInvoiceDueDay';
 
 export interface InsightMetadataDto {
   categoryId?: string;
@@ -29,4 +30,6 @@ export interface InsightMetadataDto {
   accountId?: string;
   projectedBalance?: number;
   projectedYield?: number;
+  invoiceClosingDay?: number;
+  invoiceDueDay?: InsightMetadataDtoInvoiceDueDay;
 }

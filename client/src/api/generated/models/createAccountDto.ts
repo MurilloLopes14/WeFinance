@@ -23,4 +23,10 @@ export interface CreateAccountDto {
   yieldGranularity?: CreateAccountDtoYieldGranularity;
   /** Data de vencimento do investimento (YYYY-MM-DD) */
   maturityDate?: string;
+  /** Limite de crédito do cartão (apenas para contas do tipo credit) */
+  creditLimit?: number;
+  /** Dia de fechamento da fatura (1–28) */
+  invoiceClosingDay?: number;
+  /** Dia de vencimento da fatura (1–31) */
+  invoiceDueDay?: number;
 }

@@ -39,6 +39,7 @@ import {
   BalanceHistoryResponseDto,
   CategoryBreakdownItemDto,
   CategoryBreakdownResponseDto,
+  CreditAccountSummaryDto,
   DailySummaryDayDto,
   DailySummaryResponseDto,
   PersonalSummaryResponseDto,
@@ -470,7 +471,7 @@ export class TransactionsService {
     const targetMonth = month ?? currentMonth();
     const { startDate, endDate } = monthDateRange(targetMonth);
 
-    const [allTxRows, userSplitRows, splitTxIdRows, accountRows] = await Promise.all([
+    const [allTxRows, userSplitRows, splitTxIdRows, accountRows, creditAccountRows] = await Promise.all([
       this.db
         .select({
           id: transactions.id,
@@ -522,6 +523,16 @@ export class TransactionsService {
         .from(accounts)
         .where(eq(accounts.householdId, householdId))
         .groupBy(accounts.type),
+
+      this.db
+        .select({
+          id: accounts.id,
+          name: accounts.name,
+          creditLimit: accounts.creditLimit,
+          invoiceClosingDay: accounts.invoiceClosingDay,
+        })
+        .from(accounts)
+        .where(and(eq(accounts.householdId, householdId), eq(accounts.type, 'credit'))),
     ]);
 
     const splitTxIds = new Set(splitTxIdRows.map((r) => r.txId));
@@ -552,6 +563,52 @@ export class TransactionsService {
       transactionCount++;
     }
 
+    // ─── Credit card cycle summaries ─────────────────────────────────────────
+    const activeCreditAccounts = creditAccountRows.filter(
+      (a) => a.creditLimit != null && a.invoiceClosingDay != null,
+    );
+
+    let creditAccounts: CreditAccountSummaryDto[] = [];
+
+    if (activeCreditAccounts.length > 0) {
+      const cycleMap = new Map(
+        activeCreditAccounts.map((a) => [a.id, creditCycleStart(a.invoiceClosingDay!)]),
+      );
+      const earliestCycleStart = [...cycleMap.values()].sort()[0];
+
+      const cycleExpenseRows = await this.db
+        .select({ accountId: transactions.accountId, total: sum(transactions.amount) })
+        .from(transactions)
+        .where(
+          and(
+            inArray(transactions.accountId, activeCreditAccounts.map((a) => a.id)),
+            gte(transactions.date, earliestCycleStart),
+            eq(transactions.type, 'expense'),
+            ne(transactions.status, 'draft'),
+          ),
+        )
+        .groupBy(transactions.accountId);
+
+      const spentByAccount = new Map(
+        cycleExpenseRows.map((r) => [r.accountId, parseFloat(r.total ?? '0')]),
+      );
+
+      creditAccounts = activeCreditAccounts.map((a) => {
+        const cycleStart = cycleMap.get(a.id)!;
+        const toBeSpent = spentByAccount.get(a.id) ?? 0;
+        const limit = parseFloat(a.creditLimit!);
+        return {
+          accountId: a.id,
+          name: a.name,
+          creditLimit: limit,
+          toBeSpent: parseFloat(toBeSpent.toFixed(2)),
+          availableCredit: parseFloat((limit - toBeSpent).toFixed(2)),
+          cycleStart,
+          invoiceDueDay: creditInvoiceDueDay(a.invoiceClosingDay!),
+        };
+      });
+    }
+
     return {
       month: targetMonth,
       totalIncome: parseFloat(totalIncome.toFixed(2)),
@@ -561,6 +618,7 @@ export class TransactionsService {
       availableBalance: parseFloat(availableBalance.toFixed(2)),
       investedBalance: parseFloat(investedBalance.toFixed(2)),
       totalNetWorth: parseFloat((availableBalance + investedBalance).toFixed(2)),
+      creditAccounts,
     };
   }
 
@@ -1363,6 +1421,25 @@ export class TransactionsService {
 
 function todayIso(): string {
   return new Date().toISOString().slice(0, 10);
+}
+
+function creditInvoiceDueDay(closingDay: number): number {
+  const due = closingDay + 7;
+  return due > 31 ? due - 31 : due;
+}
+
+function creditCycleStart(invoiceClosingDay: number): string {
+  const today = new Date();
+  const day = today.getDate();
+  const year = today.getFullYear();
+  const month = today.getMonth() + 1;
+  const pad = (n: number) => String(n).padStart(2, '0');
+  if (day >= invoiceClosingDay) {
+    return `${year}-${pad(month)}-${pad(invoiceClosingDay)}`;
+  }
+  const prevMonth = month === 1 ? 12 : month - 1;
+  const prevYear = month === 1 ? year - 1 : year;
+  return `${prevYear}-${pad(prevMonth)}-${pad(invoiceClosingDay)}`;
 }
 
 function csvCell(value: string): string {

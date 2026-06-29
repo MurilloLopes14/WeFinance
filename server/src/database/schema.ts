@@ -128,6 +128,8 @@ export const accounts = pgTable('accounts', {
   yieldPercent: decimal('yield_percent', { precision: 8, scale: 4 }),
   yieldGranularity: yieldGranularityEnum('yield_granularity'),
   maturityDate: dateColumn('maturity_date'),
+  creditLimit: decimal('credit_limit', { precision: 12, scale: 2 }),
+  invoiceClosingDay: integer('invoice_closing_day'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });

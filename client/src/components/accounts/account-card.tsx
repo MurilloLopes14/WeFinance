@@ -1,4 +1,5 @@
 import type { AccountResponseDto } from '@/api/generated/models/accountResponseDto'
+import { AccountResponseDtoType } from '@/api/generated/models/accountResponseDtoType'
 import { ColoredObjectIcon } from '@/components/object/colored-object-icon'
 import { ObjectCardActionsMenu, type ObjectCardAction } from '@/components/object/object-card-actions-menu'
 import { Badge } from '@/components/ui/badge'
@@ -16,6 +17,9 @@ import type { CSSProperties } from 'react'
 
 export const accountCardGridClassName =
   'grid w-full auto-rows-min grid-cols-1 content-start items-start gap-3 sm:grid-cols-2 xl:grid-cols-3'
+
+const accountBadgeClassName =
+  'h-5 shrink-0 rounded-md px-1.5 py-0 text-[11px] leading-none'
 
 type AccountCardProps = {
   account: AccountResponseDto
@@ -36,6 +40,7 @@ export function AccountCard({
 }: AccountCardProps) {
   const accountColor = account.color ?? DEFAULT_PRESET_COLOR
   const currency = getAccountCurrency(account, householdCurrencyById)
+  const isCredit = account.type === AccountResponseDtoType.credit
 
   const actions: ObjectCardAction[] = []
 
@@ -91,17 +96,33 @@ export function AccountCard({
             {householdName && (
               <Badge
                 variant="outline"
-                className="h-5 max-w-[42%] shrink truncate rounded-md px-1.5 py-0 text-[11px] leading-none sm:max-w-36"
+                className={cn(
+                  accountBadgeClassName,
+                  'max-w-[42%] truncate sm:max-w-36',
+                )}
               >
                 {householdName}
               </Badge>
             )}
-            <Badge
-              variant="secondary"
-              className="h-5 shrink-0 rounded-md px-1.5 py-0 text-[11px] leading-none"
-            >
+            <Badge variant="secondary" className={accountBadgeClassName}>
               {getAccountTypeLabel(account.type)}
             </Badge>
+            {isCredit && account.creditLimit != null ? (
+              <Badge
+                variant="outline"
+                className={cn(accountBadgeClassName, 'max-w-[38%] truncate')}
+              >
+                Limite{' '}
+                <SensitiveValue className="tabular-nums">
+                  {formatAccountBalance(account.creditLimit, currency)}
+                </SensitiveValue>
+              </Badge>
+            ) : null}
+            {isCredit && account.invoiceClosingDay != null ? (
+              <Badge variant="outline" className={accountBadgeClassName}>
+                Fecha dia {account.invoiceClosingDay}
+              </Badge>
+            ) : null}
             {account.institution && (
               <p className="min-w-0 flex-1 truncate text-xs leading-none text-muted-foreground">
                 {account.institution}

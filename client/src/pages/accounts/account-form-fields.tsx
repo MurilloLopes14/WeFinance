@@ -13,6 +13,7 @@ import {
 } from '@/components/ui/select'
 import { CreateAccountDtoType } from '@/api/generated/models/createAccountDtoType'
 import { colorPickerInputClassName } from '@/lib/color-helpers'
+import { formatCurrencyInputFromDigits } from '@/lib/currency-input-helpers'
 import { yieldGranularityFormOptions } from '@/lib/account-helpers'
 import { cn } from '@/lib/utils'
 import {
@@ -43,9 +44,11 @@ export function AccountFormFields({
   const householdId = watch('householdId')
   const type = watch('type')
   const yieldGranularity = watch('yieldGranularity')
+  const creditLimit = watch('creditLimit')
   const color = watch('color') || defaultAccountFormValues.color
   const fieldsDisabled = !householdId
   const isInvestment = type === CreateAccountDtoType.investment
+  const isCredit = type === CreateAccountDtoType.credit
 
   const budgetNumberInputClassName =
     '[appearance:textfield] [-moz-appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none'
@@ -91,6 +94,10 @@ export function AccountFormFields({
                 setValue('yieldPercent', '', { shouldValidate: true })
                 setValue('yieldGranularity', '', { shouldValidate: true })
                 setValue('maturityDate', '', { shouldValidate: true })
+              }
+              if (value !== CreateAccountDtoType.credit) {
+                setValue('creditLimit', '', { shouldValidate: true })
+                setValue('invoiceClosingDay', '', { shouldValidate: true })
               }
             }}
             items={accountTypeFormOptions.map((option) => ({
@@ -146,11 +153,74 @@ export function AccountFormFields({
               valueAsNumber: true,
             })}
           />
+          {isCredit ? (
+            <p className="text-xs leading-relaxed text-muted-foreground">
+              Para cartão de crédito, comece com zero. As despesas registradas deixam o saldo
+              negativo — isso representa o valor a pagar na fatura.
+            </p>
+          ) : null}
           {(errors as FieldErrors<AccountFormValues>).balanceManual && (
             <p className="text-sm text-destructive">
               {(errors as FieldErrors<AccountFormValues>).balanceManual?.message}
             </p>
           )}
+        </div>
+      )}
+
+      {isCredit && (
+        <div className="space-y-4 rounded-xl border border-border/60 bg-muted/20 p-4">
+          <div>
+            <p className="text-sm font-medium">Cartão de crédito</p>
+            <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+              Configure o limite e o ciclo da fatura para acompanhar gastos e receber lembretes.
+            </p>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="account-credit-limit">Limite de crédito</Label>
+            <Input
+              id="account-credit-limit"
+              inputMode="decimal"
+              placeholder="5.000,00"
+              autoComplete="off"
+              spellCheck={false}
+              className={cn('rounded-xl tabular-nums', budgetNumberInputClassName)}
+              disabled={fieldsDisabled}
+              value={creditLimit ?? ''}
+              onChange={(event) => {
+                const digits = event.target.value.replace(/\D/g, '')
+                setValue('creditLimit', formatCurrencyInputFromDigits(digits), {
+                  shouldValidate: true,
+                })
+              }}
+            />
+            {errors.creditLimit && (
+              <p className="text-sm text-destructive">{errors.creditLimit.message}</p>
+            )}
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="account-invoice-closing-day">Dia de fechamento</Label>
+            <Input
+              id="account-invoice-closing-day"
+              type="number"
+              inputMode="numeric"
+              min={1}
+              max={28}
+              placeholder="Ex.: 5"
+              className={cn('rounded-xl tabular-nums', budgetNumberInputClassName)}
+              disabled={fieldsDisabled}
+              {...register('invoiceClosingDay')}
+            />
+            {errors.invoiceClosingDay && (
+              <p className="text-sm text-destructive">
+                {errors.invoiceClosingDay.message}
+              </p>
+            )}
+            <p className="text-xs leading-relaxed text-muted-foreground">
+              O vencimento é calculado automaticamente como fechamento + 7 dias.
+            </p>
+          </div>
         </div>
       )}
 

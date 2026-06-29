@@ -32,7 +32,7 @@ export function DashboardPanel({
         </div>
         {action}
       </div>
-      <div className="mt-4 min-h-0 flex-1">{children}</div>
+      <div className="mt-4 min-h-0 flex-1 overflow-y-auto">{children}</div>
     </section>
   )
 }

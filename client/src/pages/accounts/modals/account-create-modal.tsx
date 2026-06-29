@@ -17,6 +17,7 @@ import {
 import { getApiErrorMessage } from '@/lib/get-api-error-message'
 import { AccountFormFields } from '@/pages/accounts/account-form-fields'
 import {
+  buildCreditAccountPayload,
   buildInvestmentAccountPayload,
   defaultAccountFormValues,
   accountFormSchema,
@@ -77,6 +78,7 @@ export function AccountCreateModal({ open, onOpenChange }: AccountCreateModalPro
         balanceManual: values.balanceManual,
         color: values.color || undefined,
         ...buildInvestmentAccountPayload(values),
+        ...buildCreditAccountPayload(values),
       },
     })
   })

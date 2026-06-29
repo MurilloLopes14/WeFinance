@@ -1,7 +1,10 @@
 import { KpiCard } from '@/components/dashboard/kpi-card'
+import type { KpiCardProps } from '@/components/dashboard/kpi-card'
 import { Skeleton } from '@/components/ui/skeleton'
+import type { CreditAccountSummaryDto } from '@/api/generated/models/creditAccountSummaryDto'
 import type { TransactionSummaryResponseDto } from '@/api/generated/models/transactionSummaryResponseDto'
 import { cn } from '@/lib/utils'
+import { useMemo } from 'react'
 
 export type AccountBalanceBreakdown = {
   available: number
@@ -9,12 +12,17 @@ export type AccountBalanceBreakdown = {
   total: number
 }
 
+/** Orphan cards on the last row span the full width (2 cols mobile, 3 cols sm+). */
+export const kpiCardsGridClassName =
+  'grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3 [&>:last-child:nth-child(2n-1)]:col-span-2 sm:[&>:last-child:nth-child(3n-2)]:col-span-3'
+
 type KpiCardsColumnProps = {
   data: TransactionSummaryResponseDto | undefined
   currency: string
   isLoading: boolean
   label?: string
   accountBalances?: AccountBalanceBreakdown
+  creditAccounts?: CreditAccountSummaryDto[]
   className?: string
 }
 
@@ -24,10 +32,79 @@ export function KpiCardsColumn({
   isLoading,
   label,
   accountBalances,
+  creditAccounts,
   className,
 }: KpiCardsColumnProps) {
   const showAccountBalances = accountBalances !== undefined
-  const skeletonCount = showAccountBalances ? 6 : 3
+  const showCreditSection = creditAccounts !== undefined
+  const totalToBePaid =
+    creditAccounts?.reduce((sum, account) => sum + account.toBeSpent, 0) ?? 0
+  const hasCreditAccounts = (creditAccounts?.length ?? 0) > 0
+
+  const kpiCards = useMemo(() => {
+    const cards: Omit<KpiCardProps, 'currency'>[] = [
+      {
+        label: 'Receitas',
+        value: data?.totalIncome ?? 0,
+        variant: 'income',
+      },
+      {
+        label: 'Despesas',
+        value: data?.totalExpenses ?? 0,
+        variant: 'expense',
+      },
+      {
+        label: 'Saldo',
+        value: data?.balance ?? 0,
+        variant: 'balance',
+      },
+    ]
+
+    if (showAccountBalances && accountBalances) {
+      cards.push(
+        {
+          label: 'Disponível',
+          value: accountBalances.available,
+          variant: 'available',
+        },
+        {
+          label: 'Investido',
+          value: accountBalances.invested,
+          variant: 'invested',
+        },
+        {
+          label: 'Total',
+          value: accountBalances.total,
+          variant: 'total',
+        },
+      )
+    }
+
+    if (showCreditSection && hasCreditAccounts) {
+      cards.push({
+        label: 'A pagar',
+        value: totalToBePaid,
+        variant: 'toBePaid',
+      })
+    }
+
+    return cards
+  }, [
+    accountBalances,
+    data?.balance,
+    data?.totalExpenses,
+    data?.totalIncome,
+    hasCreditAccounts,
+    showAccountBalances,
+    showCreditSection,
+    totalToBePaid,
+  ])
+
+  const skeletonCount = isLoading
+    ? showAccountBalances
+      ? 6 + (showCreditSection && hasCreditAccounts ? 1 : 0)
+      : 3
+    : kpiCards.length
 
   return (
     <div className={cn('space-y-3', className)}>
@@ -36,61 +113,16 @@ export function KpiCardsColumn({
       ) : null}
 
       {isLoading ? (
-        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3 xl:grid-cols-6">
+        <div className={kpiCardsGridClassName}>
           {Array.from({ length: skeletonCount }).map((_, index) => (
-            <Skeleton key={index} className="h-[4.25rem] w-full rounded-xl" />
+            <Skeleton key={index} className="h-17 w-full rounded-xl" />
           ))}
         </div>
       ) : (
-        <div className="space-y-3">
-          <div
-            className={cn(
-              'grid gap-2 sm:gap-3',
-              showAccountBalances ? 'grid-cols-2 sm:grid-cols-3' : 'grid-cols-2 sm:grid-cols-3',
-            )}
-          >
-            <KpiCard
-              label="Receitas"
-              value={data?.totalIncome ?? 0}
-              currency={currency}
-              variant="income"
-            />
-            <KpiCard
-              label="Despesas"
-              value={data?.totalExpenses ?? 0}
-              currency={currency}
-              variant="expense"
-            />
-            <KpiCard
-              label="Saldo"
-              value={data?.balance ?? 0}
-              currency={currency}
-              variant="balance"
-            />
-          </div>
-
-          {showAccountBalances && accountBalances ? (
-            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3">
-              <KpiCard
-                label="Disponível"
-                value={accountBalances.available}
-                currency={currency}
-                variant="available"
-              />
-              <KpiCard
-                label="Investido"
-                value={accountBalances.invested}
-                currency={currency}
-                variant="invested"
-              />
-              <KpiCard
-                label="Total"
-                value={accountBalances.total}
-                currency={currency}
-                variant="total"
-              />
-            </div>
-          ) : null}
+        <div className={kpiCardsGridClassName}>
+          {kpiCards.map((card) => (
+            <KpiCard key={card.label} {...card} currency={currency} />
+          ))}
         </div>
       )}
     </div>

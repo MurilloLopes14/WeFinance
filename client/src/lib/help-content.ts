@@ -306,6 +306,17 @@ export const HELP: HelpModule[] = [
         ],
       },
       {
+        title: 'Cartões de crédito',
+        body: 'Contas do tipo Crédito têm campos extras para acompanhar faturas e limites:',
+        bullets: [
+          'Limite de crédito — valor máximo do cartão. Usado para calcular quanto ainda está disponível.',
+          'Dia de fechamento — quando a fatura fecha (1 a 28). Despesas após essa data entram na próxima fatura.',
+          'Dia de vencimento — calculado automaticamente como fechamento + 7 dias.',
+          'O saldo da conta fica negativo conforme você registra despesas — isso representa o valor a pagar na fatura atual, não um erro.',
+          'No Dashboard (aba Você), o card A pagar mostra o total das faturas em aberto e o painel de cartões detalha cada um.',
+        ],
+      },
+      {
         title: 'Contas de investimento',
         body: 'Contas de investimento têm campos adicionais para acompanhamento de rentabilidade:',
         bullets: [
@@ -323,7 +334,8 @@ export const HELP: HelpModule[] = [
     tips: [
       'Use o tipo correto para que os KPIs do Dashboard (Disponível vs. Investido) sejam calculados corretamente.',
       'Você não precisa inserir saldos iniciais — o WeFinance calcula tudo com base nas transações registradas. Se quiser refletir um saldo real, registre uma transação de Receita com o valor inicial.',
-      'Para cartão de crédito, registre as compras como Despesa na conta de crédito e o pagamento da fatura como Transferência da conta corrente para a conta de crédito.',
+      'Para cartão de crédito, registre as compras como Despesa na conta de crédito e o pagamento da fatura como Transferência da conta corrente para a conta de crédito — assim o saldo do cartão volta a zero.',
+      'Configure limite e dia de fechamento no cadastro do cartão para receber insights sobre datas importantes no Dashboard.',
       'Contas de investimento com data de vencimento próxima geram insights de alerta no Dashboard.',
     ],
     relatedKeys: ['transactions', 'dashboard'],

@@ -49,6 +49,8 @@ export class AccountsService {
         yieldPercent: dto.yieldPercent != null ? String(dto.yieldPercent) : null,
         yieldGranularity: dto.yieldGranularity ?? null,
         maturityDate: dto.maturityDate ?? null,
+        creditLimit: dto.creditLimit != null ? String(dto.creditLimit) : null,
+        invoiceClosingDay: dto.invoiceClosingDay ?? null,
       })
       .returning();
 
@@ -107,6 +109,8 @@ export class AccountsService {
     if (dto.yieldPercent !== undefined) updateData.yieldPercent = dto.yieldPercent != null ? String(dto.yieldPercent) : null;
     if (dto.yieldGranularity !== undefined) updateData.yieldGranularity = dto.yieldGranularity;
     if (dto.maturityDate !== undefined) updateData.maturityDate = dto.maturityDate;
+    if (dto.creditLimit !== undefined) updateData.creditLimit = dto.creditLimit != null ? String(dto.creditLimit) : null;
+    if (dto.invoiceClosingDay !== undefined) updateData.invoiceClosingDay = dto.invoiceClosingDay;
 
     const [updated] = await this.db
       .update(accounts)
@@ -240,10 +244,18 @@ export class AccountsService {
       yieldPercent: account.yieldPercent != null ? parseFloat(account.yieldPercent) : null,
       yieldGranularity: account.yieldGranularity ?? null,
       maturityDate: account.maturityDate ?? null,
+      creditLimit: account.creditLimit != null ? parseFloat(account.creditLimit) : null,
+      invoiceClosingDay: account.invoiceClosingDay ?? null,
+      invoiceDueDay: account.invoiceClosingDay != null ? invoiceDueDay(account.invoiceClosingDay) : null,
       createdAt: account.createdAt,
       updatedAt: account.updatedAt,
     };
   }
+}
+
+function invoiceDueDay(closingDay: number): number {
+  const due = closingDay + 7;
+  return due > 31 ? due - 31 : due;
 }
 
 function calcProjection(

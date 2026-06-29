@@ -5,6 +5,7 @@
  * Shared Finance Management API
  * OpenAPI spec version: 1.0
  */
+import type { CreditAccountSummaryDto } from './creditAccountSummaryDto';
 
 export interface PersonalSummaryResponseDto {
   month: string;
@@ -19,4 +20,6 @@ export interface PersonalSummaryResponseDto {
   investedBalance: number;
   /** Total net worth (availableBalance + investedBalance) */
   totalNetWorth: number;
+  /** Resumo de fatura por cartão de crédito */
+  creditAccounts: CreditAccountSummaryDto[];
 }

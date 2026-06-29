@@ -42,6 +42,7 @@ function buildEmptyCtx(overrides: Partial<InsightsContext> = {}): InsightsContex
     },
     budgets: { household: null, categories: [], categorySum: 0 },
     investmentAccounts: [],
+    creditAccounts: [],
     ...overrides,
   };
 }

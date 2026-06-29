@@ -58,6 +58,13 @@ export interface InvestmentAccountItem {
   maturityDate: string | null;
 }
 
+export interface CreditAccountItem {
+  id: string;
+  name: string;
+  creditLimit: number;
+  invoiceClosingDay: number;
+}
+
 export interface InsightsContext {
   householdId: string;
   userId: string;
@@ -75,4 +82,5 @@ export interface InsightsContext {
   };
   budgets: BudgetMetrics;
   investmentAccounts: InvestmentAccountItem[];
+  creditAccounts: CreditAccountItem[];
 }

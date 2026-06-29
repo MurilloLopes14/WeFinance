@@ -1,5 +1,28 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
+export class CreditAccountSummaryDto {
+  @ApiProperty()
+  accountId: string;
+
+  @ApiProperty()
+  name: string;
+
+  @ApiProperty({ description: 'Limite total do cartão' })
+  creditLimit: number;
+
+  @ApiProperty({ description: 'Total gasto na fatura atual (desde o último fechamento)' })
+  toBeSpent: number;
+
+  @ApiProperty({ description: 'Crédito disponível (creditLimit - toBeSpent)' })
+  availableCredit: number;
+
+  @ApiProperty({ example: '2026-06-15', description: 'Início do ciclo atual' })
+  cycleStart: string;
+
+  @ApiProperty({ example: 22, description: 'Dia de vencimento (invoiceClosingDay + 7)' })
+  invoiceDueDay: number;
+}
+
 export class PersonalSummaryResponseDto {
   @ApiProperty({ example: '2026-06' })
   month: string;
@@ -24,6 +47,9 @@ export class PersonalSummaryResponseDto {
 
   @ApiProperty({ description: 'Total net worth (availableBalance + investedBalance)' })
   totalNetWorth: number;
+
+  @ApiProperty({ type: [CreditAccountSummaryDto], description: 'Resumo de fatura por cartão de crédito' })
+  creditAccounts: CreditAccountSummaryDto[];
 }
 
 export class CategoryBreakdownItemDto {
