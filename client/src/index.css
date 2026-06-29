@@ -517,17 +517,30 @@
     box-shadow: var(--shadow-glass), var(--shadow-inset-reflect);
   }
 
-  /* Select / combobox — frosted panels on desktop */
+  /* Select / combobox menus — opaque on all breakpoints (dialog may stay glass) */
+  .dropdown-surface {
+    background-color: var(--surface-solid-elevated) !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-glass);
+  }
+
+  .dropdown-surface-subtle {
+    background-color: var(--surface-solid) !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    border: 1px solid var(--border);
+  }
+
+  /* Frosted overlay for non-menu surfaces (e.g. calendar popover) on desktop */
   @media (min-width: 768px) {
-    [data-slot='select-content'],
-    [data-slot='select-scroll-up-button'],
-    [data-slot='select-scroll-down-button'],
-    [data-slot='combobox-content'],
     .overlay-surface {
       background: var(--overlay-surface-bg) !important;
       backdrop-filter: blur(var(--overlay-surface-blur)) saturate(var(--glass-saturate)) !important;
       -webkit-backdrop-filter: blur(var(--overlay-surface-blur))
         saturate(var(--glass-saturate)) !important;
+      border: 1px solid var(--glass-border);
       box-shadow: var(--shadow-glass), var(--shadow-inset-reflect);
     }
   }

@@ -29,7 +29,7 @@ export class PayeesService {
     requesterId: string,
     dto: CreatePayeeDto,
   ): Promise<PayeeResponseDto> {
-    await this.householdsService.assertOwner(householdId, requesterId);
+    await this.householdsService.assertMember(householdId, requesterId);
 
     if (dto.defaultCategoryId) {
       await this.assertCategoryBelongsToHousehold(householdId, dto.defaultCategoryId);

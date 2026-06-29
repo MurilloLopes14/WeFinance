@@ -83,7 +83,7 @@ function SelectContent({
         <SelectPrimitive.Popup
           data-slot="select-content"
           data-align-trigger={alignItemWithTrigger}
-          className={cn("relative isolate z-[250] max-h-(--available-height) w-(--anchor-width) max-w-[calc(100vw-2rem)] min-w-0 origin-(--transform-origin) overflow-x-hidden overflow-y-auto rounded-lg overlay-surface max-md-solid-surface text-popover-foreground duration-100 sm:min-w-36 data-[align-trigger=true]:animate-none data-[side=bottom]:slide-in-from-top-2 data-[side=inline-end]:slide-in-from-left-2 data-[side=inline-start]:slide-in-from-right-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0", className )}
+          className={cn("relative isolate z-[250] max-h-(--available-height) w-(--anchor-width) max-w-[calc(100vw-2rem)] min-w-0 origin-(--transform-origin) overflow-x-hidden overflow-y-auto rounded-lg dropdown-surface text-popover-foreground duration-100 sm:min-w-36 data-[align-trigger=true]:animate-none data-[side=bottom]:slide-in-from-top-2 data-[side=inline-end]:slide-in-from-left-2 data-[side=inline-start]:slide-in-from-right-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0", className )}
           {...props}
         >
           <SelectScrollUpButton />
@@ -157,7 +157,7 @@ function SelectScrollUpButton({
     <SelectPrimitive.ScrollUpArrow
       data-slot="select-scroll-up-button"
       className={cn(
-        "top-0 z-10 flex w-full cursor-default items-center justify-center overlay-surface max-md-solid-surface-subtle py-1 [&_svg:not([class*='size-'])]:size-4",
+        "top-0 z-10 flex w-full cursor-default items-center justify-center dropdown-surface-subtle py-1 [&_svg:not([class*='size-'])]:size-4",
         className
       )}
       {...props}
@@ -176,7 +176,7 @@ function SelectScrollDownButton({
     <SelectPrimitive.ScrollDownArrow
       data-slot="select-scroll-down-button"
       className={cn(
-        "bottom-0 z-10 flex w-full cursor-default items-center justify-center overlay-surface max-md-solid-surface-subtle py-1 [&_svg:not([class*='size-'])]:size-4",
+        "bottom-0 z-10 flex w-full cursor-default items-center justify-center dropdown-surface-subtle py-1 [&_svg:not([class*='size-'])]:size-4",
         className
       )}
       {...props}
