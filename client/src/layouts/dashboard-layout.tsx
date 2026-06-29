@@ -13,7 +13,7 @@ export function DashboardLayout() {
         <AppTourProvider>
         <AppSidebar />
         <SidebarInset className="min-h-0 flex-1">
-          <header className="dashboard-mobile-topbar flex h-14 shrink-0 items-center gap-3 px-4 md:hidden">
+          <header className="dashboard-mobile-topbar flex shrink-0 items-center gap-3 px-4 md:hidden">
             <SidebarTrigger className="size-9 rounded-xl" aria-label="Abrir menu" />
             <div className="flex min-w-0 items-center gap-2">
               <AppBrandMark />
