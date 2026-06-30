@@ -1,0 +1,881 @@
+/* ─── Fonts (Geist Variable, Inter, Poppins — espelha client/src/index.css) ─ */
+@import url("https://cdn.jsdelivr.net/npm/@fontsource-variable/geist@5.2.8/index.css");
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Poppins:wght@500;600;700&display=swap");
+
+/* ─── Design tokens (dark mode — canvas principal do WeFinance) ───────────── */
+:root {
+  --radius: 0.875rem;
+
+  --font-sans: "Geist Variable", "Inter", system-ui, sans-serif;
+  --font-heading: "Poppins", "Geist Variable", sans-serif;
+
+  --background: oklch(0.11 0.028 265);
+  --foreground: oklch(0.96 0.01 250);
+  --muted-foreground: oklch(0.68 0.02 250);
+  --primary: oklch(0.78 0.16 195);
+  --primary-foreground: oklch(0.12 0.03 265);
+  --neon-cyan: oklch(0.82 0.17 195);
+  --neon-violet: oklch(0.72 0.22 285);
+  --neon-teal: oklch(0.75 0.14 175);
+
+  --glass-bg: oklch(1 0 0 / 4%);
+  --glass-bg-strong: oklch(1 0 0 / 8%);
+  --glass-border: oklch(1 0 0 / 14%);
+  --glass-border-subtle: oklch(1 0 0 / 8%);
+  --glass-blur: 20px;
+  --glass-saturate: 1.6;
+
+  --border: oklch(1 0 0 / 10%);
+  --glow-primary: oklch(0.78 0.16 195);
+  --glow-accent: oklch(0.72 0.22 285);
+
+  --mesh-1: oklch(0.45 0.18 250 / 28%);
+  --mesh-2: oklch(0.42 0.2 285 / 16%);
+  --mesh-3: oklch(0.4 0.14 195 / 12%);
+  --mesh-base: oklch(0.11 0.028 265);
+
+  --shadow-glass: 0 8px 32px oklch(0 0 0 / 35%), 0 2px 8px oklch(0 0 0 / 20%);
+  --shadow-glow-sm: 0 0 16px oklch(0.78 0.16 195 / 22%);
+  --shadow-glow-primary: 0 0 20px oklch(0.78 0.16 195 / 24%),
+    0 4px 16px oklch(0.78 0.16 195 / 12%);
+  --shadow-inset-reflect: inset 0 1px 0 oklch(1 0 0 / 12%),
+    inset 0 -1px 0 oklch(1 0 0 / 4%);
+
+  --surface-solid: oklch(0.16 0.028 265);
+  --surface-solid-elevated: oklch(0.19 0.03 265);
+
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+
+  --content-max: 42rem;
+  --step-gap: 1.75rem;
+  --page-gutter: clamp(1.25rem, 5vw, 2rem);
+
+  /* dimensões de página para PDF (A4) */
+  --print-page-width: 210mm;
+  --print-page-height: 297mm;
+  --print-margin: 14mm;
+}
+
+/* ─── Reset ───────────────────────────────────────────────────────────────── */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  overflow-x: hidden;
+}
+
+body {
+  min-height: 100dvh;
+  overflow-x: hidden;
+  font-family: var(--font-sans);
+  font-size: 1rem;
+  line-height: 1.6;
+  color: var(--foreground);
+  background: var(--mesh-base);
+  font-feature-settings: "rlig" 1, "calt" 1;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+img,
+picture,
+video,
+canvas,
+svg {
+  display: block;
+  max-width: 100%;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+
+a {
+  color: var(--primary);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.2em;
+}
+
+a:hover {
+  color: var(--neon-cyan);
+}
+
+ul,
+ol {
+  list-style: none;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-heading);
+  letter-spacing: -0.02em;
+  line-height: 1.25;
+  font-weight: 600;
+}
+
+p {
+  max-width: 65ch;
+}
+
+::selection {
+  background: oklch(from var(--glow-primary) l c h / 28%);
+  color: var(--foreground);
+}
+
+/* ─── Ambient mesh (como no app) ──────────────────────────────────────────── */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  background: var(--mesh-base);
+  pointer-events: none;
+}
+
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 75% 55% at 15% 10%, var(--mesh-1), transparent 55%),
+    radial-gradient(ellipse 60% 45% at 82% 18%, var(--mesh-2), transparent 48%),
+    radial-gradient(ellipse 50% 38% at 38% 88%, var(--mesh-3), transparent 50%);
+}
+
+/* ─── Layout ──────────────────────────────────────────────────────────────── */
+.page {
+  width: min(100%, 52rem);
+  margin-inline: auto;
+  padding-inline: var(--page-gutter);
+  padding-block: max(env(safe-area-inset-top, 0px), 2rem) max(env(safe-area-inset-bottom, 0px), 3rem);
+}
+
+.page-header {
+  text-align: center;
+  margin-bottom: 2.5rem;
+}
+
+.brand-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.375rem 0.875rem;
+  margin-bottom: 1rem;
+  border-radius: 999px;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--neon-cyan);
+  background: oklch(from var(--neon-cyan) l c h / 10%);
+  border: 1px solid oklch(from var(--neon-cyan) l c h / 22%);
+}
+
+.page-title {
+  font-size: clamp(1.75rem, 5vw, 2.25rem);
+  font-weight: 700;
+  margin-bottom: 0.75rem;
+}
+
+.page-title .gradient {
+  background: linear-gradient(
+    135deg,
+    var(--neon-cyan) 0%,
+    var(--neon-violet) 50%,
+    var(--neon-teal) 100%
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.page-lead {
+  margin-inline: auto;
+  color: var(--muted-foreground);
+  font-size: 1.0625rem;
+}
+
+/* ─── Glass surfaces ──────────────────────────────────────────────────────── */
+.glass {
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--shadow-glass), var(--shadow-inset-reflect);
+  border-radius: var(--radius-2xl);
+}
+
+.glass-strong {
+  background: var(--glass-bg-strong);
+  backdrop-filter: blur(calc(var(--glass-blur) * 1.2)) saturate(var(--glass-saturate));
+  -webkit-backdrop-filter: blur(calc(var(--glass-blur) * 1.2)) saturate(var(--glass-saturate));
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--shadow-glass), var(--shadow-inset-reflect);
+  border-radius: var(--radius-2xl);
+}
+
+/* ─── Nav de plataformas ──────────────────────────────────────────────────── */
+.platform-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.625rem;
+  justify-content: center;
+  margin-bottom: 2rem;
+}
+
+.platform-nav a {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1.125rem;
+  border-radius: var(--radius-xl);
+  font-size: 0.9375rem;
+  font-weight: 500;
+  text-decoration: none;
+  color: var(--foreground);
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border-subtle);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+
+.platform-nav a:hover {
+  color: var(--foreground);
+  background: var(--glass-bg-strong);
+  border-color: oklch(from var(--glow-primary) l c h / 35%);
+  box-shadow: var(--shadow-glow-sm);
+}
+
+/* ─── Seções de tutorial ──────────────────────────────────────────────────── */
+.tutorial-section {
+  margin-bottom: 3rem;
+  scroll-margin-top: 1.5rem;
+}
+
+/* ─── Páginas centradas (intro, notas) ────────────────────────────────────── */
+.centered-hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  width: 100%;
+  max-width: 28rem;
+  margin-inline: auto;
+  text-align: center;
+}
+
+.centered-hero__icon {
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  width: 4.5rem;
+  height: 4.5rem;
+  border-radius: var(--radius-2xl);
+  font-size: 2rem;
+  line-height: 1;
+}
+
+.centered-hero .platform-icon {
+  background: oklch(from var(--glow-primary) l c h / 12%);
+  border: 1px solid oklch(from var(--glow-primary) l c h / 22%);
+  box-shadow: 0 0 28px oklch(from var(--glow-primary) l c h / 14%);
+}
+
+.centered-hero .note-icon {
+  background: oklch(from var(--neon-violet) l c h / 12%);
+  border: 1px solid oklch(from var(--neon-violet) l c h / 22%);
+  box-shadow: 0 0 28px oklch(from var(--neon-violet) l c h / 12%);
+}
+
+.centered-hero__title {
+  font-family: var(--font-heading);
+  font-size: 1.5rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.25;
+  color: var(--foreground);
+}
+
+.centered-hero__desc {
+  max-width: 34ch;
+  margin-inline: auto;
+  font-size: 0.9375rem;
+  line-height: 1.55;
+  color: var(--muted-foreground);
+}
+
+.centered-hero__desc strong {
+  color: var(--foreground);
+  font-weight: 500;
+}
+
+.centered-hero__desc kbd {
+  display: inline-block;
+  padding: 0.125rem 0.4375rem;
+  border-radius: 0.375rem;
+  font-family: var(--font-sans);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--foreground);
+  background: var(--surface-solid-elevated);
+  border: 1px solid var(--border);
+}
+
+.centered-hero--note {
+  max-width: 32rem;
+  padding: 1.5rem 1.75rem;
+  border-radius: var(--radius-2xl);
+  background: oklch(from var(--neon-violet) l c h / 8%);
+  border: 1px solid oklch(from var(--neon-violet) l c h / 18%);
+  box-shadow:
+    0 0 0 1px oklch(from var(--neon-violet) l c h / 6%),
+    0 0 32px oklch(from var(--neon-violet) l c h / 10%);
+}
+
+.print-page--section-intro,
+.print-page--note {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+}
+
+.section-title {
+  font-size: 1.375rem;
+  margin-bottom: 0.25rem;
+}
+
+.section-subtitle {
+  color: var(--muted-foreground);
+  font-size: 0.9375rem;
+}
+
+.section-card {
+  padding: 1.5rem;
+}
+
+/* ─── Passos ──────────────────────────────────────────────────────────────── */
+.steps {
+  display: flex;
+  flex-direction: column;
+  gap: var(--step-gap);
+}
+
+.step {
+  display: grid;
+  gap: 1rem;
+}
+
+@media (min-width: 640px) {
+  .step {
+    grid-template-columns: auto 1fr;
+    align-items: start;
+  }
+}
+
+.step-number {
+  display: grid;
+  place-items: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 999px;
+  font-family: var(--font-heading);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--primary-foreground);
+  background: var(--primary);
+  box-shadow: var(--shadow-glow-primary);
+}
+
+.step-content h3 {
+  font-size: 1.0625rem;
+  font-weight: 600;
+  margin-bottom: 0.375rem;
+}
+
+.step-content p {
+  color: var(--muted-foreground);
+  font-size: 0.9375rem;
+}
+
+.step-content p + p {
+  margin-top: 0.5rem;
+}
+
+.step-content kbd {
+  display: inline-block;
+  padding: 0.125rem 0.4375rem;
+  border-radius: 0.375rem;
+  font-family: var(--font-sans);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--foreground);
+  background: var(--surface-solid-elevated);
+  border: 1px solid var(--border);
+}
+
+/* ─── Imagens / prints ────────────────────────────────────────────────────── */
+.figure {
+  margin-top: 1rem;
+}
+
+.figure-caption {
+  margin-top: 0.625rem;
+  font-size: 0.8125rem;
+  color: var(--muted-foreground);
+  text-align: center;
+}
+
+/* Container padrão para screenshots de celular */
+.figure-phone {
+  max-width: min(100%, 22rem);
+  margin-inline: auto;
+}
+
+@media (min-width: 640px) {
+  .figure-phone {
+    max-width: min(100%, 26rem);
+  }
+}
+
+.figure-phone .figure-image-wrap {
+  border-radius: 1.75rem;
+  padding: 0.5rem;
+  background: var(--surface-solid);
+  border: 1px solid oklch(from var(--neon-cyan) l c h / 18%);
+  box-shadow:
+    0 0 0 1px oklch(from var(--neon-cyan) l c h / 8%),
+    0 0 24px oklch(from var(--glow-primary) l c h / 16%),
+    0 0 48px oklch(from var(--glow-accent) l c h / 10%),
+    0 8px 24px oklch(0 0 0 / 28%);
+}
+
+/* Screenshot largo (ex.: banner de instalação) */
+.figure-wide {
+  max-width: 100%;
+}
+
+.figure-wide .figure-image-wrap {
+  border-radius: var(--radius-xl);
+}
+
+/* Wrapper comum — use em todo <figure> com print */
+.figure-image-wrap {
+  overflow: hidden;
+  background: var(--surface-solid-elevated);
+  border: 1px solid oklch(from var(--glow-primary) l c h / 14%);
+  box-shadow:
+    0 0 0 1px oklch(from var(--neon-cyan) l c h / 6%),
+    0 0 20px oklch(from var(--glow-primary) l c h / 12%),
+    0 0 36px oklch(from var(--glow-accent) l c h / 7%),
+    0 4px 16px oklch(0 0 0 / 22%);
+}
+
+/* Estilo base aplicado a todas as tags <img> do tutorial */
+.figure img,
+.tutorial-section img {
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+  object-position: center top;
+  vertical-align: middle;
+  border-radius: 1.25rem;
+}
+
+/* Placeholder quando a imagem ainda não foi adicionada */
+.figure img[src=""],
+.figure img:not([src]),
+img.is-placeholder {
+  aspect-ratio: 9 / 19.5;
+  min-height: 12rem;
+  background:
+    linear-gradient(
+      135deg,
+      oklch(from var(--glow-primary) l c h / 8%) 0%,
+      oklch(from var(--glow-accent) l c h / 6%) 100%
+    );
+  border: 1px dashed oklch(from var(--glow-primary) l c h / 25%);
+}
+
+.figure-wide img.is-placeholder,
+.figure-wide img[src=""] {
+  aspect-ratio: 16 / 9;
+}
+
+/* Grid de múltiplos prints lado a lado (opcional) */
+.figure-grid {
+  display: grid;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+@media (min-width: 480px) {
+  .figure-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.figure-grid .figure-phone {
+  max-width: none;
+}
+
+/* ─── Footer ──────────────────────────────────────────────────────────────── */
+.page-footer {
+  margin-top: 3rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border);
+  text-align: center;
+  font-size: 0.875rem;
+  color: var(--muted-foreground);
+}
+
+.page-footer a {
+  font-weight: 500;
+}
+
+.divider {
+  height: 1px;
+  margin-block: 2.5rem;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    oklch(from var(--glass-border) l c h / 80%),
+    transparent
+  );
+}
+
+/* ─── Utilitários de visibilidade ─────────────────────────────────────────── */
+.print-only {
+  display: none;
+}
+
+.print-hint {
+  margin-top: 1.25rem;
+  font-size: 0.875rem;
+  color: var(--muted-foreground);
+}
+
+.print-hint kbd {
+  display: inline-block;
+  padding: 0.125rem 0.375rem;
+  border-radius: 0.25rem;
+  font-size: 0.8125rem;
+  background: var(--surface-solid-elevated);
+  border: 1px solid var(--border);
+}
+
+.footer-link {
+  margin-top: 0.75rem;
+}
+
+/* ─── Tela: agrupamento visual dos passos ─────────────────────────────────── */
+.tutorial-section .steps {
+  display: flex;
+  flex-direction: column;
+  gap: var(--step-gap);
+}
+
+.tutorial-section .print-page--step {
+  padding: 1.5rem;
+}
+
+.tutorial-section .print-page--section-intro {
+  margin-bottom: 1.25rem;
+  padding-block: 2.5rem;
+}
+
+.tutorial-section .print-page--note {
+  margin-top: 1.25rem;
+  padding-block: 2.5rem;
+}
+
+/* ─── Impressão / PDF ─────────────────────────────────────────────────────── */
+@page {
+  size: A4 portrait;
+  margin: var(--print-margin);
+}
+
+@media print {
+  :root {
+    --step-gap: 0;
+  }
+
+  *,
+  *::before,
+  *::after {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  html {
+    scroll-behavior: auto;
+  }
+
+  body {
+    min-height: 0;
+    background: var(--background) !important;
+    font-size: 10.5pt;
+    line-height: 1.45;
+  }
+
+  body::before,
+  body::after {
+    display: none !important;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+
+  .print-only {
+    display: block;
+  }
+
+  .page {
+    width: 100%;
+    max-width: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  /* Cada .print-page = uma folha */
+  .print-page {
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
+    width: 100%;
+    min-height: calc(var(--print-page-height) - var(--print-margin) * 2);
+    padding: 10mm 8mm;
+    break-after: page;
+    page-break-after: always;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .print-page:last-child {
+    break-after: auto;
+    page-break-after: auto;
+  }
+
+  /* Capa */
+  .print-page--cover {
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+  }
+
+  .print-page--cover .page-header {
+    margin-bottom: 0;
+  }
+
+  .print-page--cover .page-lead {
+    max-width: 32ch;
+  }
+
+  /* Intro de plataforma e notas — centralizado na folha */
+  .print-page--section-intro,
+  .print-page--note {
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+  }
+
+  .print-page--section-intro .centered-hero__title,
+  .print-page--section-intro .section-title {
+    font-size: 1.625rem;
+  }
+
+  .print-page--section-intro .centered-hero__icon {
+    width: 18mm;
+    height: 18mm;
+    font-size: 10mm;
+  }
+
+  .print-page--note .centered-hero--note {
+    max-width: 38ch;
+    padding: 8mm 10mm;
+    box-shadow:
+      0 0 0 1px oklch(from var(--neon-violet) l c h / 8%),
+      0 0 20px oklch(from var(--neon-violet) l c h / 12%);
+  }
+
+  .print-page--note .centered-hero__title {
+    font-size: 13pt;
+  }
+
+  .print-page--note .centered-hero__desc {
+    font-size: 10.5pt;
+    max-width: none;
+  }
+
+  .print-page--note .centered-hero__icon {
+    width: 14mm;
+    height: 14mm;
+    font-size: 8mm;
+  }
+
+  /* Passo — texto em cima, imagem embaixo com espaço flexível */
+  .print-page--step {
+    display: grid !important;
+    grid-template-columns: auto 1fr;
+    grid-template-rows: auto 1fr;
+    align-items: start;
+    gap: 4mm 5mm;
+    padding: 10mm 8mm !important;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+  }
+
+  .print-page--step .step-number {
+    grid-row: 1;
+    grid-column: 1;
+    width: 9mm;
+    height: 9mm;
+    font-size: 10pt;
+    box-shadow: none;
+  }
+
+  .print-page--step .step-content {
+    grid-row: 1 / -1;
+    grid-column: 2;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    flex: 1;
+  }
+
+  .print-page--step .step-platform {
+    margin-bottom: 1.5mm;
+    font-size: 8.5pt;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--neon-cyan);
+  }
+
+  .print-page--step .step-content h3 {
+    font-size: 13pt;
+    margin-bottom: 2mm;
+  }
+
+  .print-page--step .step-content p {
+    font-size: 10pt;
+    max-width: none;
+  }
+
+  .print-page--step .step-content p + p {
+    margin-top: 2mm;
+  }
+
+  .print-page--step .figure {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    margin-top: 4mm;
+    min-height: 0;
+    width: 100%;
+  }
+
+  .print-page--step .figure-phone {
+    max-width: 100%;
+    width: auto;
+    margin-inline: auto;
+  }
+
+  .print-page--step .figure-phone .figure-image-wrap {
+    padding: 2.5mm;
+    border-radius: 5mm;
+    border: 1px solid oklch(from var(--neon-cyan) l c h / 20%);
+    box-shadow:
+      0 0 0 1px oklch(from var(--neon-cyan) l c h / 10%),
+      0 0 16px oklch(from var(--glow-primary) l c h / 14%),
+      0 0 28px oklch(from var(--glow-accent) l c h / 9%);
+  }
+
+  .print-page--step .figure img {
+    max-height: 205mm;
+    width: auto;
+    max-width: 100%;
+    margin-inline: auto;
+    border-radius: 4mm;
+    object-fit: contain;
+  }
+
+  .print-page--step .figure-caption {
+    margin-top: 2mm;
+    font-size: 8pt;
+  }
+
+  /* Notas e rodapé */
+  .print-page--footer {
+    justify-content: center;
+    text-align: center;
+    border-top: none;
+    margin-top: 0;
+    padding-top: 0;
+  }
+
+  .print-page--footer p {
+    max-width: none;
+    margin-inline: auto;
+  }
+
+  /* Elementos decorativos desnecessários no PDF */
+  .glass,
+  .glass-strong {
+    background: transparent !important;
+    backdrop-filter: none !important;
+    border: none !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+  }
+
+  .tutorial-section {
+    margin-bottom: 0;
+  }
+
+  .steps {
+    gap: 0;
+  }
+
+  a {
+    color: var(--foreground);
+    text-decoration: none;
+  }
+
+  .page-title .gradient {
+    color: var(--neon-cyan);
+    background: none;
+    -webkit-background-clip: unset;
+    background-clip: unset;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}

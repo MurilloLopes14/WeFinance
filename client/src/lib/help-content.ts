@@ -351,7 +351,7 @@ export const HELP: HelpModule[] = [
     sections: [
       {
         title: 'O que é um fixo',
-        body: 'Um fixo é um registro de que um valor vai entrar ou sair regularmente. Ele não cria transações automaticamente — serve como planejamento e lembrete. Você ainda precisa lançar a transação real quando ela ocorrer.',
+        body: 'Um fixo registra que um valor vai entrar ou sair regularmente. Na data de execução, o WeFinance lança a transação automaticamente na conta vinculada e atualiza o saldo. Fixos ativos também aparecem no painel "Próximos Fixos" do Dashboard como lembrete do fluxo de caixa.',
       },
       {
         title: 'Campos principais',
@@ -359,20 +359,41 @@ export const HELP: HelpModule[] = [
         bullets: [
           'Nome — descrição clara (ex.: "Netflix", "Aluguel Ap. 42").',
           'Tipo — Despesa ou Receita. Define como ele aparece nos resumos.',
-          'Valor — o valor esperado da recorrência.',
-          'Categoria — para categorizar automaticamente quando você lançar a transação.',
-          'Data de vencimento — o dia do mês em que ocorre (ex.: dia 5).',
-          'Ativo/Inativo — se inativo, não aparece nos próximos fixos.',
+          'Valor — o valor de cada ocorrência (em parcelamentos, o valor de cada parcela).',
+          'Conta e categoria — usadas na transação gerada automaticamente.',
+          'Cadência — intervalo entre execuções (ex.: a cada 1 mês).',
+          'Próxima execução — data em que a primeira (ou próxima) transação será lançada.',
+          'Ativo/Inativo — se inativo, não executa nem aparece nos próximos fixos.',
+        ],
+      },
+      {
+        title: 'Parcelamentos',
+        body: 'Para compras ou recebimentos com prazo definido (celular em 12x, empréstimo, consórcio), marque "Este fixo é um parcelamento" e informe o total de parcelas. O valor informado vale para cada parcela; a cadência define o intervalo entre elas.',
+        bullets: [
+          'Na execução, a transação é criada com descrição no formato "(N/total): nome" — por exemplo, "(3/12): iPhone 15".',
+          'Cada parcela gerada é registrada no fixo; ao concluir todas, o parcelamento é desativado automaticamente.',
+          'No card do fixo, acompanhe o progresso (ex.: 3/12) e quantas parcelas ainda faltam.',
+        ],
+      },
+      {
+        title: 'Antecipar parcelas',
+        body: 'Se uma parcela vence antes da data programada — ou você quer quitá-la manualmente — use uma transação com antecipação. Disponível ao criar transação (despesa ou receita, não transferência) para o proprietário do grupo.',
+        bullets: [
+          'Marque "Antecipar parcela" e selecione o parcelamento ativo com parcelas pendentes do mesmo tipo.',
+          'Escolha qual parcela quitar; por padrão, a próxima pendente já vem selecionada.',
+          'Conta, valor e categoria são preenchidos a partir do fixo; a transação aparece como "Parcela Antecipada (N/total): …".',
+          'Antecipar uma parcela fora de ordem não altera as datas das demais — só a próxima da fila adianta o calendário do fixo.',
         ],
       },
       {
         title: 'Ativar e desativar',
-        body: 'Em vez de excluir um fixo sazonal (ex.: IPTU parcelado), desative-o quando não for mais recorrente. Isso preserva o histórico e facilita reativar no futuro.',
+        body: 'Em vez de excluir um fixo sazonal (ex.: IPTU anual), desative-o quando não for mais recorrente. Isso preserva o histórico e facilita reativar no futuro. Parcelamentos concluídos são desativados sozinhos.',
       },
     ],
     tips: [
       'Use fixos para planejar o fluxo de caixa — você vê no Dashboard quais saídas e entradas esperar nos próximos dias.',
-      'Para despesas parceladas, crie um fixo com o número de meses definido e desative ao terminar.',
+      'Para parcelamentos, confira o progresso no card do fixo antes de antecipar — evita pagar a mesma parcela duas vezes.',
+      'Alinhe a cadência ao vencimento real (mensal para cartão, quinzenal para salário) e use a data da primeira parcela em "Próxima execução".',
       'Inative fixos sazonais (IPVA, IPTU, seguro anual) ao invés de excluir.',
       'O painel de Próximos Fixos no Dashboard mostra os 5 mais próximos — útil para planejar a semana.',
     ],
