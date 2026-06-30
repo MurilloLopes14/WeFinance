@@ -8,6 +8,7 @@ import {
   Landmark,
   PieChart,
   PiggyBank,
+  ScrollText,
   Tags,
   UserCircle,
   Users,
@@ -17,6 +18,7 @@ export type DashboardNavItem = {
   title: string
   url: string
   icon: LucideIcon
+  adminOnly?: boolean
 }
 
 export type DashboardNavGroup = {
@@ -85,6 +87,12 @@ export const dashboardSecondaryNav: DashboardNavItem[] = [
     title: 'Central de Ajuda',
     url: '/dashboard/ajuda',
     icon: HelpCircle,
+  },
+  {
+    title: 'Notas de versão',
+    url: '/dashboard/notas-de-versao',
+    icon: ScrollText,
+    adminOnly: true,
   },
 ]
 

@@ -63,3 +63,41 @@ export function findSubscriptionInList(
 ): SubscriptionResponseDto | undefined {
   return subscriptions.find((subscription) => subscription.id === subscriptionId)
 }
+
+export function getPendingInstallmentNumbers(
+  generated: number[],
+  total: number | null | undefined,
+): number[] {
+  if (!total || total < 1) return []
+
+  const generatedSet = new Set(generated)
+  const pending: number[] = []
+
+  for (let number = 1; number <= total; number += 1) {
+    if (!generatedSet.has(number)) {
+      pending.push(number)
+    }
+  }
+
+  return pending
+}
+
+export function formatInstallmentProgress(
+  generatedCount: number,
+  total: number | null | undefined,
+): string | null {
+  if (!total) return null
+  return `${generatedCount}/${total}`
+}
+
+export function filterInstallmentSubscriptionsByQuery(
+  subscriptions: SubscriptionResponseDto[],
+  query: string,
+): SubscriptionResponseDto[] {
+  const normalizedQuery = query.trim().toLowerCase()
+  if (!normalizedQuery) return subscriptions
+
+  return subscriptions.filter((subscription) =>
+    subscription.name.toLowerCase().includes(normalizedQuery),
+  )
+}

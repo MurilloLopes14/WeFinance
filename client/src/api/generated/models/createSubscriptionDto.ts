@@ -21,4 +21,8 @@ export interface CreateSubscriptionDto {
   /** ISO date of first (or next) run */
   nextRunAt: string;
   active?: boolean;
+  /** Marca este fixo como um parcelamento (tem fim definido) */
+  isInstallment?: boolean;
+  /** Número total de parcelas. Obrigatório quando isInstallment = true */
+  installmentTotal?: number;
 }

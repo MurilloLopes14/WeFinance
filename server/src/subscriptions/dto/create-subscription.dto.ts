@@ -10,6 +10,7 @@ import {
   IsUUID,
   Length,
   Min,
+  ValidateIf,
 } from 'class-validator';
 
 export class CreateSubscriptionDto {
@@ -54,4 +55,20 @@ export class CreateSubscriptionDto {
   @IsOptional()
   @IsBoolean()
   active?: boolean = true;
+
+  @ApiPropertyOptional({
+    default: false,
+    description: 'Marca este fixo como um parcelamento (tem fim definido)',
+  })
+  @IsOptional()
+  @IsBoolean()
+  isInstallment?: boolean = false;
+
+  @ApiPropertyOptional({
+    description: 'Número total de parcelas. Obrigatório quando isInstallment = true',
+  })
+  @ValidateIf((o) => o.isInstallment === true)
+  @IsInt()
+  @Min(1)
+  installmentTotal?: number;
 }

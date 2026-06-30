@@ -79,6 +79,9 @@ function toFormValues(transaction: TransactionResponseDto): TransactionFormValue
       userId: split.userId,
       share: split.share,
     })),
+    advancesInstallment: false,
+    subscriptionId: '',
+    installmentNumber: undefined,
   }
 }
 

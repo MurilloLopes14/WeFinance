@@ -228,6 +228,7 @@ export function TransactionPage() {
           isLoading={isLoadingInsights}
           isError={isInsightsError}
           description={`Análises do grupo selecionado para ${formatInsightMonthLabel(insightsMonth)}.`}
+          layout="compact"
           tourAnchor="transactions-insights"
           onRetry={() => {
             void refetchInsights()

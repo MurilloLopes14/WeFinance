@@ -9,6 +9,7 @@ import {
   ParseUUIDPipe,
   Patch,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import {
@@ -22,6 +23,7 @@ import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import type { AuthenticatedUser } from '../common/types/jwt-payload.type';
 import { CreateSubscriptionDto } from './dto/create-subscription.dto';
 import { UpdateSubscriptionDto } from './dto/update-subscription.dto';
+import { FilterSubscriptionsDto } from './dto/filter-subscriptions.dto';
 import { SubscriptionResponseDto } from './dto/subscription-response.dto';
 import { SubscriptionsService } from './subscriptions.service';
 
@@ -48,9 +50,10 @@ export class SubscriptionsController {
   @ApiResponse({ status: 200, type: [SubscriptionResponseDto] })
   findAll(
     @Param('householdId', ParseUUIDPipe) householdId: string,
+    @Query() filters: FilterSubscriptionsDto,
     @CurrentUser() user: AuthenticatedUser,
   ) {
-    return this.subscriptionsService.findAll(householdId, user.id);
+    return this.subscriptionsService.findAll(householdId, user.id, filters);
   }
 
   @Get(':subId')

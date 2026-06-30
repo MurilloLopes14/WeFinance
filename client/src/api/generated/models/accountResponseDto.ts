@@ -30,7 +30,10 @@ export interface AccountResponseDto {
   creditLimit?: number | null;
   /** @nullable */
   invoiceClosingDay?: number | null;
-  /** @nullable */
+  /**
+   * Dia de vencimento (invoiceClosingDay + 7, calculado automaticamente)
+   * @nullable
+   */
   invoiceDueDay?: number | null;
   createdAt: string;
   updatedAt: string;

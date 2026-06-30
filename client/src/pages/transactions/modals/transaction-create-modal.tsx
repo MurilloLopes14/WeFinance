@@ -10,6 +10,9 @@ import {
   usePayeesControllerFindAll,
 } from '@/api/generated/payees/payees'
 import {
+  getSubscriptionsControllerFindAllQueryKey,
+} from '@/api/generated/subscriptions/subscriptions'
+import {
   getTransactionsControllerFindAllQueryKey,
   useTransactionsControllerCreate,
 } from '@/api/generated/transactions/transactions'
@@ -130,9 +133,14 @@ export function TransactionCreateModal({
         onOpenChange(false)
         reset(createDefaultTransactionFormValues())
 
-        await queryClient.invalidateQueries({
-          queryKey: getTransactionsControllerFindAllQueryKey(variables.householdId),
-        })
+        await Promise.all([
+          queryClient.invalidateQueries({
+            queryKey: getTransactionsControllerFindAllQueryKey(variables.householdId),
+          }),
+          queryClient.invalidateQueries({
+            queryKey: getSubscriptionsControllerFindAllQueryKey(variables.householdId),
+          }),
+        ])
       },
       onError: (error) => {
         toast.error(getApiErrorMessage(error, 'Não foi possível criar a transação'))
@@ -167,6 +175,23 @@ export function TransactionCreateModal({
 
     const isTransfer = values.type === CreateTransactionDtoType.transfer
 
+    if (values.advancesInstallment) {
+      createMutation.mutate({
+        householdId: values.householdId,
+        data: {
+          accountId: values.accountId,
+          type: values.type,
+          amount: values.amount,
+          date: values.date,
+          categoryId: values.categoryId || undefined,
+          description: values.description || undefined,
+          subscriptionId: values.subscriptionId,
+          installmentNumber: values.installmentNumber,
+        },
+      })
+      return
+    }
+
     let payeeId: string | undefined
     if (values.hasPayee && !isTransfer) {
       try {
@@ -183,7 +208,7 @@ export function TransactionCreateModal({
     }
 
     const split =
-      !isTransfer && selectedHousehold
+      !isTransfer && !values.advancesInstallment && selectedHousehold
         ? resolveTransactionSplits({
             splitMode: values.splitMode,
             amount: values.amount,

@@ -73,6 +73,14 @@ export class UsersController {
     return this.usersService.findMe(user.id);
   }
 
+  @Patch('me/seen-release-note')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({ summary: 'Marca a última release note publicada como vista pelo usuário' })
+  @ApiResponse({ status: 204 })
+  async markReleaseNoteSeen(@CurrentUser() user: AuthenticatedUser) {
+    await this.usersService.markReleaseNoteSeen(user.id);
+  }
+
   @Patch('me/onboarding')
   @ApiOperation({ summary: 'Update onboarding/tour state for current user' })
   @ApiResponse({ status: 200, type: MeResponseDto })

@@ -25,6 +25,8 @@ import {
 } from '@/components/ui/sidebar'
 import { clearAccessToken } from '@/api/auth-storage'
 import { AUTH_SESSION_QUERY_KEY } from '@/hooks/use-auth-session'
+import { useAuthSession } from '@/hooks/use-auth-session'
+import { isAdmin } from '@/lib/user-helpers'
 import { cn } from '@/lib/utils'
 import { ChevronRight, LogOut, PanelLeft } from 'lucide-react'
 import { useEffect, useState } from 'react'
@@ -41,6 +43,11 @@ export function AppSidebar() {
   const queryClient = useQueryClient()
   const { state, toggleSidebar, isMobile, setOpenMobile } = useSidebar()
   const isCollapsed = state === 'collapsed'
+
+  const { data: user } = useAuthSession()
+  const secondaryNavItems = dashboardSecondaryNav.filter(
+    (item) => !item.adminOnly || isAdmin(user?.role),
+  )
 
   const closeMobileSidebar = () => {
     if (isMobile) setOpenMobile(false)
@@ -174,7 +181,7 @@ export function AppSidebar() {
           <SidebarGroupLabel className="text-sm">Sistema</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {dashboardSecondaryNav.map((item) => (
+              {secondaryNavItems.map((item) => (
                 <SidebarMenuItem
                   key={item.url}
                   {...(item.url === '/dashboard/ajuda' ? { 'data-tour': 'tour-nav-help' } : {})}

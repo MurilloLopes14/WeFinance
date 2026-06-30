@@ -6,11 +6,11 @@
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcrypt';
-import { and, count, desc, eq, ilike, inArray, SQL } from 'drizzle-orm';
+import { and, count, desc, eq, ilike, inArray, isNotNull, SQL } from 'drizzle-orm';
 import { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import { DRIZZLE } from '../database/database.constants';
 import * as schema from '../database/schema';
-import { householdMembers, users } from '../database/schema';
+import { householdMembers, releaseNotes, users } from '../database/schema';
 import { stripPassword } from '../common/utils/strip-password';
 import { UploadService } from '../upload/upload.service';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -105,13 +105,41 @@ export class UsersService {
     return stripPassword(user);
   }
 
-  async findMe(id: string): Promise<SafeUser & { onboarding: OnboardingData | null }> {
-    const user = await this.findEntityById(id);
-    const safe = stripPassword(user);
+  async findMe(id: string): Promise<SafeUser & { onboarding: OnboardingData | null; shouldSeeReleaseNotes: boolean }> {
+    const [user, latestNote] = await Promise.all([
+      this.findEntityById(id),
+      this.db
+        .select({ id: releaseNotes.id })
+        .from(releaseNotes)
+        .where(isNotNull(releaseNotes.publishedAt))
+        .orderBy(desc(releaseNotes.publishedAt))
+        .limit(1),
+    ]);
+
+    const latestId = latestNote[0]?.id ?? null;
+    const shouldSeeReleaseNotes = latestId !== null && user.lastSeenReleaseNoteId !== latestId;
+
     return {
-      ...safe,
+      ...stripPassword(user),
       onboarding: (user.onboarding as OnboardingData) ?? null,
+      shouldSeeReleaseNotes,
     };
+  }
+
+  async markReleaseNoteSeen(userId: string): Promise<void> {
+    const [latest] = await this.db
+      .select({ id: releaseNotes.id })
+      .from(releaseNotes)
+      .where(isNotNull(releaseNotes.publishedAt))
+      .orderBy(desc(releaseNotes.publishedAt))
+      .limit(1);
+
+    if (!latest) return;
+
+    await this.db
+      .update(users)
+      .set({ lastSeenReleaseNoteId: latest.id, updatedAt: new Date() })
+      .where(eq(users.id, userId));
   }
 
   async updateOnboarding(id: string, dto: UpdateOnboardingDto): Promise<SafeUser & { onboarding: OnboardingData | null }> {

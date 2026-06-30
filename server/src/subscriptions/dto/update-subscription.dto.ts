@@ -60,4 +60,15 @@ export class UpdateSubscriptionDto {
   @IsOptional()
   @IsBoolean()
   active?: boolean;
+
+  @ApiPropertyOptional({ description: 'Marca este fixo como um parcelamento (tem fim definido)' })
+  @IsOptional()
+  @IsBoolean()
+  isInstallment?: boolean;
+
+  @ApiPropertyOptional({ description: 'Número total de parcelas' })
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  installmentTotal?: number;
 }

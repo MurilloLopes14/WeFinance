@@ -32,12 +32,26 @@ export const subscriptionFormSchema = z.object({
     .trim()
     .regex(/^\d{4}-\d{2}-\d{2}$/, 'Informe uma data válida'),
   active: z.boolean(),
+  isInstallment: z.boolean(),
+  installmentTotal: z
+    .number({ error: 'Informe um número válido' })
+    .int('O total deve ser um número inteiro')
+    .min(1, 'Informe ao menos 1 parcela')
+    .optional(),
 }).superRefine((values, context) => {
   if (values.hasPayee && !values.payeeId) {
     context.addIssue({
       code: 'custom',
       path: ['payeeId'],
       message: 'Selecione um beneficiário',
+    })
+  }
+
+  if (values.isInstallment && (!values.installmentTotal || values.installmentTotal < 1)) {
+    context.addIssue({
+      code: 'custom',
+      path: ['installmentTotal'],
+      message: 'Informe o total de parcelas',
     })
   }
 })
@@ -64,6 +78,8 @@ export const defaultSubscriptionFormValues: SubscriptionFormValues = {
   cadenceEvery: 1,
   nextRunAt: getDefaultNextRunAt(),
   active: true,
+  isInstallment: false,
+  installmentTotal: undefined,
 }
 
 export const subscriptionTypeFormOptions = [

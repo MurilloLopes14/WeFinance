@@ -120,6 +120,27 @@
       "when": 1782697314353,
       "tag": "0016_watery_spiral",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1782847689353,
+      "tag": "0017_famous_madelyne_pryor",
+      "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1782850449486,
+      "tag": "0018_certain_vengeance",
+      "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1782860000000,
+      "tag": "0019_installment_array",
+      "breakpoints": true
     }
   ]
 }

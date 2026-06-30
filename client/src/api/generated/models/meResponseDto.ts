@@ -27,4 +27,6 @@ export interface MeResponseDto {
   updatedAt: string;
   /** @nullable */
   onboarding?: MeResponseDtoOnboarding;
+  /** true se há uma release note publicada ainda não vista pelo usuário */
+  shouldSeeReleaseNotes: boolean;
 }

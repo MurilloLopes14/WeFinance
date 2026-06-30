@@ -293,6 +293,67 @@ export function useUsersControllerGetProfile<TData = Awaited<ReturnType<typeof u
 
 
 /**
+ * @summary Marca a última release note publicada como vista pelo usuário
+ */
+export const usersControllerMarkReleaseNoteSeen = (
+    
+ options?: SecondParameter<typeof customInstance>,) => {
+      
+      
+      return customInstance<void>(
+      {url: `/api/v1/users/me/seen-release-note`, method: 'PATCH'
+    },
+      options);
+    }
+  
+
+
+export const getUsersControllerMarkReleaseNoteSeenMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof usersControllerMarkReleaseNoteSeen>>, TError,void, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof usersControllerMarkReleaseNoteSeen>>, TError,void, TContext> => {
+
+const mutationKey = ['usersControllerMarkReleaseNoteSeen'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof usersControllerMarkReleaseNoteSeen>>, void> = () => {
+          
+
+          return  usersControllerMarkReleaseNoteSeen(requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UsersControllerMarkReleaseNoteSeenMutationResult = NonNullable<Awaited<ReturnType<typeof usersControllerMarkReleaseNoteSeen>>>
+    
+    export type UsersControllerMarkReleaseNoteSeenMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Marca a última release note publicada como vista pelo usuário
+ */
+export const useUsersControllerMarkReleaseNoteSeen = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof usersControllerMarkReleaseNoteSeen>>, TError,void, TContext>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof usersControllerMarkReleaseNoteSeen>>,
+        TError,
+        void,
+        TContext
+      > => {
+
+      const mutationOptions = getUsersControllerMarkReleaseNoteSeenMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    /**
  * @summary Update onboarding/tour state for current user
  */
 export const usersControllerUpdateOnboarding = (

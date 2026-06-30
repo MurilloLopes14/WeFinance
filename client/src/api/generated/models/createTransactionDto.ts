@@ -19,6 +19,10 @@ export interface CreateTransactionDto {
   payeeId?: string;
   categoryId?: string;
   description?: string;
+  /** UUID de uma subscription de parcelamento (isInstallment=true) para antecipar uma parcela */
+  subscriptionId?: string;
+  /** Número da parcela a antecipar (1 a installmentTotal). Omitir para antecipar a próxima pendente. */
+  installmentNumber?: number;
   /** Required when type is "transfer" */
   transfer?: TransferInputDto;
   /** Cost splits between members. Not used for transfers. */

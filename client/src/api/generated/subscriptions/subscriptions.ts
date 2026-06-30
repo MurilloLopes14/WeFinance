@@ -27,6 +27,7 @@ import type {
 import type {
   CreateSubscriptionDto,
   SubscriptionResponseDto,
+  SubscriptionsControllerFindAllParams,
   UpdateSubscriptionDto
 } from '.././models';
 
@@ -109,12 +110,14 @@ export const useSubscriptionsControllerCreate = <TError = ErrorType<unknown>,
  */
 export const subscriptionsControllerFindAll = (
     householdId: string,
+    params?: SubscriptionsControllerFindAllParams,
  options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
 ) => {
       
       
       return customInstance<SubscriptionResponseDto[]>(
-      {url: `/api/v1/households/${householdId}/subscriptions`, method: 'GET', signal
+      {url: `/api/v1/households/${householdId}/subscriptions`, method: 'GET',
+        params, signal
     },
       options);
     }
@@ -122,23 +125,25 @@ export const subscriptionsControllerFindAll = (
 
 
 
-export const getSubscriptionsControllerFindAllQueryKey = (householdId?: string,) => {
+export const getSubscriptionsControllerFindAllQueryKey = (householdId?: string,
+    params?: SubscriptionsControllerFindAllParams,) => {
     return [
-    `/api/v1/households/${householdId}/subscriptions`
+    `/api/v1/households/${householdId}/subscriptions`, ...(params ? [params]: [])
     ] as const;
     }
 
     
-export const useSubscriptionsControllerFindAllQueryOptions = <TData = Awaited<ReturnType<typeof subscriptionsControllerFindAll>>, TError = ErrorType<unknown>>(householdId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof subscriptionsControllerFindAll>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+export const useSubscriptionsControllerFindAllQueryOptions = <TData = Awaited<ReturnType<typeof subscriptionsControllerFindAll>>, TError = ErrorType<unknown>>(householdId: string,
+    params?: SubscriptionsControllerFindAllParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof subscriptionsControllerFindAll>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
 
-  const queryKey =  queryOptions?.queryKey ?? getSubscriptionsControllerFindAllQueryKey(householdId);
+  const queryKey =  queryOptions?.queryKey ?? getSubscriptionsControllerFindAllQueryKey(householdId,params);
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof subscriptionsControllerFindAll>>> = ({ signal }) => subscriptionsControllerFindAll(householdId, requestOptions, signal);
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof subscriptionsControllerFindAll>>> = ({ signal }) => subscriptionsControllerFindAll(householdId,params, requestOptions, signal);
 
       
 
@@ -152,7 +157,8 @@ export type SubscriptionsControllerFindAllQueryError = ErrorType<unknown>
 
 
 export function useSubscriptionsControllerFindAll<TData = Awaited<ReturnType<typeof subscriptionsControllerFindAll>>, TError = ErrorType<unknown>>(
- householdId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof subscriptionsControllerFindAll>>, TError, TData>> & Pick<
+ householdId: string,
+    params: undefined |  SubscriptionsControllerFindAllParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof subscriptionsControllerFindAll>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof subscriptionsControllerFindAll>>,
           TError,
@@ -162,7 +168,8 @@ export function useSubscriptionsControllerFindAll<TData = Awaited<ReturnType<typ
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 export function useSubscriptionsControllerFindAll<TData = Awaited<ReturnType<typeof subscriptionsControllerFindAll>>, TError = ErrorType<unknown>>(
- householdId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof subscriptionsControllerFindAll>>, TError, TData>> & Pick<
+ householdId: string,
+    params?: SubscriptionsControllerFindAllParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof subscriptionsControllerFindAll>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof subscriptionsControllerFindAll>>,
           TError,
@@ -172,7 +179,8 @@ export function useSubscriptionsControllerFindAll<TData = Awaited<ReturnType<typ
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 export function useSubscriptionsControllerFindAll<TData = Awaited<ReturnType<typeof subscriptionsControllerFindAll>>, TError = ErrorType<unknown>>(
- householdId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof subscriptionsControllerFindAll>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ householdId: string,
+    params?: SubscriptionsControllerFindAllParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof subscriptionsControllerFindAll>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
@@ -180,11 +188,12 @@ export function useSubscriptionsControllerFindAll<TData = Awaited<ReturnType<typ
  */
 
 export function useSubscriptionsControllerFindAll<TData = Awaited<ReturnType<typeof subscriptionsControllerFindAll>>, TError = ErrorType<unknown>>(
- householdId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof subscriptionsControllerFindAll>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ householdId: string,
+    params?: SubscriptionsControllerFindAllParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof subscriptionsControllerFindAll>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
  , queryClient?: QueryClient 
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
-  const queryOptions = useSubscriptionsControllerFindAllQueryOptions(householdId,options)
+  const queryOptions = useSubscriptionsControllerFindAllQueryOptions(householdId,params,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 

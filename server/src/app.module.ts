@@ -13,6 +13,7 @@ import { EventsModule } from './events/events.module';
 import { HouseholdsModule } from './households/households.module';
 import { ImportsModule } from './imports/imports.module';
 import { InsightsModule } from './insights/insights.module';
+import { ReleaseNotesModule } from './release-notes/release-notes.module';
 import { PayeesModule } from './payees/payees.module';
 import { SubscriptionsModule } from './subscriptions/subscriptions.module';
 import { TransactionSplitsModule } from './transaction-splits/transaction-splits.module';
@@ -43,6 +44,7 @@ import { UsersModule } from './users/users.module';
     SubscriptionsModule,
     ImportsModule,
     InsightsModule,
+    ReleaseNotesModule,
   ],
   controllers: [AppController],
   providers: [AppService],

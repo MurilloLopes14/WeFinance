@@ -52,6 +52,9 @@ export class UserResponseDto {
 export class MeResponseDto extends UserResponseDto {
   @ApiPropertyOptional({ type: OnboardingDto, nullable: true })
   onboarding: OnboardingDto | null;
+
+  @ApiProperty({ description: 'true se há uma release note publicada ainda não vista pelo usuário' })
+  shouldSeeReleaseNotes: boolean;
 }
 
 export class PaginatedUsersResponseDto {

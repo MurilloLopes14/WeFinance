@@ -35,6 +35,18 @@ export class SubscriptionResponseDto {
   active: boolean;
 
   @ApiProperty()
+  isInstallment: boolean;
+
+  @ApiPropertyOptional({ type: Number, nullable: true })
+  installmentTotal: number | null;
+
+  @ApiProperty({ description: 'Números das parcelas já geradas (auto ou antecipadas)', type: [Number] })
+  generatedInstallments: number[];
+
+  @ApiProperty({ description: 'Quantidade de parcelas já geradas (derivado de generatedInstallments.length)' })
+  installmentsGenerated: number;
+
+  @ApiProperty()
   createdAt: Date;
 
   @ApiProperty()

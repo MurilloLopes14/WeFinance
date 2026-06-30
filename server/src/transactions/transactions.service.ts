@@ -15,12 +15,14 @@ import {
   accounts,
   categories,
   payees,
+  subscriptions,
   transactionSplits,
   transactions,
   users,
 } from '../database/schema';
 import { currentMonth, monthDateRange, subtractMonths } from '../common/utils/month.utils';
 import { HouseholdsService } from '../households/households.service';
+import { computeNextRunAt, nextPendingInstallment } from '../subscriptions/subscriptions.service';
 import { SplitInputDto } from './dto/split-input.dto';
 import { CreateTransactionDto } from './dto/create-transaction.dto';
 import { UpdateTransactionDto } from './dto/update-transaction.dto';
@@ -47,6 +49,7 @@ import {
 
 type Transaction = typeof transactions.$inferSelect;
 type TransactionSplit = typeof transactionSplits.$inferSelect;
+type Subscription = typeof subscriptions.$inferSelect;
 
 @Injectable()
 export class TransactionsService {
@@ -78,8 +81,29 @@ export class TransactionsService {
       return this.createTransfer(householdId, requesterId, dto);
     }
 
+    let installmentSub: Subscription | null = null;
+    let targetInstallmentNumber: number | null = null;
+
+    if (dto.subscriptionId) {
+      await this.householdsService.assertOwner(householdId, requesterId);
+      const { sub, targetNumber } = await this.validateInstallmentSubscription(
+        householdId,
+        dto.subscriptionId,
+        dto.type,
+        dto.installmentNumber,
+      );
+      installmentSub = sub;
+      targetInstallmentNumber = targetNumber;
+    }
+
     const isFuture = dto.date > todayIso();
     const status = isFuture ? 'draft' : 'cleared';
+
+    const description = installmentSub && targetInstallmentNumber !== null
+      ? `Parcela Antecipada (${targetInstallmentNumber}/${installmentSub.installmentTotal}): ${
+          dto.description ?? installmentSub.name
+        }`
+      : dto.description ?? null;
 
     const tx = await this.db.transaction(async (trx) => {
       const [transaction] = await trx
@@ -89,9 +113,10 @@ export class TransactionsService {
           accountId: dto.accountId,
           payeeId: dto.payeeId ?? null,
           categoryId: dto.categoryId ?? null,
+          subscriptionId: dto.subscriptionId ?? null,
           type: dto.type,
           amount: String(dto.amount),
-          description: dto.description ?? null,
+          description,
           date: dto.date,
           status,
           createdById: requesterId,
@@ -119,10 +144,97 @@ export class TransactionsService {
         await this.adjustAccountBalance(trx, dto.accountId, balanceDelta);
       }
 
+      if (installmentSub && targetInstallmentNumber !== null) {
+        const generated = (installmentSub.generatedInstallments ?? []) as number[];
+        const nextPending = nextPendingInstallment(generated, installmentSub.installmentTotal!);
+        const newGenerated = [...generated, targetInstallmentNumber];
+
+        const subUpdate: Partial<typeof subscriptions.$inferInsert> = {
+          generatedInstallments: newGenerated,
+          updatedAt: new Date(),
+        };
+
+        // Só avança o nextRunAt se a parcela antecipada é a próxima da fila
+        // (evita comprimir o calendário das demais parcelas ainda pendentes)
+        if (targetInstallmentNumber === nextPending) {
+          subUpdate.nextRunAt = computeNextRunAt(
+            installmentSub.nextRunAt,
+            installmentSub.cadenceUnit,
+            installmentSub.cadenceEvery,
+          );
+        }
+
+        if (newGenerated.length >= installmentSub.installmentTotal!) {
+          subUpdate.active = false;
+        }
+
+        await trx
+          .update(subscriptions)
+          .set(subUpdate)
+          .where(eq(subscriptions.id, installmentSub.id));
+      }
+
       return transaction;
     });
 
     return this.findOneRaw(tx.id);
+  }
+
+  private async validateInstallmentSubscription(
+    householdId: string,
+    subscriptionId: string,
+    type: 'expense' | 'income' | 'transfer',
+    installmentNumber?: number,
+  ): Promise<{ sub: Subscription; targetNumber: number }> {
+    const [sub] = await this.db
+      .select()
+      .from(subscriptions)
+      .where(
+        and(
+          eq(subscriptions.id, subscriptionId),
+          eq(subscriptions.householdId, householdId),
+        ),
+      )
+      .limit(1);
+
+    if (!sub) {
+      throw new NotFoundException(
+        `Subscription "${subscriptionId}" não encontrada neste grupo familiar`,
+      );
+    }
+    if (!sub.isInstallment || !sub.installmentTotal) {
+      throw new BadRequestException('Esta subscription não é um parcelamento');
+    }
+    if (!sub.active) {
+      throw new BadRequestException('Este parcelamento já foi concluído ou está inativo');
+    }
+    if (sub.type !== type) {
+      throw new BadRequestException(
+        `O tipo da transação (${type}) não corresponde ao tipo do parcelamento (${sub.type})`,
+      );
+    }
+
+    const generated = (sub.generatedInstallments ?? []) as number[];
+    const nextPending = nextPendingInstallment(generated, sub.installmentTotal);
+
+    if (nextPending === null) {
+      throw new BadRequestException('Todas as parcelas deste parcelamento já foram geradas');
+    }
+
+    const targetNumber = installmentNumber ?? nextPending;
+
+    if (targetNumber < 1 || targetNumber > sub.installmentTotal) {
+      throw new BadRequestException(
+        `Número de parcela inválido: deve estar entre 1 e ${sub.installmentTotal}`,
+      );
+    }
+    if (generated.includes(targetNumber)) {
+      throw new BadRequestException(
+        `A parcela ${targetNumber} deste parcelamento já foi gerada`,
+      );
+    }
+
+    return { sub, targetNumber };
   }
 
   // ─── List ────────────────────────────────────────────────────────────────
@@ -1347,6 +1459,7 @@ export class TransactionsService {
       status: tx.status,
       transferToId: tx.transferToId ?? null,
       transferLinkId: tx.transferLinkId ?? null,
+      subscriptionId: tx.subscriptionId ?? null,
       metadata: tx.metadata as Record<string, unknown> | null,
       createdById: tx.createdById,
       owner,

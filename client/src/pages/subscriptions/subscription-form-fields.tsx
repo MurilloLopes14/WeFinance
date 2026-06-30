@@ -53,6 +53,7 @@ export function SubscriptionFormFields({
   const active = watch('active')
   const hasPayee = watch('hasPayee')
   const payeeId = watch('payeeId')
+  const isInstallment = watch('isInstallment')
   const fieldsDisabled = !householdId
 
   const filteredCategories = useMemo(
@@ -208,6 +209,56 @@ export function SubscriptionFormFields({
             </SelectContent>
           </Select>
         </div>
+      </div>
+
+      <div className="space-y-3 border-t border-foreground/10 pt-4">
+        <div className="flex items-start gap-2">
+          <Checkbox
+            id="subscription-is-installment"
+            checked={isInstallment}
+            disabled={fieldsDisabled}
+            onCheckedChange={(checked) => {
+              const enabled = checked === true
+              setValue('isInstallment', enabled, { shouldValidate: true })
+
+              if (!enabled) {
+                setValue('installmentTotal', undefined, { shouldValidate: true })
+              }
+            }}
+          />
+          <div className="space-y-1">
+            <Label htmlFor="subscription-is-installment" className="font-normal leading-snug">
+              Este fixo é um parcelamento
+            </Label>
+            <p className="text-xs leading-relaxed text-muted-foreground">
+              Defina um número finito de parcelas. O valor informado será aplicado em cada uma.
+            </p>
+          </div>
+        </div>
+
+        {isInstallment && (
+          <div className="space-y-2 pl-7">
+            <Label htmlFor="subscription-installment-total">Total de parcelas</Label>
+            <Input
+              id="subscription-installment-total"
+              type="number"
+              min={1}
+              step={1}
+              inputMode="numeric"
+              placeholder="Ex.: 12"
+              className="max-w-40 rounded-xl"
+              disabled={fieldsDisabled}
+              {...register('installmentTotal', {
+                valueAsNumber: true,
+                setValueAs: (value) =>
+                  value === '' || Number.isNaN(Number(value)) ? undefined : Number(value),
+              })}
+            />
+            {errors.installmentTotal && (
+              <p className="text-sm text-destructive">{errors.installmentTotal.message}</p>
+            )}
+          </div>
+        )}
       </div>
 
       {showPayeeField && (

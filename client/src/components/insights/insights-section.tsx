@@ -1,5 +1,6 @@
 import {
   InsightCard,
+  insightCardCompactGridClassName,
   insightCardGridClassName,
 } from '@/components/insights/insight-card'
 import { InsightsGridSkeleton } from '@/components/insights/insights-grid-skeleton'
@@ -29,6 +30,7 @@ type InsightsSectionProps = {
   className?: string
   onRetry?: () => void
   variant?: 'all' | 'mobile' | 'desktop'
+  layout?: 'grid' | 'compact'
   tourAnchor?: string
 }
 
@@ -43,6 +45,7 @@ export function InsightsSection({
   className,
   onRetry,
   variant = 'all',
+  layout = 'grid',
   tourAnchor,
 }: InsightsSectionProps) {
   const monthLabel = month ? formatInsightMonthLabel(month) : undefined
@@ -66,6 +69,7 @@ export function InsightsSection({
     onRetry,
     className,
     tourAnchor,
+    layout,
   }
 
   return (
@@ -86,6 +90,7 @@ type InsightsPanelContentProps = {
   onRetry?: () => void
   className?: string
   tourAnchor?: string
+  layout?: 'grid' | 'compact'
 }
 
 function InsightsDesktopPanel({
@@ -98,15 +103,22 @@ function InsightsDesktopPanel({
   className,
   onRetry,
   tourAnchor,
+  layout = 'grid',
 }: InsightsPanelContentProps) {
+  const [expandedOpen, setExpandedOpen] = useState(false)
+
   if (isLoading) {
     return (
       <section
-        className={cn('hidden space-y-3 md:block', className)}
+        className={cn('hidden min-w-0 space-y-2 md:block', className)}
         {...(tourAnchor ? { 'data-tour': tourAnchor } : {})}
       >
-        <InsightsSectionHeader title={title} description={description} />
-        <InsightsGridSkeleton />
+        <InsightsSectionHeader
+          title={title}
+          description={description}
+          compact={layout === 'compact'}
+        />
+        <InsightsGridSkeleton layout={layout} count={layout === 'compact' ? 6 : 3} />
       </section>
     )
   }
@@ -119,6 +131,61 @@ function InsightsDesktopPanel({
       >
         <InsightsSectionHeader title={title} description={description} />
         <InsightsErrorState onRetry={onRetry} />
+      </section>
+    )
+  }
+
+  if (layout === 'compact') {
+    const maxInlineInsights = 8
+    const inlineInsights = insights.slice(0, maxInlineInsights)
+    const hasOverflow = insights.length > maxInlineInsights
+
+    return (
+      <section
+        className={cn('hidden min-w-0 md:block', className)}
+        {...(tourAnchor ? { 'data-tour': tourAnchor } : {})}
+      >
+        <div className="mb-2 flex items-center justify-between gap-3">
+          <InsightsSectionHeader title={title} description={description} compact />
+          {hasOverflow && (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="shrink-0 rounded-xl"
+              onClick={() => setExpandedOpen(true)}
+            >
+              Ver todos ({insights.length})
+            </Button>
+          )}
+        </div>
+
+        <div className={insightCardCompactGridClassName}>
+          {inlineInsights.map((insight) => (
+            <InsightCard
+              key={`${insight.householdId}-${insight.id}`}
+              insight={insight}
+              showHouseholdName={showHouseholdName}
+              size="compact"
+            />
+          ))}
+        </div>
+
+        <Sheet open={expandedOpen} onOpenChange={setExpandedOpen}>
+          <SheetContent side="right" className="w-full gap-0 overflow-y-auto sm:max-w-md">
+            <SheetHeader className="border-b border-foreground/10 pb-4">
+              <SheetTitle>{title}</SheetTitle>
+              <SheetDescription>{description}</SheetDescription>
+            </SheetHeader>
+            <div className="flex flex-col gap-3 p-4">
+              <InsightsCardsGrid
+                insights={insights}
+                showHouseholdName={showHouseholdName}
+                layout="stack"
+              />
+            </div>
+          </SheetContent>
+        </Sheet>
       </section>
     )
   }
@@ -263,10 +330,26 @@ function InsightsErrorState({ onRetry }: { onRetry?: () => void }) {
 function InsightsSectionHeader({
   title,
   description,
+  compact = false,
 }: {
   title: string
   description: string
+  compact?: boolean
 }) {
+  if (compact) {
+    return (
+      <div className="flex min-w-0 items-center gap-2">
+        <div className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+          <Lightbulb className="size-3.5" />
+        </div>
+        <div className="min-w-0">
+          <h2 className="truncate text-sm font-semibold tracking-tight">{title}</h2>
+          <p className="truncate text-xs text-muted-foreground">{description}</p>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="flex items-start gap-3">
       <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">

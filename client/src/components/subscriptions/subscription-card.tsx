@@ -12,15 +12,11 @@ import { formatAccountBalance } from '@/lib/account-helpers'
 import { SensitiveValue } from '@/components/privacy/sensitive-value'
 
 import {
-
   formatSubscriptionCadence,
-
   formatSubscriptionNextRun,
-
+  formatInstallmentProgress,
   getSubscriptionAccentColor,
-
   getSubscriptionTypeLabel,
-
 } from '@/lib/subscription-helpers'
 
 import { getTransactionAmountClassName } from '@/lib/transaction-helpers'
@@ -109,6 +105,19 @@ export function SubscriptionCard({
 
 
   const accountLine = [accountName, categoryName].filter(Boolean).join(' · ')
+
+  const installmentProgress =
+    subscription.isInstallment && subscription.installmentTotal
+      ? formatInstallmentProgress(
+          subscription.installmentsGenerated,
+          subscription.installmentTotal,
+        )
+      : null
+
+  const pendingInstallments =
+    subscription.isInstallment && subscription.installmentTotal
+      ? subscription.installmentTotal - subscription.installmentsGenerated
+      : 0
 
 
 
@@ -229,19 +238,27 @@ export function SubscriptionCard({
         </Badge>
 
         {!subscription.active && (
-
           <Badge
-
             variant="outline"
-
             className="h-5 shrink-0 rounded-md px-1.5 py-0 text-[11px] leading-none"
-
           >
-
             Pausada
-
           </Badge>
+        )}
 
+        {installmentProgress && (
+          <Badge
+            variant={pendingInstallments > 0 ? 'secondary' : 'outline'}
+            className="h-5 shrink-0 rounded-md px-1.5 py-0 text-[11px] tabular-nums leading-none"
+            title={
+              pendingInstallments > 0
+                ? `${subscription.installmentsGenerated} cobradas, ${pendingInstallments} pendentes`
+                : 'Parcelamento concluído'
+            }
+          >
+            {installmentProgress}
+            {pendingInstallments > 0 ? ` · ${pendingInstallments} pend.` : ' · ok'}
+          </Badge>
         )}
 
         {accountLine && (

@@ -21,4 +21,8 @@ export interface UpdateSubscriptionDto {
   cadenceEvery?: number;
   nextRunAt?: string;
   active?: boolean;
+  /** Marca este fixo como um parcelamento (tem fim definido) */
+  isInstallment?: boolean;
+  /** Número total de parcelas */
+  installmentTotal?: number;
 }

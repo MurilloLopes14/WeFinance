@@ -10,6 +10,7 @@ import { SplitPage } from '@/pages/splits/split-page'
 import { ProfilePage } from '@/pages/profile/profile-page'
 import { HouseholdPage } from '@/pages/households/household-page'
 import { BudgetPage } from '@/pages/budgets/budget-page'
+import { ReleaseNotesPage } from '@/pages/release-notes/release-notes-page'
 import { HelpPage } from '@/pages/help/help-page'
 import { PayeePage } from '@/pages/payees/payee-page'
 import { TransactionPage } from '@/pages/transactions/transaction-page'
@@ -108,6 +109,8 @@ export function AppRouter() {
                     <ProfilePage />
                   ) : item.url === '/dashboard/ajuda' ? (
                     <HelpPage />
+                  ) : item.url === '/dashboard/notas-de-versao' ? (
+                    <ReleaseNotesPage />
                   ) : (
                     <DashboardPlaceholderPage
                       title={item.title}

@@ -3,6 +3,7 @@ import { AppSidebar } from '@/components/dashboard/app-sidebar'
 import { SidebarInset, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar'
 import { TransactionCreateProvider } from '@/contexts/transaction-create-context'
 import { PrivacyModeProvider } from '@/contexts/privacy-mode-context'
+import { ReleaseNotesGate } from '@/components/release-notes/release-notes-gate'
 import { AppTourProvider } from '@/components/tour/app-tour-provider'
 import { Outlet } from 'react-router-dom'
 export function DashboardLayout() {
@@ -11,6 +12,7 @@ export function DashboardLayout() {
       <PrivacyModeProvider>
       <TransactionCreateProvider>
         <AppTourProvider>
+        <ReleaseNotesGate />
         <AppSidebar />
         <SidebarInset className="min-h-0 flex-1">
           <header className="dashboard-mobile-topbar flex shrink-0 items-center gap-3 px-4 md:hidden">

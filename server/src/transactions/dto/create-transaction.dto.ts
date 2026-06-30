@@ -3,6 +3,7 @@ import {
   IsArray,
   IsDateString,
   IsEnum,
+  IsInt,
   IsNumber,
   IsOptional,
   IsString,
@@ -52,6 +53,23 @@ export class CreateTransactionDto {
   @IsOptional()
   @IsString()
   description?: string;
+
+  @ApiPropertyOptional({
+    description:
+      'UUID de uma subscription de parcelamento (isInstallment=true) para antecipar uma parcela',
+  })
+  @IsOptional()
+  @IsUUID()
+  subscriptionId?: string;
+
+  @ApiPropertyOptional({
+    description:
+      'Número da parcela a antecipar (1 a installmentTotal). Omitir para antecipar a próxima pendente.',
+  })
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  installmentNumber?: number;
 
   @ApiPropertyOptional({
     type: TransferInputDto,

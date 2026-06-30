@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Inject,
   Injectable,
   Logger,
@@ -20,6 +21,7 @@ import { EventsService } from '../events/events.service';
 import { HouseholdsService } from '../households/households.service';
 import { CreateSubscriptionDto } from './dto/create-subscription.dto';
 import { UpdateSubscriptionDto } from './dto/update-subscription.dto';
+import { FilterSubscriptionsDto } from './dto/filter-subscriptions.dto';
 import { SubscriptionResponseDto } from './dto/subscription-response.dto';
 
 type Subscription = typeof subscriptions.$inferSelect;
@@ -61,6 +63,8 @@ export class SubscriptionsService {
         cadenceEvery: dto.cadenceEvery ?? 1,
         nextRunAt: dto.nextRunAt,
         active: dto.active ?? true,
+        isInstallment: dto.isInstallment ?? false,
+        installmentTotal: dto.isInstallment ? dto.installmentTotal ?? null : null,
       })
       .returning();
 
@@ -79,13 +83,19 @@ export class SubscriptionsService {
   async findAll(
     householdId: string,
     requesterId: string,
+    filters: FilterSubscriptionsDto = {},
   ): Promise<SubscriptionResponseDto[]> {
     await this.householdsService.assertMember(householdId, requesterId);
+
+    const conditions = [eq(subscriptions.householdId, householdId)];
+    if (filters.isInstallment !== undefined) {
+      conditions.push(eq(subscriptions.isInstallment, filters.isInstallment));
+    }
 
     const rows = await this.db
       .select()
       .from(subscriptions)
-      .where(eq(subscriptions.householdId, householdId));
+      .where(and(...conditions));
 
     return rows.map(this.format);
   }
@@ -129,6 +139,8 @@ export class SubscriptionsService {
     if (dto.cadenceEvery !== undefined) updateData.cadenceEvery = dto.cadenceEvery;
     if (dto.nextRunAt !== undefined) updateData.nextRunAt = dto.nextRunAt;
     if (dto.active !== undefined) updateData.active = dto.active;
+    if (dto.isInstallment !== undefined) updateData.isInstallment = dto.isInstallment;
+    if (dto.installmentTotal !== undefined) updateData.installmentTotal = dto.installmentTotal;
 
     const [updated] = await this.db
       .update(subscriptions)
@@ -229,6 +241,16 @@ export class SubscriptionsService {
       sub.cadenceEvery,
     );
 
+    const generated = (sub.generatedInstallments ?? []) as number[];
+    const nextPending = sub.isInstallment && sub.installmentTotal
+      ? nextPendingInstallment(generated, sub.installmentTotal)
+      : null;
+
+    const description =
+      sub.isInstallment && nextPending !== null && sub.installmentTotal
+        ? `(${nextPending}/${sub.installmentTotal}): ${sub.name}`
+        : sub.name;
+
     const [updated] = await this.db.transaction(async (trx) => {
       const [tx] = await trx
         .insert(transactions)
@@ -236,18 +258,32 @@ export class SubscriptionsService {
           householdId: sub.householdId,
           accountId: sub.accountId,
           categoryId: sub.categoryId ?? null,
+          subscriptionId: sub.id,
           type: sub.type,
           amount: sub.amount,
-          description: sub.name,
+          description,
           date: sub.nextRunAt,
           status: 'cleared',
           createdById: requesterId ?? ownerId,
         })
         .returning();
 
+      const subscriptionUpdate: Partial<typeof subscriptions.$inferInsert> = {
+        nextRunAt,
+        updatedAt: new Date(),
+      };
+
+      if (sub.isInstallment && sub.installmentTotal && nextPending !== null) {
+        const newGenerated = [...generated, nextPending];
+        subscriptionUpdate.generatedInstallments = newGenerated;
+        if (newGenerated.length >= sub.installmentTotal) {
+          subscriptionUpdate.active = false;
+        }
+      }
+
       const [updatedSub] = await trx
         .update(subscriptions)
-        .set({ nextRunAt, updatedAt: new Date() })
+        .set(subscriptionUpdate)
         .where(eq(subscriptions.id, sub.id))
         .returning();
 
@@ -364,6 +400,10 @@ export class SubscriptionsService {
       cadenceEvery: sub.cadenceEvery,
       nextRunAt: sub.nextRunAt,
       active: sub.active,
+      isInstallment: sub.isInstallment,
+      installmentTotal: sub.installmentTotal ?? null,
+      generatedInstallments: (sub.generatedInstallments ?? []) as number[],
+      installmentsGenerated: ((sub.generatedInstallments ?? []) as number[]).length,
       createdAt: sub.createdAt,
       updatedAt: sub.updatedAt,
     };
@@ -374,7 +414,14 @@ function todayIso(): string {
   return new Date().toISOString().split('T')[0];
 }
 
-function computeNextRunAt(
+export function nextPendingInstallment(generated: number[], total: number): number | null {
+  for (let i = 1; i <= total; i++) {
+    if (!generated.includes(i)) return i;
+  }
+  return null;
+}
+
+export function computeNextRunAt(
   current: string,
   unit: 'day' | 'week' | 'month' | 'year',
   every: number,

@@ -21,6 +21,13 @@ export interface SubscriptionResponseDto {
   cadenceEvery: number;
   nextRunAt: string;
   active: boolean;
+  isInstallment: boolean;
+  /** @nullable */
+  installmentTotal?: number | null;
+  /** Números das parcelas já geradas (auto ou antecipadas) */
+  generatedInstallments: number[];
+  /** Quantidade de parcelas já geradas (derivado de generatedInstallments.length) */
+  installmentsGenerated: number;
   createdAt: string;
   updatedAt: string;
 }

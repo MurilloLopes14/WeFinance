@@ -72,6 +72,8 @@ function toFormValues(
     cadenceEvery: subscription.cadenceEvery,
     nextRunAt: normalizeDateField(subscription.nextRunAt),
     active: subscription.active,
+    isInstallment: subscription.isInstallment,
+    installmentTotal: subscription.installmentTotal ?? undefined,
   }
 }
 
@@ -192,6 +194,8 @@ export function SubscriptionEditModal({
           cadenceEvery: values.cadenceEvery,
           nextRunAt: values.nextRunAt,
           active: values.active,
+          isInstallment: values.isInstallment,
+          installmentTotal: values.isInstallment ? values.installmentTotal : undefined,
         },
       })
     } catch (error) {

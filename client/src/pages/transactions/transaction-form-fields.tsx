@@ -4,7 +4,9 @@ import type { HouseholdMemberResponseDto } from '@/api/generated/models/househol
 import type { HouseholdResponseDto } from '@/api/generated/models/householdResponseDto'
 import type { PayeeResponseDto } from '@/api/generated/models/payeeResponseDto'
 import { PayeeSearchField } from '@/components/payees/payee-search-field'
+import { InstallmentSubscriptionSearchField } from '@/components/subscriptions/installment-subscription-search-field'
 import { TransactionAmountInput } from '@/components/transactions/transaction-amount-input'
+import { useSubscriptionsControllerFindAll } from '@/api/generated/subscriptions/subscriptions'
 import { getHouseholdSplitTypeLabel } from '@/components/households/household-header'
 import { HouseholdComboboxField } from '@/components/households/household-combobox-field'
 import { HouseholdGatedFormSection } from '@/components/object/household-gated-form-section'
@@ -23,6 +25,11 @@ import { Textarea } from '@/components/ui/textarea'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import { formatAccountBalance } from '@/lib/account-helpers'
 import { getPayeePartyLabel } from '@/lib/payee-helpers'
+import { isHouseholdOwner } from '@/lib/household-helpers'
+import {
+  findSubscriptionInList,
+  getPendingInstallmentNumbers,
+} from '@/lib/subscription-helpers'
 import { isFutureTransactionDate } from '@/lib/transaction-helpers'
 import { getUserInitials } from '@/lib/household-helpers'
 import {
@@ -35,6 +42,7 @@ import {
   type TransactionFormValues,
 } from '@/pages/transactions/transaction-form-schema'
 import { CreateTransactionDtoType } from '@/api/generated/models/createTransactionDtoType'
+import { cn } from '@/lib/utils'
 import { Loader2, Plus, Trash2 } from 'lucide-react'
 import { useMemo } from 'react'
 import {
@@ -93,8 +101,50 @@ export function TransactionFormFields({
   const splitMode = watch('splitMode')
   const amount = watch('amount')
   const customSplits = watch('customSplits')
+  const advancesInstallment = watch('advancesInstallment')
+  const subscriptionId = watch('subscriptionId')
+  const installmentNumber = watch('installmentNumber')
   const fieldsDisabled = !householdId
   const isEditMode = mode === 'edit'
+  const isOwner = isHouseholdOwner(members, currentUserId)
+
+  const { data: installmentSubscriptions = [] } = useSubscriptionsControllerFindAll(
+    householdId,
+    { isInstallment: true },
+    {
+      query: {
+        enabled: Boolean(householdId) && isOwner && mode === 'create',
+      },
+    },
+  )
+
+  const eligibleInstallmentSubscriptions = useMemo(
+    () =>
+      installmentSubscriptions.filter(
+        (subscription) =>
+          subscription.active &&
+          subscription.type === type &&
+          getPendingInstallmentNumbers(
+            subscription.generatedInstallments,
+            subscription.installmentTotal,
+          ).length > 0,
+      ),
+    [installmentSubscriptions, type],
+  )
+
+  const selectedInstallmentSubscription = useMemo(
+    () => findSubscriptionInList(eligibleInstallmentSubscriptions, subscriptionId ?? ''),
+    [eligibleInstallmentSubscriptions, subscriptionId],
+  )
+
+  const advancableInstallmentNumbers = useMemo(() => {
+    if (!selectedInstallmentSubscription) return []
+
+    return getPendingInstallmentNumbers(
+      selectedInstallmentSubscription.generatedInstallments,
+      selectedInstallmentSubscription.installmentTotal,
+    )
+  }, [selectedInstallmentSubscription])
 
   const { fields, append, remove } = useFieldArray({
     control,
@@ -102,7 +152,9 @@ export function TransactionFormFields({
   })
 
   const isTransfer = type === CreateTransactionDtoType.transfer
-  const showSplitSection = !isTransfer
+  const showSplitSection = !isTransfer && !advancesInstallment
+  const showAdvanceInstallmentSection = isOwner && mode === 'create' && !isTransfer
+  const showAmountField = !advancesInstallment
   const isFutureDate = isFutureTransactionDate(date)
   const transferAccountsLocked = isEditMode && isTransfer
   const typeFieldDisabled = fieldsDisabled || isEditMode
@@ -159,6 +211,48 @@ export function TransactionFormFields({
     append({ userId: nextMember.userId, share: 0 })
   }
 
+  const applyInstallmentSubscription = (nextSubscriptionId: string) => {
+    const subscription = findSubscriptionInList(
+      eligibleInstallmentSubscriptions,
+      nextSubscriptionId,
+    )
+    if (!subscription) return
+
+    const pendingNumbers = getPendingInstallmentNumbers(
+      subscription.generatedInstallments,
+      subscription.installmentTotal,
+    )
+
+    setValue('subscriptionId', nextSubscriptionId, { shouldValidate: true })
+    setValue('accountId', subscription.accountId, { shouldValidate: true })
+    setValue('amount', subscription.amount, { shouldValidate: true })
+    setValue('type', subscription.type, { shouldValidate: true })
+
+    const categoryId =
+      typeof subscription.categoryId === 'string' ? subscription.categoryId : ''
+    if (categoryId) {
+      setValue('categoryId', categoryId, { shouldValidate: true })
+    }
+
+    setValue('installmentNumber', pendingNumbers[0], { shouldValidate: true })
+  }
+
+  const handleAdvanceInstallmentChange = (enabled: boolean) => {
+    setValue('advancesInstallment', enabled, { shouldValidate: true })
+
+    if (!enabled) {
+      setValue('subscriptionId', '', { shouldValidate: true })
+      setValue('installmentNumber', undefined, { shouldValidate: true })
+      return
+    }
+
+    setValue('hasPayee', false, { shouldValidate: true })
+    setValue('payeeId', '', { shouldValidate: true })
+    setValue('payeeName', '', { shouldValidate: true })
+    setValue('splitMode', 'none', { shouldValidate: true })
+    setValue('customSplits', [], { shouldValidate: true })
+  }
+
   return (
     <div className="min-w-0 space-y-4">
       <HouseholdComboboxField
@@ -172,6 +266,9 @@ export function TransactionFormFields({
           setValue('payeeId', '', { shouldValidate: true })
           setValue('payeeName', '', { shouldValidate: true })
           setValue('customSplits', [], { shouldValidate: true })
+          setValue('advancesInstallment', false, { shouldValidate: true })
+          setValue('subscriptionId', '', { shouldValidate: true })
+          setValue('installmentNumber', undefined, { shouldValidate: true })
         }}
         disabled={householdDisabled}
         error={errors.householdId?.message}
@@ -194,6 +291,8 @@ export function TransactionFormFields({
               setValue('hasPayee', false, { shouldValidate: true })
               setValue('payeeId', '', { shouldValidate: true })
               setValue('payeeName', '', { shouldValidate: true })
+              setValue('subscriptionId', '', { shouldValidate: true })
+              setValue('installmentNumber', undefined, { shouldValidate: true })
             }}
             items={transactionTypeFormOptions.map((option) => ({
               value: option.value,
@@ -235,7 +334,101 @@ export function TransactionFormFields({
         </div>
       </div>
 
-      <div className="grid min-w-0 gap-4 sm:grid-cols-2">
+      {showAdvanceInstallmentSection && (
+        <div className="space-y-3 rounded-xl border border-foreground/10 bg-foreground/2 p-4">
+          <div className="flex items-start gap-2">
+            <Checkbox
+              id="transaction-advances-installment"
+              checked={advancesInstallment}
+              disabled={fieldsDisabled || eligibleInstallmentSubscriptions.length === 0}
+              onCheckedChange={(checked) => handleAdvanceInstallmentChange(checked === true)}
+            />
+            <div className="space-y-1">
+              <Label htmlFor="transaction-advances-installment" className="font-normal leading-snug">
+                Antecipar parcela
+              </Label>
+              <p className="text-xs leading-relaxed text-muted-foreground">
+                Registra o pagamento de uma parcela pendente. O valor vem do parcelamento
+                selecionado.
+              </p>
+              {eligibleInstallmentSubscriptions.length === 0 && (
+                <p className="text-xs leading-relaxed text-muted-foreground">
+                  Não há parcelamentos ativos com parcelas pendentes para este tipo.
+                </p>
+              )}
+            </div>
+          </div>
+
+          {advancesInstallment && (
+            <div className="grid min-w-0 gap-4 sm:grid-cols-2">
+              <InstallmentSubscriptionSearchField
+                subscriptions={eligibleInstallmentSubscriptions}
+                value={subscriptionId ?? ''}
+                onValueChange={(nextSubscriptionId) => {
+                  if (!nextSubscriptionId) {
+                    setValue('subscriptionId', '', { shouldValidate: true })
+                    setValue('installmentNumber', undefined, { shouldValidate: true })
+                    return
+                  }
+
+                  applyInstallmentSubscription(nextSubscriptionId)
+                }}
+                disabled={fieldsDisabled}
+                error={errors.subscriptionId?.message}
+              />
+
+              <div className="space-y-2">
+                <Label htmlFor="transaction-installment-number">Parcela</Label>
+                <Select
+                  value={installmentNumber ? String(installmentNumber) : ''}
+                  disabled={fieldsDisabled || !subscriptionId || advancableInstallmentNumbers.length === 0}
+                  modal={false}
+                  onValueChange={(value) => {
+                    if (!value) return
+                    setValue('installmentNumber', Number(value), { shouldValidate: true })
+                  }}
+                  items={advancableInstallmentNumbers.map((number) => ({
+                    value: String(number),
+                    label: `Parcela ${number}`,
+                  }))}
+                >
+                  <SelectTrigger id="transaction-installment-number" className="w-full rounded-xl">
+                    <SelectValue placeholder="Selecione a parcela…" />
+                  </SelectTrigger>
+                  <SelectContent align="start" sideOffset={4}>
+                    <SelectGroup>
+                      {advancableInstallmentNumbers.map((number) => (
+                        <SelectItem key={number} value={String(number)}>
+                          Parcela {number}
+                          {selectedInstallmentSubscription?.installmentTotal
+                            ? ` de ${selectedInstallmentSubscription.installmentTotal}`
+                            : ''}
+                        </SelectItem>
+                      ))}
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
+                {errors.installmentNumber && (
+                  <p className="text-sm text-destructive">{errors.installmentNumber.message}</p>
+                )}
+              </div>
+
+              {selectedInstallmentSubscription && (
+                <div className="sm:col-span-2">
+                  <p className="text-sm text-muted-foreground">
+                    Valor da parcela:{' '}
+                    <span className="font-medium tabular-nums text-foreground">
+                      {formatAccountBalance(selectedInstallmentSubscription.amount)}
+                    </span>
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
+      <div className={cn('grid min-w-0 gap-4', showAmountField && 'sm:grid-cols-2')}>
         <div className="space-y-2">
           <Label htmlFor="transaction-account">
             {isTransfer ? 'Conta de origem' : 'Conta'}
@@ -274,25 +467,27 @@ export function TransactionFormFields({
           )}
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="transaction-amount">Valor</Label>
-          <Controller
-            name="amount"
-            control={control}
-            render={({ field }) => (
-              <TransactionAmountInput
-                value={field.value}
-                onChange={(nextValue) => {
-                  field.onChange(nextValue)
-                }}
-                onBlur={field.onBlur}
-                disabled={fieldsDisabled}
-                type={type}
-              />
-            )}
-          />
-          {errors.amount && <p className="text-sm text-destructive">{errors.amount.message}</p>}
-        </div>
+        {showAmountField && (
+          <div className="space-y-2">
+            <Label htmlFor="transaction-amount">Valor</Label>
+            <Controller
+              name="amount"
+              control={control}
+              render={({ field }) => (
+                <TransactionAmountInput
+                  value={field.value}
+                  onChange={(nextValue) => {
+                    field.onChange(nextValue)
+                  }}
+                  onBlur={field.onBlur}
+                  disabled={fieldsDisabled}
+                  type={type}
+                />
+              )}
+            />
+            {errors.amount && <p className="text-sm text-destructive">{errors.amount.message}</p>}
+          </div>
+        )}
       </div>
 
       {isTransfer && (
@@ -330,7 +525,7 @@ export function TransactionFormFields({
         </div>
       )}
 
-      {!isTransfer && (
+      {!isTransfer && !advancesInstallment && (
         <div className="space-y-2">
           <Label htmlFor="transaction-category">Categoria (opcional)</Label>
           <Select
@@ -365,8 +560,9 @@ export function TransactionFormFields({
         </div>
       )}
 
-      <div className="space-y-2">
-        <Label htmlFor="transaction-description">Descrição (opcional)</Label>
+      {!isTransfer && !advancesInstallment && (
+        <div className="space-y-2">
+          <Label htmlFor="transaction-description">Descrição (opcional)</Label>
         <Textarea
           id="transaction-description"
           placeholder="Ex.: Supermercado, salário, aluguel..."
@@ -377,9 +573,10 @@ export function TransactionFormFields({
         {errors.description && (
           <p className="text-sm text-destructive">{errors.description.message}</p>
         )}
-      </div>
+        </div>
+      )}
 
-      {!isTransfer && (
+      {!isTransfer && !advancesInstallment && (
         <div className="space-y-3 border-t border-foreground/10 pt-4">
           <div className="flex items-start gap-2">
             <Checkbox

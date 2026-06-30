@@ -27,6 +27,4 @@ export interface CreateAccountDto {
   creditLimit?: number;
   /** Dia de fechamento da fatura (1–28) */
   invoiceClosingDay?: number;
-  /** Dia de vencimento da fatura (1–31) */
-  invoiceDueDay?: number;
 }

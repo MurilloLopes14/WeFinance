@@ -5,7 +5,8 @@
       "Bash(npm run *)",
       "Bash(npm install *)",
       "Bash(node_modules/.bin/tsc --noEmit)",
-      "Bash(npx drizzle-kit *)"
+      "Bash(npx drizzle-kit *)",
+      "Bash(npx jest *)"
     ]
   }
 }

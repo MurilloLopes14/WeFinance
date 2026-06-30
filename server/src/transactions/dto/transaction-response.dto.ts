@@ -84,6 +84,9 @@ export class TransactionResponseDto {
   @ApiPropertyOptional({ type: String, nullable: true })
   transferLinkId: string | null;
 
+  @ApiPropertyOptional({ type: String, nullable: true })
+  subscriptionId: string | null;
+
   @ApiPropertyOptional({ nullable: true })
   metadata: Record<string, unknown> | null;
 

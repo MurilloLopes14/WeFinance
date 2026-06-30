@@ -37,9 +37,4 @@ export interface UpdateAccountDto {
    * @nullable
    */
   invoiceClosingDay?: number | null;
-  /**
-   * Dia de vencimento da fatura (1–31). null para remover.
-   * @nullable
-   */
-  invoiceDueDay?: number | null;
 }

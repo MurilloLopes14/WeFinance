@@ -31,6 +31,8 @@ export interface TransactionResponseDto {
   /** @nullable */
   transferLinkId?: string | null;
   /** @nullable */
+  subscriptionId?: string | null;
+  /** @nullable */
   metadata?: TransactionResponseDtoMetadata;
   createdById: string;
   owner: TransactionOwnerDto;

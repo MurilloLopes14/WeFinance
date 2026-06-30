@@ -75,6 +75,7 @@ export const users = pgTable('users', {
   isActive: boolean('is_active').default(true).notNull(),
   avatarUrl: text('avatar_url'),
   onboarding: jsonb('onboarding'),
+  lastSeenReleaseNoteId: uuid('last_seen_release_note_id'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
@@ -195,6 +196,10 @@ export const transactions = pgTable('transactions', {
     (): AnyPgColumn => transactions.id,
     { onDelete: 'set null' },
   ),
+  subscriptionId: uuid('subscription_id').references(
+    (): AnyPgColumn => subscriptions.id,
+    { onDelete: 'set null' },
+  ),
   metadata: jsonb('metadata'),
   createdById: uuid('created_by_id').references(() => users.id).notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
@@ -235,6 +240,9 @@ export const subscriptions = pgTable('subscriptions', {
   cadenceEvery: integer('cadence_every').default(1).notNull(),
   nextRunAt: dateColumn('next_run_at').notNull(),
   active: boolean('active').default(true).notNull(),
+  isInstallment: boolean('is_installment').default(false).notNull(),
+  installmentTotal: integer('installment_total'),
+  generatedInstallments: jsonb('generated_installments').$type<number[]>().default([]).notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
@@ -317,6 +325,19 @@ export const categoryBudgets = pgTable(
   }),
 );
 
+// ─── Release Notes ───────────────────────────────────────────────────────────
+
+export const releaseNotes = pgTable('release_notes', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  version: varchar('version', { length: 20 }).notNull(),
+  title: varchar('title', { length: 200 }).notNull(),
+  content: text('content').notNull(),
+  publishedAt: timestamp('published_at'),
+  createdById: uuid('created_by_id').references(() => users.id, { onDelete: 'set null' }),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
 // ─── Relations ───────────────────────────────────────────────────────────────
 
 export const usersRelations = relations(users, ({ many }) => ({
@@ -357,7 +378,7 @@ export const categoryBudgetsRelations = relations(categoryBudgets, ({ one }) => 
   }),
 }));
 
-export const subscriptionsRelations = relations(subscriptions, ({ one }) => ({
+export const subscriptionsRelations = relations(subscriptions, ({ one, many }) => ({
   household: one(households, {
     fields: [subscriptions.householdId],
     references: [households.id],
@@ -370,6 +391,7 @@ export const subscriptionsRelations = relations(subscriptions, ({ one }) => ({
     fields: [subscriptions.categoryId],
     references: [categories.id],
   }),
+  installmentPayments: many(transactions),
 }));
 
 export const eventsRelations = relations(events, ({ one }) => ({
@@ -469,6 +491,10 @@ export const transactionsRelations = relations(transactions, ({ one, many }) => 
     fields: [transactions.transferLinkId],
     references: [transactions.id],
     relationName: 'transfer_mirror',
+  }),
+  subscription: one(subscriptions, {
+    fields: [transactions.subscriptionId],
+    references: [subscriptions.id],
   }),
   splits: many(transactionSplits),
 }));

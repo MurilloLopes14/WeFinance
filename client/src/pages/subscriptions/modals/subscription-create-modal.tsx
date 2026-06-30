@@ -90,6 +90,8 @@ export function SubscriptionCreateModal({ open, onOpenChange }: SubscriptionCrea
         cadenceEvery: values.cadenceEvery,
         nextRunAt: values.nextRunAt,
         active: values.active,
+        isInstallment: values.isInstallment,
+        installmentTotal: values.isInstallment ? values.installmentTotal : undefined,
       },
     })
   })

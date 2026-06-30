@@ -17,9 +17,6 @@ export interface CreditAccountSummaryDto {
   availableCredit: number;
   /** Início do ciclo atual */
   cycleStart: string;
-  /**
-   * Dia de vencimento da fatura
-   * @nullable
-   */
-  invoiceDueDay?: number | null;
+  /** Dia de vencimento (invoiceClosingDay + 7) */
+  invoiceDueDay: number;
 }

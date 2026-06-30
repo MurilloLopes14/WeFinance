@@ -20,9 +20,7 @@ export const transactionFormSchema = z
       CreateTransactionDtoType.income,
       CreateTransactionDtoType.transfer,
     ]),
-    amount: z
-      .number({ error: 'Informe um valor válido' })
-      .min(0.01, 'O valor deve ser maior que zero'),
+    amount: z.number({ error: 'Informe um valor válido' }),
     date: z
       .string()
       .trim()
@@ -45,6 +43,9 @@ export const transactionFormSchema = z
       .or(z.literal('')),
     splitMode: z.enum(transactionSplitModeValues),
     customSplits: z.array(customSplitEntrySchema),
+    advancesInstallment: z.boolean(),
+    subscriptionId: z.string().optional().or(z.literal('')),
+    installmentNumber: z.number().int().optional(),
   })
   .superRefine((values, context) => {
     if (values.type === 'transfer') {
@@ -62,6 +63,34 @@ export const transactionFormSchema = z
         })
       }
       return
+    }
+
+    if (values.advancesInstallment) {
+      if (!values.subscriptionId) {
+        context.addIssue({
+          code: 'custom',
+          path: ['subscriptionId'],
+          message: 'Selecione o parcelamento',
+        })
+      }
+
+      if (!values.installmentNumber || values.installmentNumber < 1) {
+        context.addIssue({
+          code: 'custom',
+          path: ['installmentNumber'],
+          message: 'Selecione a parcela a antecipar',
+        })
+      }
+
+      return
+    }
+
+    if (values.amount < 0.01) {
+      context.addIssue({
+        code: 'custom',
+        path: ['amount'],
+        message: 'O valor deve ser maior que zero',
+      })
     }
 
     if (values.hasPayee) {
@@ -130,6 +159,9 @@ export function createDefaultTransactionFormValues(
     payeeName: '',
     splitMode: 'none',
     customSplits: [],
+    advancesInstallment: false,
+    subscriptionId: '',
+    installmentNumber: undefined,
   }
 }
 
