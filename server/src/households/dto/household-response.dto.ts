@@ -21,8 +21,8 @@ export class HouseholdMemberResponseDto {
   @ApiProperty()
   userId: string;
 
-  @ApiProperty({ enum: ['owner', 'member'] })
-  role: 'owner' | 'member';
+  @ApiProperty({ enum: ['owner', 'moderator', 'member'] })
+  role: 'owner' | 'moderator' | 'member';
 
   @ApiProperty()
   splitValue: number;

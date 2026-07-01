@@ -29,6 +29,39 @@ export function formatAccountBalance(
   }).format(balance)
 }
 
+/** Valor enxuto para badges: 5k, 1,5m, 2b… */
+export function formatCompactAmount(value: number, locale = 'pt-BR'): string {
+  const abs = Math.abs(value)
+  const sign = value < 0 ? '-' : ''
+
+  if (abs < 1_000) {
+    return `${sign}${new Intl.NumberFormat(locale, { maximumFractionDigits: 0 }).format(abs)}`
+  }
+
+  const units = [
+    { threshold: 1_000_000_000, suffix: 'b' },
+    { threshold: 1_000_000, suffix: 'm' },
+    { threshold: 1_000, suffix: 'k' },
+  ] as const
+
+  for (const { threshold, suffix } of units) {
+    if (abs >= threshold) {
+      const scaled = abs / threshold
+      const formatted = new Intl.NumberFormat(locale, {
+        maximumFractionDigits: scaled >= 10 ? 0 : 1,
+      }).format(scaled)
+
+      return `${sign}${formatted}${suffix}`
+    }
+  }
+
+  return `${sign}${abs}`
+}
+
+export function formatAccountCreditLimitLabel(limit: number): string {
+  return `limite de ${formatCompactAmount(limit)}`
+}
+
 export function getAccountCurrency(
   account: AccountResponseDto,
   householdCurrencyById: Record<string, string | undefined>,

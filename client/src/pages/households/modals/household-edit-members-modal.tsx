@@ -3,7 +3,9 @@ import {
   getHouseholdsControllerFindMembersQueryKey,
   useHouseholdsControllerFindMembers,
   useHouseholdsControllerRemoveMember,
+  useHouseholdsControllerUpdateMemberRole,
 } from '@/api/generated/households/households'
+import { UpdateMemberRoleDtoRole } from '@/api/generated/models/updateMemberRoleDtoRole'
 import { HouseholdInviteCodePanel } from '@/components/households/household-invite-code-panel'
 import {
   FormDialogContent,
@@ -25,6 +27,13 @@ import {
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import {
   Dialog,
   DialogDescription,
@@ -51,13 +60,26 @@ type HouseholdEditMembersModalProps = {
 
 type MemberRowProps = {
   member: HouseholdMemberResponseDto
-  canRemove: boolean
+  canManage: boolean
   isRemoving: boolean
+  isUpdatingRole: boolean
   onRemove: (member: HouseholdMemberResponseDto) => void
+  onRoleChange: (
+    member: HouseholdMemberResponseDto,
+    role: typeof UpdateMemberRoleDtoRole.moderator | typeof UpdateMemberRoleDtoRole.member,
+  ) => void
 }
 
-function MemberRow({ member, canRemove, isRemoving, onRemove }: MemberRowProps) {
-  const showRemove = canRemove && member.role !== 'owner'
+function MemberRow({
+  member,
+  canManage,
+  isRemoving,
+  isUpdatingRole,
+  onRemove,
+  onRoleChange,
+}: MemberRowProps) {
+  const showRemove = canManage && member.role !== 'owner'
+  const showRoleSelect = canManage && member.role !== 'owner'
 
   return (
     <div className="glass-subtle flex items-center gap-3 rounded-xl px-3 py-2.5 ring-1 ring-foreground/10">
@@ -72,12 +94,43 @@ function MemberRow({ member, canRemove, isRemoving, onRemove }: MemberRowProps) 
         <p className="truncate text-xs text-muted-foreground">{member.user.email}</p>
       </div>
 
-      <Badge
-        variant={member.role === 'owner' ? 'default' : 'secondary'}
-        className="shrink-0 rounded-md text-[10px]"
-      >
-        {getHouseholdMemberRoleLabel(member.role)}
-      </Badge>
+      {showRoleSelect ? (
+        <Select
+          value={member.role}
+          disabled={isUpdatingRole}
+          onValueChange={(value) =>
+            onRoleChange(
+              member,
+              value as
+                | typeof UpdateMemberRoleDtoRole.moderator
+                | typeof UpdateMemberRoleDtoRole.member,
+            )
+          }
+        >
+          <SelectTrigger
+            size="sm"
+            className="h-7 w-30 shrink-0 rounded-md text-xs"
+            aria-label={`Cargo de ${member.user.name}`}
+          >
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value={UpdateMemberRoleDtoRole.moderator}>
+              {getHouseholdMemberRoleLabel('moderator')}
+            </SelectItem>
+            <SelectItem value={UpdateMemberRoleDtoRole.member}>
+              {getHouseholdMemberRoleLabel('member')}
+            </SelectItem>
+          </SelectContent>
+        </Select>
+      ) : (
+        <Badge
+          variant={member.role === 'owner' ? 'default' : 'secondary'}
+          className="shrink-0 rounded-md text-[10px]"
+        >
+          {getHouseholdMemberRoleLabel(member.role)}
+        </Badge>
+      )}
 
       {showRemove && (
         <Button
@@ -153,6 +206,36 @@ export function HouseholdEditMembersModal({
     },
   })
 
+  const [updatingRoleMemberId, setUpdatingRoleMemberId] = useState<string | null>(null)
+
+  const updateMemberRoleMutation = useHouseholdsControllerUpdateMemberRole({
+    mutation: {
+      onSuccess: async () => {
+        await invalidateHouseholdData()
+        toast.success('Cargo atualizado')
+        setUpdatingRoleMemberId(null)
+      },
+      onError: (error) => {
+        toast.error(getApiErrorMessage(error, 'Não foi possível alterar o cargo'))
+        setUpdatingRoleMemberId(null)
+      },
+    },
+  })
+
+  const handleRoleChange = (
+    member: HouseholdMemberResponseDto,
+    role: typeof UpdateMemberRoleDtoRole.moderator | typeof UpdateMemberRoleDtoRole.member,
+  ) => {
+    if (!householdId || member.role === role) return
+
+    setUpdatingRoleMemberId(member.id)
+    updateMemberRoleMutation.mutate({
+      id: householdId,
+      memberId: member.id,
+      data: { role },
+    })
+  }
+
   const handleConfirmRemove = () => {
     if (!householdId || !memberToRemove) return
 
@@ -222,9 +305,11 @@ export function HouseholdEditMembersModal({
                     <MemberRow
                       key={member.id}
                       member={member}
-                      canRemove={isOwner}
+                      canManage={isOwner}
                       isRemoving={removingMemberId === member.id}
+                      isUpdatingRole={updatingRoleMemberId === member.id}
                       onRemove={setMemberToRemove}
+                      onRoleChange={handleRoleChange}
                     />
                   ))
                 )}

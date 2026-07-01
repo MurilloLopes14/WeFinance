@@ -6,7 +6,6 @@ import {
   useTransactionsControllerRemove,
 } from '@/api/generated/transactions/transactions'
 import type { TransactionResponseDto } from '@/api/generated/models/transactionResponseDto'
-import { InsightsSection } from '@/components/insights/insights-section'
 import { ObjectDeleteConfirmDialog } from '@/components/object/object-delete-confirm-dialog'
 import { TransactionHeader, type TransactionFilters } from '@/components/transactions/transaction-header'
 import { TransactionTableSkeleton } from '@/components/transactions/transaction-table-skeleton'
@@ -18,12 +17,10 @@ import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import { useTransactionCreate } from '@/contexts/transaction-create-context'
 import { useAuthSession } from '@/hooks/use-auth-session'
-import { useHouseholdInsights } from '@/hooks/use-household-insights'
 import { getApiErrorMessage } from '@/lib/get-api-error-message'
 import { householdsListParams } from '@/lib/household-api-helpers'
 import { buildTransactionListParams, invalidateTransactionDependentQueries } from '@/lib/transaction-api-helpers'
-import { formatInsightMonthLabel } from '@/lib/insight-helpers'
-import { canMutateTransaction, getCurrentMonthParam, getTransactionTypeLabel } from '@/lib/transaction-helpers'
+import { canMutateTransaction, getTransactionTypeLabel } from '@/lib/transaction-helpers'
 import { TransactionEditModal } from '@/pages/transactions/modals/transaction-edit-modal'
 import { ArrowLeftRight, SearchX, Users } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useState } from 'react'
@@ -119,21 +116,6 @@ export function TransactionPage() {
     [households, selectedHouseholdId],
   )
 
-  const insightsMonth = filters.month || getCurrentMonthParam()
-
-  const {
-    insights,
-    month: insightsReferenceMonth,
-    isLoading: isLoadingInsights,
-    isError: isInsightsError,
-    refetch: refetchInsights,
-  } = useHouseholdInsights({
-    householdId: selectedHouseholdId,
-    householdName: selectedHousehold?.name,
-    month: insightsMonth,
-    enabled: Boolean(selectedHouseholdId),
-  })
-
   const accountNameById = useMemo(
     () => Object.fromEntries((accounts ?? []).map((account) => [account.id, account.name])),
     [accounts],
@@ -164,7 +146,6 @@ export function TransactionPage() {
   const refetch = () => {
     void refetchHouseholds()
     void refetchTransactions()
-    void refetchInsights()
   }
 
   const handleFiltersChange = (nextFilters: TransactionFilters) => {
@@ -220,21 +201,6 @@ export function TransactionPage() {
           onClick: () => openCreate(selectedHouseholdId),
         }}
       />
-
-      {hasAnyHousehold && (
-        <InsightsSection
-          insights={insights}
-          month={insightsReferenceMonth}
-          isLoading={isLoadingInsights}
-          isError={isInsightsError}
-          description={`Análises do grupo selecionado para ${formatInsightMonthLabel(insightsMonth)}.`}
-          layout="compact"
-          tourAnchor="transactions-insights"
-          onRetry={() => {
-            void refetchInsights()
-          }}
-        />
-      )}
 
       {hasAnyHousehold && currentUser ? (
         <div className="flex w-fit items-center gap-2.5 rounded-xl border border-border/60 bg-muted/30 px-3 py-2">

@@ -31,7 +31,8 @@ import type {
   HouseholdsControllerFindAllParams,
   InviteCodeResponseDto,
   JoinHouseholdDto,
-  UpdateHouseholdDto
+  UpdateHouseholdDto,
+  UpdateMemberRoleDto
 } from '.././models';
 
 import { customInstance } from '../../axios-instance';
@@ -728,6 +729,71 @@ export function useHouseholdsControllerFindMembers<TData = Awaited<ReturnType<ty
 
 
 /**
+ * @summary Alterar cargo de um membro (somente proprietário)
+ */
+export const householdsControllerUpdateMemberRole = (
+    id: string,
+    memberId: string,
+    updateMemberRoleDto: BodyType<UpdateMemberRoleDto>,
+ options?: SecondParameter<typeof customInstance>,) => {
+      
+      
+      return customInstance<HouseholdMemberResponseDto>(
+      {url: `/api/v1/households/${id}/members/${memberId}/role`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: updateMemberRoleDto
+    },
+      options);
+    }
+  
+
+
+export const getHouseholdsControllerUpdateMemberRoleMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof householdsControllerUpdateMemberRole>>, TError,{id: string;memberId: string;data: BodyType<UpdateMemberRoleDto>}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof householdsControllerUpdateMemberRole>>, TError,{id: string;memberId: string;data: BodyType<UpdateMemberRoleDto>}, TContext> => {
+
+const mutationKey = ['householdsControllerUpdateMemberRole'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof householdsControllerUpdateMemberRole>>, {id: string;memberId: string;data: BodyType<UpdateMemberRoleDto>}> = (props) => {
+          const {id,memberId,data} = props ?? {};
+
+          return  householdsControllerUpdateMemberRole(id,memberId,data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type HouseholdsControllerUpdateMemberRoleMutationResult = NonNullable<Awaited<ReturnType<typeof householdsControllerUpdateMemberRole>>>
+    export type HouseholdsControllerUpdateMemberRoleMutationBody = BodyType<UpdateMemberRoleDto>
+    export type HouseholdsControllerUpdateMemberRoleMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Alterar cargo de um membro (somente proprietário)
+ */
+export const useHouseholdsControllerUpdateMemberRole = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof householdsControllerUpdateMemberRole>>, TError,{id: string;memberId: string;data: BodyType<UpdateMemberRoleDto>}, TContext>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof householdsControllerUpdateMemberRole>>,
+        TError,
+        {id: string;memberId: string;data: BodyType<UpdateMemberRoleDto>},
+        TContext
+      > => {
+
+      const mutationOptions = getHouseholdsControllerUpdateMemberRoleMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    /**
  * @summary Remover membro do grupo familiar (somente proprietário)
  */
 export const householdsControllerRemoveMember = (

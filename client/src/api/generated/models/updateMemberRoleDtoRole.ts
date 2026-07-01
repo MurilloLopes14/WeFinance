@@ -6,12 +6,11 @@
  * OpenAPI spec version: 1.0
  */
 
-export type HouseholdMemberResponseDtoRole = typeof HouseholdMemberResponseDtoRole[keyof typeof HouseholdMemberResponseDtoRole];
+export type UpdateMemberRoleDtoRole = typeof UpdateMemberRoleDtoRole[keyof typeof UpdateMemberRoleDtoRole];
 
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
-export const HouseholdMemberResponseDtoRole = {
-  owner: 'owner',
+export const UpdateMemberRoleDtoRole = {
   moderator: 'moderator',
   member: 'member',
 } as const;

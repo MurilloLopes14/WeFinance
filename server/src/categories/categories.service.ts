@@ -30,7 +30,7 @@ export class CategoriesService {
     requesterId: string,
     dto: CreateCategoryDto,
   ): Promise<CategoryResponseDto> {
-    await this.householdsService.assertOwner(householdId, requesterId);
+    await this.householdsService.assertAtLeastModerator(householdId, requesterId);
 
     if (dto.parentId) {
       await this.findCategory(householdId, dto.parentId);
@@ -99,7 +99,7 @@ export class CategoriesService {
     requesterId: string,
     dto: UpdateCategoryDto,
   ): Promise<CategoryResponseDto> {
-    await this.householdsService.assertOwner(householdId, requesterId);
+    await this.householdsService.assertAtLeastModerator(householdId, requesterId);
     await this.findCategory(householdId, categoryId);
 
     if (dto.isFixed === true) {
@@ -161,7 +161,7 @@ export class CategoriesService {
     categoryId: string,
     requesterId: string,
   ): Promise<void> {
-    await this.householdsService.assertOwner(householdId, requesterId);
+    await this.householdsService.assertAtLeastModerator(householdId, requesterId);
     await this.findCategory(householdId, categoryId);
 
     const [child] = await this.db

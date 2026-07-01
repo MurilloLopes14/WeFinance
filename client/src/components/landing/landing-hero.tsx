@@ -49,11 +49,20 @@ export function LandingHero() {
       <LandingAudiences />
 
       <FadeIn delay={400}>
-        <div className="mt-8 flex w-full flex-col gap-3 sm:mt-10 sm:w-auto sm:flex-row sm:items-center">
+        <div className="mt-8 flex w-full flex-col gap-3 sm:mt-10 sm:w-auto sm:flex-row sm:flex-wrap sm:items-center">
           <Link to="/register" className="w-full sm:w-auto">
             <Button size="lg" className="glow-primary h-11 w-full rounded-xl px-6 sm:min-w-[13rem]">
               Criar conta gratuita
               <ArrowRight className="size-4" />
+            </Button>
+          </Link>
+          <Link to="/login" className="w-full sm:w-auto">
+            <Button
+              variant="outline"
+              size="lg"
+              className="glass-interactive h-11 w-full rounded-xl px-6 sm:min-w-[13rem]"
+            >
+              Entrar
             </Button>
           </Link>
           <a href="#funcionalidades" className="w-full sm:w-auto">

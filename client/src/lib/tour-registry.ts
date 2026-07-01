@@ -25,14 +25,22 @@ const tourRegistry: Record<TourKey, Step[]> = {
     {
       target: '[data-tour="tour-sidebar"]',
       title: 'Menu lateral',
-      content: 'Navegue entre Dashboard, Transações e a gestão do grupo. A Central de Ajuda está em Sistema para um guia completo do WeFinance.',
+      content:
+        'Navegue pela guia Principal, gestão do grupo e configurações. A Central de Ajuda está em Sistema.',
+      placement: 'right',
+      skipBeacon: true,
+    },
+    {
+      target: '[data-tour="tour-nav-dashboard"]',
+      title: 'Dashboard',
+      content: 'Visão geral com indicadores, gráficos, insights e calendário financeiro.',
       placement: 'right',
       skipBeacon: true,
     },
     {
       target: '[data-tour="tour-nav-transactions"]',
       title: 'Transações',
-      content: 'Registre despesas, receitas e transferências do household.',
+      content: 'Liste, filtre e gerencie todas as movimentações do grupo.',
       placement: 'right',
       skipBeacon: true,
     },
@@ -52,8 +60,8 @@ const tourRegistry: Record<TourKey, Step[]> = {
     },
     {
       target: '[data-tour="dashboard-header"]',
-      title: 'Dashboard',
-      content: 'Visão geral das finanças pessoais e do grupo no mês selecionado.',
+      title: 'Visão geral',
+      content: 'Indicadores, gráficos e insights do grupo no mês selecionado.',
       placement: 'bottom',
       skipBeacon: true,
     },
@@ -78,6 +86,14 @@ const tourRegistry: Record<TourKey, Step[]> = {
       placement: 'top',
       skipBeacon: true,
     },
+    {
+      target: '[data-tour="dashboard-insights"]',
+      title: 'Insights',
+      content:
+        'Alertas e análises automáticas do grupo — orçamentos, tendências e oportunidades no período.',
+      placement: 'bottom',
+      skipBeacon: true,
+    },
   ],
 
   transactions: [
@@ -92,13 +108,6 @@ const tourRegistry: Record<TourKey, Step[]> = {
       target: '[data-tour="transactions-toolbar"]',
       title: 'Busca e filtros',
       content: 'Refine a listagem ou exporte o período em CSV.',
-      placement: 'bottom',
-      skipBeacon: true,
-    },
-    {
-      target: '[data-tour="transactions-insights"]',
-      title: 'Insights',
-      content: 'Alertas e análises automáticas do grupo — orçamentos estourados, tendências e oportunidades de economia no período filtrado.',
       placement: 'bottom',
       skipBeacon: true,
     },

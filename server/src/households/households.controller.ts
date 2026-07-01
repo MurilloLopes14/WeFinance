@@ -25,6 +25,7 @@ import { CreateHouseholdDto } from './dto/create-household.dto';
 import { UpdateHouseholdDto } from './dto/update-household.dto';
 import { JoinHouseholdDto } from './dto/join-household.dto';
 import { InviteCodeResponseDto } from './dto/invite-code-response.dto';
+import { UpdateMemberRoleDto } from './dto/update-member-role.dto';
 import {
   HouseholdMemberResponseDto,
   HouseholdResponseDto,
@@ -134,6 +135,18 @@ export class HouseholdsController {
     @CurrentUser() user: AuthenticatedUser,
   ) {
     return this.householdsService.findMembers(id, user.id);
+  }
+
+  @Patch(':id/members/:memberId/role')
+  @ApiOperation({ summary: 'Alterar cargo de um membro (somente proprietário)' })
+  @ApiResponse({ status: 200, type: HouseholdMemberResponseDto })
+  updateMemberRole(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Param('memberId', ParseUUIDPipe) memberId: string,
+    @Body() dto: UpdateMemberRoleDto,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    return this.householdsService.updateMemberRole(id, user.id, memberId, dto.role);
   }
 
   @Delete(':id/members/:memberId')

@@ -18,7 +18,7 @@ import { relations } from 'drizzle-orm';
 // ─── Enums ───────────────────────────────────────────────────────────────────
 
 export const userRoleEnum = pgEnum('user_role', ['admin', 'member']);
-export const householdRoleEnum = pgEnum('household_role', ['owner', 'member']);
+export const householdRoleEnum = pgEnum('household_role', ['owner', 'moderator', 'member']);
 export const splitTypeEnum = pgEnum('split_type', ['equal', 'percent']);
 export const accountTypeEnum = pgEnum('account_type', [
   'checking',

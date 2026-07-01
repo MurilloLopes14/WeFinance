@@ -95,11 +95,9 @@ export function AppSidebar() {
                   size="lg"
                   render={<NavLink to="/dashboard" onClick={closeMobileSidebar} />}
                   className="min-w-0 flex-1"
+                  aria-label="WeFinance — Dashboard"
                 >
                   <AppLogo />
-                  <span className="font-heading font-semibold group-data-[collapsible=icon]:hidden">
-                    WeFinance
-                  </span>
                 </SidebarMenuButton>
                 <Button
                   type="button"
@@ -123,10 +121,21 @@ export function AppSidebar() {
           <SidebarGroupContent>
             <SidebarMenu>
               {dashboardMainNav.map((item) => (
-                <SidebarMenuItem key={item.url} data-tour="tour-nav-transactions">
+                <SidebarMenuItem
+                  key={item.url}
+                  {...(item.url === '/dashboard'
+                    ? { 'data-tour': 'tour-nav-dashboard' }
+                    : item.url === '/dashboard/transacoes'
+                      ? { 'data-tour': 'tour-nav-transactions' }
+                      : {})}
+                >
                   <SidebarMenuButton
                     render={<NavLink to={item.url} onClick={closeMobileSidebar} />}
-                    isActive={location.pathname === item.url}
+                    isActive={
+                      item.url === '/dashboard'
+                        ? location.pathname === '/dashboard'
+                        : location.pathname === item.url
+                    }
                     tooltip={item.title}
                     className="text-base [&_svg]:size-4.5"
                   >

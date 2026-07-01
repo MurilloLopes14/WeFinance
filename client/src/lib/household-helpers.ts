@@ -21,10 +21,19 @@ export function getHouseholdOwnerFromList(
   return members.find((member) => member.userId === userId)
 }
 
+const HOUSEHOLD_MEMBER_ROLE_LABELS: Record<
+  HouseholdMemberResponseDto['role'],
+  string
+> = {
+  owner: 'Proprietário',
+  moderator: 'Moderador',
+  member: 'Membro',
+}
+
 export function getHouseholdMemberRoleLabel(
   role: HouseholdMemberResponseDto['role'],
 ): string {
-  return role === 'owner' ? 'Proprietário' : 'Membro'
+  return HOUSEHOLD_MEMBER_ROLE_LABELS[role]
 }
 
 export function getUserInitials(name: string): string {

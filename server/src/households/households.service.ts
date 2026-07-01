@@ -237,6 +237,57 @@ export class HouseholdsService {
     }
   }
 
+  async assertAtLeastModerator(householdId: string, userId: string): Promise<void> {
+    await this.findHousehold(householdId);
+    const record = await this.findMemberRecord(householdId, userId);
+
+    if (!record || (record.role !== 'owner' && record.role !== 'moderator')) {
+      throw new ForbiddenException('É necessário ser moderador ou proprietário para realizar esta ação');
+    }
+  }
+
+  async updateMemberRole(
+    householdId: string,
+    requesterId: string,
+    memberId: string,
+    role: 'moderator' | 'member',
+  ): Promise<HouseholdMemberResponseDto> {
+    await this.assertOwner(householdId, requesterId);
+
+    const [target] = await this.db
+      .select()
+      .from(householdMembers)
+      .where(
+        and(
+          eq(householdMembers.id, memberId),
+          eq(householdMembers.householdId, householdId),
+        ),
+      )
+      .limit(1);
+
+    if (!target) {
+      throw new NotFoundException(`Membro "${memberId}" não encontrado neste grupo familiar`);
+    }
+
+    if (target.role === 'owner') {
+      throw new ForbiddenException('Não é possível alterar o cargo do proprietário');
+    }
+
+    const [updated] = await this.db
+      .update(householdMembers)
+      .set({ role })
+      .where(eq(householdMembers.id, memberId))
+      .returning();
+
+    const [user] = await this.db
+      .select({ id: users.id, name: users.name, email: users.email })
+      .from(users)
+      .where(eq(users.id, updated.userId))
+      .limit(1);
+
+    return this.formatMember(updated, user);
+  }
+
   // ─── Private helpers ──────────────────────────────────────────────────────
 
   private async findHousehold(id: string): Promise<Household> {

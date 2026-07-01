@@ -31,7 +31,7 @@ export class AccountsService {
     requesterId: string,
     dto: CreateAccountDto,
   ): Promise<AccountResponseDto> {
-    await this.householdsService.assertOwner(householdId, requesterId);
+    await this.householdsService.assertAtLeastModerator(householdId, requesterId);
 
     if (dto.userId) {
       await this.assertUserIsMember(householdId, dto.userId);
@@ -99,7 +99,7 @@ export class AccountsService {
     requesterId: string,
     dto: UpdateAccountDto,
   ): Promise<AccountResponseDto> {
-    await this.householdsService.assertOwner(householdId, requesterId);
+    await this.householdsService.assertAtLeastModerator(householdId, requesterId);
     await this.findAccount(householdId, accountId);
 
     if (dto.userId !== undefined && dto.userId !== null) {
@@ -143,7 +143,7 @@ export class AccountsService {
     accountId: string,
     requesterId: string,
   ): Promise<void> {
-    await this.householdsService.assertOwner(householdId, requesterId);
+    await this.householdsService.assertAtLeastModerator(householdId, requesterId);
     await this.findAccount(householdId, accountId);
 
     await this.db

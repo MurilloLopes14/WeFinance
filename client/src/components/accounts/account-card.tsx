@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge'
 import { Card, CardTitle } from '@/components/ui/card'
 import {
   formatAccountBalance,
+  formatAccountCreditLimitLabel,
   getAccountCurrency,
   getAccountTypeLabel,
 } from '@/lib/account-helpers'
@@ -85,6 +86,16 @@ export function AccountCard({
             <CardTitle className="min-w-0 truncate text-base leading-snug font-medium">
               {account.name}
             </CardTitle>
+            {isCredit && account.creditLimit != null ? (
+              <Badge
+                variant="outline"
+                className={cn(accountBadgeClassName, 'max-w-[46%] shrink-0 truncate')}
+              >
+                <SensitiveValue className="tabular-nums">
+                  {formatAccountCreditLimitLabel(account.creditLimit)}
+                </SensitiveValue>
+              </Badge>
+            ) : null}
             {account.user?.name ? (
               <Badge
                 variant="outline"
@@ -117,17 +128,6 @@ export function AccountCard({
             <Badge variant="secondary" className={accountBadgeClassName}>
               {getAccountTypeLabel(account.type)}
             </Badge>
-            {isCredit && account.creditLimit != null ? (
-              <Badge
-                variant="outline"
-                className={cn(accountBadgeClassName, 'max-w-[38%] truncate')}
-              >
-                Limite{' '}
-                <SensitiveValue className="tabular-nums">
-                  {formatAccountBalance(account.creditLimit, currency)}
-                </SensitiveValue>
-              </Badge>
-            ) : null}
             {isCredit && account.invoiceClosingDay != null ? (
               <Badge variant="outline" className={accountBadgeClassName}>
                 Fecha dia {account.invoiceClosingDay}

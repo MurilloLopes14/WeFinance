@@ -22,8 +22,11 @@ export type TourKey = (typeof TOUR_KEYS)[number]
 
 const pathToTourKey: Record<string, TourKey> = {
   '/dashboard': 'dashboard',
+  '/dashboard/transacoes': 'transactions',
   ...Object.fromEntries(
-    dashboardMainNav.map((item) => [item.url, pathSegmentToTourKey(item.url)]),
+    dashboardMainNav
+      .filter((item) => item.url !== '/dashboard' && item.url !== '/dashboard/transacoes')
+      .map((item) => [item.url, pathSegmentToTourKey(item.url)]),
   ),
   ...Object.fromEntries(
     dashboardGroupsNav.items.map((item) => [item.url, pathSegmentToTourKey(item.url)]),

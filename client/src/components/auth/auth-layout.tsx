@@ -17,10 +17,10 @@ export function AuthLayout({ children, className }: AuthLayoutProps) {
       <header className="relative z-10 mx-auto flex w-full max-w-lg items-center justify-between">
         <Link
           to="/"
-          className="glass-interactive flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium"
+          className="glass-interactive flex items-center rounded-xl px-3 py-2"
+          aria-label="WeFinance"
         >
           <AppBrandMark />
-          <span className="font-heading">WeFinance</span>
         </Link>
       </header>
 

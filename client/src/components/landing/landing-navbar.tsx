@@ -49,13 +49,11 @@ export function LandingNavbar() {
       <PageContainer as="nav" className="flex items-center justify-between gap-3">
         <Link
           to="/"
-          className="group flex min-w-0 items-center gap-2 sm:gap-2.5"
+          className="group flex min-w-0 items-center"
+          aria-label="WeFinance"
           onClick={closeMobileMenu}
         >
           <AppBrandMark size="md" />
-          <span className="truncate font-heading text-base font-semibold tracking-tight sm:text-lg">
-            We<span className="text-gradient">Finance</span>
-          </span>
         </Link>
 
         <div className="hidden items-center gap-6 lg:gap-8 md:flex">

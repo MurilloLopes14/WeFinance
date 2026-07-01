@@ -6,6 +6,7 @@ import { PrivacyModeProvider } from '@/contexts/privacy-mode-context'
 import { ReleaseNotesGate } from '@/components/release-notes/release-notes-gate'
 import { AppTourProvider } from '@/components/tour/app-tour-provider'
 import { DashboardPageTransition } from '@/layouts/dashboard-page-transition'
+import { NavLink } from 'react-router-dom'
 export function DashboardLayout() {
   return (
     <SidebarProvider className="dashboard-shell">
@@ -17,9 +18,13 @@ export function DashboardLayout() {
         <SidebarInset className="min-h-0 flex-1">
           <header className="dashboard-mobile-topbar flex shrink-0 items-center gap-3 px-4 md:hidden">
             <SidebarTrigger className="size-9 rounded-xl" aria-label="Abrir menu" />
-            <div className="flex min-w-0 items-center gap-2">
+            <NavLink
+              to="/dashboard"
+              className="flex min-w-0 items-center"
+              aria-label="WeFinance — Dashboard"
+            >
               <AppBrandMark />
-              <span className="truncate font-heading text-base font-semibold text-inherit">WeFinance</span>            </div>
+            </NavLink>
           </header>
           <div className="flex h-full min-h-0 flex-1 flex-col p-4 pb-safe-inset md:p-6">
             <DashboardPageTransition />

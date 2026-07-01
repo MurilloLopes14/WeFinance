@@ -54,7 +54,9 @@ export function AppRouter() {
               element={<Navigate to="/dashboard/fixos" replace />}
             />
 
-            {dashboardMainNav.map((item) => (
+            {dashboardMainNav
+              .filter((item) => item.url !== '/dashboard')
+              .map((item) => (
               <Route
                 key={item.url}
                 path={item.url.replace('/dashboard/', '')}

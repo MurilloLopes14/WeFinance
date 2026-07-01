@@ -43,7 +43,7 @@ export class SubscriptionsService {
     requesterId: string,
     dto: CreateSubscriptionDto,
   ): Promise<SubscriptionResponseDto> {
-    await this.householdsService.assertOwner(householdId, requesterId);
+    await this.householdsService.assertAtLeastModerator(householdId, requesterId);
     await this.assertAccountBelongsToHousehold(householdId, dto.accountId);
 
     if (dto.categoryId) {
@@ -116,7 +116,7 @@ export class SubscriptionsService {
     requesterId: string,
     dto: UpdateSubscriptionDto,
   ): Promise<SubscriptionResponseDto> {
-    await this.householdsService.assertOwner(householdId, requesterId);
+    await this.householdsService.assertAtLeastModerator(householdId, requesterId);
     await this.findSubscription(householdId, subId);
 
     if (dto.accountId) {
@@ -170,7 +170,7 @@ export class SubscriptionsService {
     subId: string,
     requesterId: string,
   ): Promise<void> {
-    await this.householdsService.assertOwner(householdId, requesterId);
+    await this.householdsService.assertAtLeastModerator(householdId, requesterId);
     await this.findSubscription(householdId, subId);
 
     await this.db
@@ -197,7 +197,7 @@ export class SubscriptionsService {
     subId: string,
     requesterId: string,
   ): Promise<SubscriptionResponseDto> {
-    await this.householdsService.assertOwner(householdId, requesterId);
+    await this.householdsService.assertAtLeastModerator(householdId, requesterId);
     const sub = await this.findSubscription(householdId, subId);
     const updated = await this.executeSubscription(sub, requesterId);
     return this.format(updated);

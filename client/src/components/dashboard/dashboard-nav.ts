@@ -6,6 +6,7 @@ import {
   FolderKanban,
   HelpCircle,
   Landmark,
+  LayoutDashboard,
   PieChart,
   PiggyBank,
   ScrollText,
@@ -28,6 +29,11 @@ export type DashboardNavGroup = {
 }
 
 export const dashboardMainNav: DashboardNavItem[] = [
+  {
+    title: 'Dashboard',
+    url: '/dashboard',
+    icon: LayoutDashboard,
+  },
   {
     title: 'Transações',
     url: '/dashboard/transacoes',

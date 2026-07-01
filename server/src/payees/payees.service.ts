@@ -86,7 +86,7 @@ export class PayeesService {
     requesterId: string,
     dto: UpdatePayeeDto,
   ): Promise<PayeeResponseDto> {
-    await this.householdsService.assertOwner(householdId, requesterId);
+    await this.householdsService.assertMember(householdId, requesterId);
     await this.findPayee(householdId, payeeId);
 
     if (dto.defaultCategoryId) {
@@ -124,7 +124,7 @@ export class PayeesService {
     payeeId: string,
     requesterId: string,
   ): Promise<void> {
-    await this.householdsService.assertOwner(householdId, requesterId);
+    await this.householdsService.assertMember(householdId, requesterId);
     await this.findPayee(householdId, payeeId);
 
     await this.db

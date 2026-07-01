@@ -73,7 +73,7 @@ export class TransactionsService {
     let targetInstallmentNumber: number | null = null;
 
     if (dto.subscriptionId) {
-      await this.householdsService.assertOwner(householdId, requesterId);
+      await this.householdsService.assertAtLeastModerator(householdId, requesterId);
       const { sub, targetNumber } = await this.validateInstallmentSubscription(
         householdId,
         dto.subscriptionId,
@@ -470,7 +470,7 @@ export class TransactionsService {
     txId: string,
     requesterId: string,
   ): Promise<TransactionResponseDto> {
-    await this.householdsService.assertOwner(householdId, requesterId);
+    await this.householdsService.assertAtLeastModerator(householdId, requesterId);
     const existing = await this.findTransaction(txId, householdId);
 
     if (existing.status === 'reconciled') {

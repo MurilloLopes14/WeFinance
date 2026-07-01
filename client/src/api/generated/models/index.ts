@@ -133,6 +133,8 @@ export * from './updateCategoryDtoMonthlyBudget';
 export * from './updateHouseholdDto';
 export * from './updateHouseholdDtoDefaultSplitType';
 export * from './updateHouseholdDtoMonthlyBudget';
+export * from './updateMemberRoleDto';
+export * from './updateMemberRoleDtoRole';
 export * from './updateOnboardingDto';
 export * from './updateOnboardingDtoCompletedToursItem';
 export * from './updateOnboardingDtoDismissedToursItem';
