@@ -64,6 +64,8 @@ export function DashboardPerspectiveTabs({
                 }
               : undefined
           }
+          includeToBePaidCard
+          toBePaid={personalSummary?.toBeSpent ?? 0}
           currency={currency}
           isLoading={isLoading}
         />
