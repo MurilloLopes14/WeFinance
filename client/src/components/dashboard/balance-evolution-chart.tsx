@@ -188,6 +188,7 @@ export function BalanceEvolutionChart({
               strokeWidth={2}
               dot={isDaily ? false : { r: 3 }}
               activeDot={{ r: isDaily ? 4 : 5 }}
+              isAnimationActive={false}
             />
           </LineChart>
         </ChartContainer>

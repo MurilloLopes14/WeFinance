@@ -20,7 +20,7 @@ export function AuthLayout({ children, className }: AuthLayoutProps) {
           className="glass-interactive flex items-center rounded-xl px-3 py-2"
           aria-label="WeFinance"
         >
-          <AppBrandMark />
+          <AppBrandMark animated />
         </Link>
       </header>
 

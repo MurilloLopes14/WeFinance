@@ -117,6 +117,7 @@ export function CategoryDonutChart({
                 outerRadius="82%"
                 paddingAngle={2}
                 strokeWidth={0}
+                isAnimationActive={false}
               >
                 {slices.map((slice) => (
                   <Cell key={slice.key} fill={slice.fill} />

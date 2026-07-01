@@ -266,12 +266,10 @@
 @keyframes glow-pulse {
   0%,
   100% {
-    opacity: 0.65;
-    filter: blur(40px);
+    opacity: 0.55;
   }
   50% {
-    opacity: 1;
-    filter: blur(52px);
+    opacity: 0.95;
   }
 }
 
@@ -410,6 +408,11 @@
     animation: var(--animate-mesh-drift);
   }
 
+  /* Mesh invisível atrás do dashboard — não animar */
+  body:has(.dashboard-shell)::after {
+    animation: none;
+  }
+
   /* subtle grain for depth */
   #root {
     isolation: isolate;
@@ -458,8 +461,6 @@
 
   .dashboard-shell [data-sidebar="sidebar"] {
     background: var(--sidebar);
-    backdrop-filter: blur(16px) saturate(1.2);
-    -webkit-backdrop-filter: blur(16px) saturate(1.2);
   }
 
   .dashboard-shell [data-slot="sidebar-inset"] {
@@ -479,8 +480,6 @@
     color: var(--sidebar-foreground);
     border-bottom: 1px solid oklch(1 0 0 / 14%);
     box-shadow: 0 1px 12px oklch(0 0 0 / 12%);
-    backdrop-filter: blur(20px) saturate(1.25);
-    -webkit-backdrop-filter: blur(20px) saturate(1.25);
   }
 
   .dashboard-mobile-topbar [data-sidebar="trigger"] {
@@ -519,6 +518,11 @@
 
   [data-sidebar="sidebar"][data-mobile="true"] [data-slot="sidebar-header"] {
     padding-top: 0.5rem;
+  }
+
+  .dashboard-shell [data-sidebar="sidebar"][data-mobile="true"] {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
   }
 
   ::selection {
@@ -592,6 +596,14 @@
       saturate(var(--glass-saturate));
     border: 1px solid var(--glass-border-subtle);
     box-shadow: var(--shadow-inset-reflect);
+  }
+
+  /* Dashboard: fundos já opacos — blur contínuo só custa GPU */
+  .dashboard-shell .glass,
+  .dashboard-shell .glass-strong,
+  .dashboard-shell .glass-subtle {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
   }
 
   /* Opaque overlays on mobile/PWA — glass stays on md+ */
@@ -901,16 +913,43 @@
 
   .brand-mark-glow {
     animation: var(--animate-brand-logo-glow);
-    will-change: filter;
+  }
+
+  .brand-mark-glow-static {
+    filter:
+      drop-shadow(0 0 2px oklch(from var(--neon-cyan) l c h / 90%))
+      drop-shadow(0 0 8px oklch(from var(--neon-cyan) l c h / 45%));
   }
 
   @media (prefers-reduced-motion: reduce) {
+    body::after {
+      animation: none;
+    }
+
+    .orb {
+      animation: none;
+      opacity: 0.75;
+    }
+
+    .text-gradient-shimmer {
+      animation: none;
+    }
+
     .brand-mark-glow {
       animation: none;
       filter:
         drop-shadow(0 0 2px oklch(from var(--neon-cyan) l c h / 90%))
         drop-shadow(0 0 8px oklch(from var(--neon-cyan) l c h / 50%));
     }
+  }
+
+  /* Pausa decorações quando a aba está em segundo plano */
+  html[data-tab-hidden] body::after,
+  html[data-tab-hidden] .orb,
+  html[data-tab-hidden] .brand-mark-glow,
+  html[data-tab-hidden] .text-gradient-shimmer,
+  html[data-tab-hidden] .sensitive-value-mask {
+    animation-play-state: paused;
   }
 
   /* ── Dividers with light refraction ── */

@@ -4,6 +4,8 @@ import { cn } from '@/lib/utils'
 type AppBrandMarkProps = {
   className?: string
   size?: 'sm' | 'md' | 'lg'
+  /** Pulso animado — apenas em landing/auth; desligado no app logado. */
+  animated?: boolean
 }
 
 const sizeClassName = {
@@ -12,14 +14,18 @@ const sizeClassName = {
   lg: 'size-10',
 } as const
 
-export function AppBrandMark({ className, size = 'sm' }: AppBrandMarkProps) {
+export function AppBrandMark({ className, size = 'sm', animated = false }: AppBrandMarkProps) {
   return (
     <span className={cn('inline-flex shrink-0', className)}>
       <img
         src={BRAND_LOGO_SRC}
         alt=""
         aria-hidden
-        className={cn('brand-mark-glow rounded-xl object-contain', sizeClassName[size])}
+        className={cn(
+          'rounded-xl object-contain',
+          animated ? 'brand-mark-glow' : 'brand-mark-glow-static',
+          sizeClassName[size],
+        )}
       />
     </span>
   )

@@ -53,7 +53,7 @@ export function LandingNavbar() {
           aria-label="WeFinance"
           onClick={closeMobileMenu}
         >
-          <AppBrandMark size="md" />
+          <AppBrandMark size="md" animated />
         </Link>
 
         <div className="hidden items-center gap-6 lg:gap-8 md:flex">
