@@ -35,7 +35,7 @@ import { NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
 
 function AppLogo() {
-  return <AppBrandMark />
+  return <AppBrandMark animated />
 }
 
 const GROUPS_SUB_ITEM_STAGGER_S = 0.045
@@ -98,6 +98,9 @@ export function AppSidebar() {
                   aria-label="WeFinance — Dashboard"
                 >
                   <AppLogo />
+                  <span className="truncate font-heading font-semibold group-data-[collapsible=icon]:hidden">
+                    WeFinance
+                  </span>
                 </SidebarMenuButton>
                 <Button
                   type="button"
