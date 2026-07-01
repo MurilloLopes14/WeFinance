@@ -1,23 +1,26 @@
-import type { ReleaseNoteResponseDto } from '@/api/generated/models/releaseNoteResponseDto'
-import { ReleaseNoteMarkdown } from '@/components/release-notes/release-note-markdown'
-import { ObjectCardActionsMenu, type ObjectCardAction } from '@/components/object/object-card-actions-menu'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import { Card, CardTitle } from '@/components/ui/card'
+import type { ReleaseNoteResponseDto } from "@/api/generated/models/releaseNoteResponseDto";
+import {
+  ObjectCardActionsMenu,
+  type ObjectCardAction,
+} from "@/components/object/object-card-actions-menu";
+import { ReleaseNoteMarkdown } from "@/components/release-notes/release-note-markdown";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardTitle } from "@/components/ui/card";
 import {
   formatReleaseNoteDate,
   isReleaseNotePublished,
-} from '@/lib/release-note-helpers'
-import { cn } from '@/lib/utils'
-import { Eye, Pencil, ScrollText, Trash2 } from 'lucide-react'
+} from "@/lib/release-note-helpers";
+import { cn } from "@/lib/utils";
+import { Eye, Pencil, ScrollText, Trash2 } from "lucide-react";
 
 type ReleaseNoteCardProps = {
-  note: ReleaseNoteResponseDto
-  onView?: (note: ReleaseNoteResponseDto) => void
-  onEdit?: (note: ReleaseNoteResponseDto) => void
-  onDelete?: (note: ReleaseNoteResponseDto) => void
-  className?: string
-}
+  note: ReleaseNoteResponseDto;
+  onView?: (note: ReleaseNoteResponseDto) => void;
+  onEdit?: (note: ReleaseNoteResponseDto) => void;
+  onDelete?: (note: ReleaseNoteResponseDto) => void;
+  className?: string;
+};
 
 export function ReleaseNoteCard({
   note,
@@ -26,33 +29,33 @@ export function ReleaseNoteCard({
   onDelete,
   className,
 }: ReleaseNoteCardProps) {
-  const published = isReleaseNotePublished(note)
-  const actions: ObjectCardAction[] = []
+  const published = isReleaseNotePublished(note);
+  const actions: ObjectCardAction[] = [];
 
   if (onEdit) {
     actions.push({
-      id: 'edit',
+      id: "edit",
       label: `Editar v${note.version}`,
       icon: Pencil,
       onClick: () => onEdit(note),
-    })
+    });
   }
 
   if (onDelete) {
     actions.push({
-      id: 'delete',
+      id: "delete",
       label: `Excluir v${note.version}`,
       icon: Trash2,
-      variant: 'destructive',
+      variant: "destructive",
       onClick: () => onDelete(note),
-    })
+    });
   }
 
   return (
     <Card
       size="sm"
       className={cn(
-        'glass-subtle flex h-fit w-full flex-col gap-0 self-start py-0 ring-1 ring-foreground/10',
+        "glass-subtle flex h-fit w-full flex-col gap-0 self-start py-0 ring-1 ring-foreground/10",
         className,
       )}
     >
@@ -67,10 +70,13 @@ export function ReleaseNoteCard({
               v{note.version}
             </Badge>
             <Badge
-              variant={published ? 'default' : 'outline'}
-              className={cn('text-[11px]', published && 'bg-primary/15 text-primary')}
+              variant={published ? "default" : "outline"}
+              className={cn(
+                "text-[11px]",
+                published && "bg-primary/15 text-primary",
+              )}
             >
-              {published ? 'Publicada' : 'Rascunho'}
+              {published ? "Publicada" : "Rascunho"}
             </Badge>
           </div>
           <CardTitle className="mt-1.5 line-clamp-2 text-sm leading-snug font-medium">
@@ -78,7 +84,7 @@ export function ReleaseNoteCard({
           </CardTitle>
           <p className="mt-1 text-[11px] text-muted-foreground">
             {formatReleaseNoteDate(
-              typeof note.publishedAt === 'string' ? note.publishedAt : null,
+              typeof note.publishedAt === "string" ? note.publishedAt : null,
             )}
           </p>
         </div>
@@ -101,10 +107,10 @@ export function ReleaseNoteCard({
       </div>
 
       <div className="max-h-48 overflow-hidden px-4 py-3">
-        <div className="line-clamp-[8] text-muted-foreground">
+        <div className="line-clamp-8 text-muted-foreground">
           <ReleaseNoteMarkdown content={note.content} />
         </div>
       </div>
     </Card>
-  )
+  );
 }

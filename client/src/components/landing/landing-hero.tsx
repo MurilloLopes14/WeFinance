@@ -1,22 +1,22 @@
-﻿import { FadeIn } from '@/components/landing/fade-in'
-import { LandingAudiences } from '@/components/landing/landing-audiences'
-import { LandingSection } from '@/components/landing/landing-section'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
+﻿import { FadeIn } from "@/components/landing/fade-in";
+import { LandingAudiences } from "@/components/landing/landing-audiences";
+import { LandingSection } from "@/components/landing/landing-section";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   ArrowRight,
   Layers,
   ShieldCheck,
   Sparkles,
   UserRound,
-} from 'lucide-react'
-import { Link } from 'react-router-dom'
+} from "lucide-react";
+import { Link } from "react-router-dom";
 
 const highlights = [
-  { icon: UserRound, label: 'Modo individual ou em grupo' },
-  { icon: Layers, label: 'Múltiplos households' },
-  { icon: ShieldCheck, label: 'Privacidade por padrão' },
-]
+  { icon: UserRound, label: "Modo individual ou em grupo" },
+  { icon: Layers, label: "Múltiplos households" },
+  { icon: ShieldCheck, label: "Privacidade por padrão" },
+];
 
 export function LandingHero() {
   return (
@@ -30,19 +30,18 @@ export function LandingHero() {
 
       <FadeIn delay={100}>
         <h1 className="max-w-4xl text-balance font-heading text-[clamp(1.875rem,5.5vw,3.75rem)] font-semibold leading-[1.1] tracking-tight">
-          Suas finanças,{' '}
-          <span className="text-gradient-shimmer text-glow">
-            do seu jeito
-          </span>
-          — solo ou em grupo
+          Suas finanças,{" "}
+          <span className="text-gradient-shimmer text-glow">do seu jeito</span>—
+          solo ou em grupo
         </h1>
       </FadeIn>
 
       <FadeIn delay={200}>
         <p className="mt-5 max-w-2xl text-pretty text-sm leading-relaxed text-muted-foreground sm:mt-6 sm:text-base lg:text-lg">
-          WeFinance é um controle financeiro flexível: use sozinho para organizar
-          a vida pessoal ou crie um grupo com família, casal, amigos ou quem
-          dividir despesas com você — com rateio, relatórios e transparência.
+          WeFinance é um controle financeiro flexível: use sozinho para
+          organizar a vida pessoal ou crie um grupo com família, casal, amigos
+          ou quem dividir despesas com você — com rateio, relatórios e
+          transparência.
         </p>
       </FadeIn>
 
@@ -51,7 +50,10 @@ export function LandingHero() {
       <FadeIn delay={400}>
         <div className="mt-8 flex w-full flex-col gap-3 sm:mt-10 sm:w-auto sm:flex-row sm:flex-wrap sm:items-center">
           <Link to="/register" className="w-full sm:w-auto">
-            <Button size="lg" className="glow-primary h-11 w-full rounded-xl px-6 sm:min-w-[13rem]">
+            <Button
+              size="lg"
+              className="glow-primary h-11 w-full rounded-xl px-6 sm:min-w-52"
+            >
               Criar conta gratuita
               <ArrowRight className="size-4" />
             </Button>
@@ -60,7 +62,7 @@ export function LandingHero() {
             <Button
               variant="outline"
               size="lg"
-              className="glass-interactive h-11 w-full rounded-xl px-6 sm:min-w-[13rem]"
+              className="glass-interactive h-11 w-full rounded-xl px-6 sm:min-w-52"
             >
               Entrar
             </Button>
@@ -69,7 +71,7 @@ export function LandingHero() {
             <Button
               variant="outline"
               size="lg"
-              className="glass-interactive h-11 w-full rounded-xl px-6 sm:min-w-[13rem]"
+              className="glass-interactive h-11 w-full rounded-xl px-6 sm:min-w-52"
             >
               Conhecer funcionalidades
             </Button>
@@ -102,18 +104,17 @@ export function LandingHero() {
                 Missão
               </p>
               <p className="mt-2 text-pretty font-heading text-lg leading-snug sm:mt-3 sm:text-xl lg:text-2xl">
-                Dar{' '}
-                <span className="text-gradient">clareza financeira</span> para
-                quem administra sozinho ou em grupo — com transparência quando
-                compartilhado e autonomia quando individual.
+                Dar <span className="text-gradient">clareza financeira</span>{" "}
+                para quem administra sozinho ou em grupo — com transparência
+                quando compartilhado e autonomia quando individual.
               </p>
             </div>
             <div className="grid grid-cols-2 gap-2.5 sm:gap-3">
               {[
-                { value: 'Solo', label: 'Finanças pessoais' },
-                { value: 'Grupo', label: 'Households' },
-                { value: '50/50', label: 'Rateio flexível' },
-                { value: 'CSV', label: 'Importação bancária' },
+                { value: "Solo", label: "Finanças pessoais" },
+                { value: "Grupo", label: "Households" },
+                { value: "50/50", label: "Rateio flexível" },
+                { value: "CSV", label: "Importação bancária" },
               ].map((item) => (
                 <div
                   key={item.label}
@@ -132,5 +133,5 @@ export function LandingHero() {
         </div>
       </FadeIn>
     </LandingSection>
-  )
+  );
 }

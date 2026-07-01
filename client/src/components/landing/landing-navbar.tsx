@@ -1,52 +1,57 @@
-﻿import { AppBrandMark } from '@/components/brand/app-brand-mark'
-import { Button } from '@/components/ui/button'
-import { useScrollLock } from '@/hooks/use-scroll-lock'
-import { cn } from '@/lib/utils'
-import { Menu, X } from 'lucide-react'
-import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
-import { PageContainer } from '@/components/layout/page-container'
+﻿import { AppBrandMark } from "@/components/brand/app-brand-mark";
+import { PageContainer } from "@/components/layout/page-container";
+import { Button } from "@/components/ui/button";
+import { useScrollLock } from "@/hooks/use-scroll-lock";
+import { cn } from "@/lib/utils";
+import { Menu, X } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 
 const navLinks = [
-  { label: 'Funcionalidades', href: '#funcionalidades' },
-  { label: 'Princípios', href: '#principios' },
-  { label: 'Roadmap', href: '#roadmap' },
-]
+  { label: "Funcionalidades", href: "#funcionalidades" },
+  { label: "Princípios", href: "#principios" },
+  { label: "Roadmap", href: "#roadmap" },
+];
 
 export function LandingNavbar() {
-  const [scrolled, setScrolled] = useState(false)
-  const [mobileOpen, setMobileOpen] = useState(false)
+  const [scrolled, setScrolled] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
 
-  useScrollLock(mobileOpen)
+  useScrollLock(mobileOpen);
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 16)
-    onScroll()
-    window.addEventListener('scroll', onScroll, { passive: true })
-    return () => window.removeEventListener('scroll', onScroll)
-  }, [])
+    const onScroll = () => setScrolled(window.scrollY > 16);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   useEffect(() => {
     const onResize = () => {
-      if (window.innerWidth >= 768) setMobileOpen(false)
-    }
-    window.addEventListener('resize', onResize)
-    return () => window.removeEventListener('resize', onResize)
-  }, [])
+      if (window.innerWidth >= 768) setMobileOpen(false);
+    };
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
 
-  const closeMobileMenu = () => setMobileOpen(false)
+  const closeMobileMenu = () => setMobileOpen(false);
 
   return (
     <header
       className={cn(
-        'app-fixed-header transition-all duration-500',
+        "app-fixed-header transition-all duration-500",
         scrolled || mobileOpen
-          ? 'glass-strong max-md-solid-surface shadow-lg [--app-fixed-header-pb:0.625rem]'
-          : 'bg-transparent [--app-fixed-header-pb:1.25rem]',
-        scrolled || mobileOpen ? 'sm:[--app-fixed-header-pb:0.75rem]' : 'sm:[--app-fixed-header-pb:1.25rem]',
+          ? "glass-strong max-md-solid-surface shadow-lg [--app-fixed-header-pb:0.625rem]"
+          : "bg-transparent [--app-fixed-header-pb:1.25rem]",
+        scrolled || mobileOpen
+          ? "sm:[--app-fixed-header-pb:0.75rem]"
+          : "sm:[--app-fixed-header-pb:1.25rem]",
       )}
     >
-      <PageContainer as="nav" className="flex items-center justify-between gap-3">
+      <PageContainer
+        as="nav"
+        className="flex items-center justify-between gap-3"
+      >
         <Link
           to="/"
           className="group flex min-w-0 items-center"
@@ -88,7 +93,7 @@ export function LandingNavbar() {
           className="shrink-0 md:hidden"
           aria-expanded={mobileOpen}
           aria-controls="mobile-nav"
-          aria-label={mobileOpen ? 'Fechar menu' : 'Abrir menu'}
+          aria-label={mobileOpen ? "Fechar menu" : "Abrir menu"}
           onClick={() => setMobileOpen((open) => !open)}
         >
           {mobileOpen ? <X /> : <Menu />}
@@ -98,8 +103,8 @@ export function LandingNavbar() {
       <div
         id="mobile-nav"
         className={cn(
-          'overflow-hidden transition-all duration-300 md:hidden',
-          mobileOpen ? 'max-h-[28rem] opacity-100' : 'max-h-0 opacity-0',
+          "overflow-hidden transition-all duration-300 md:hidden",
+          mobileOpen ? "max-h-112 opacity-100" : "max-h-0 opacity-0",
         )}
       >
         <PageContainer className="pt-2">
@@ -117,7 +122,10 @@ export function LandingNavbar() {
               ))}
               <div className="divider-glass my-2" />
               <Link to="/login" className="w-full" onClick={closeMobileMenu}>
-                <Button variant="ghost" className="h-11 w-full justify-center rounded-xl">
+                <Button
+                  variant="ghost"
+                  className="h-11 w-full justify-center rounded-xl"
+                >
                   Entrar
                 </Button>
               </Link>
@@ -131,5 +139,5 @@ export function LandingNavbar() {
         </PageContainer>
       </div>
     </header>
-  )
+  );
 }

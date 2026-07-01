@@ -1,7 +1,7 @@
-import type { ReleaseNoteResponseDto } from '@/api/generated/models/releaseNoteResponseDto'
-import { ReleaseNoteMarkdown } from '@/components/release-notes/release-note-markdown'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
+import type { ReleaseNoteResponseDto } from "@/api/generated/models/releaseNoteResponseDto";
+import { ReleaseNoteMarkdown } from "@/components/release-notes/release-note-markdown";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -9,43 +9,46 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog'
-import { formatReleaseNoteDate } from '@/lib/release-note-helpers'
-import { cn } from '@/lib/utils'
-import { Loader2, Sparkles } from 'lucide-react'
+} from "@/components/ui/dialog";
+import { formatReleaseNoteDate } from "@/lib/release-note-helpers";
+import { cn } from "@/lib/utils";
+import { Loader2, Sparkles } from "lucide-react";
 
-type ReleaseNotePopupVariant = 'announcement' | 'browse'
+type ReleaseNotePopupVariant = "announcement" | "browse";
 
 type ReleaseNotePopupProps = {
-  note: ReleaseNoteResponseDto
-  open: boolean
-  onClose: () => void
-  isMarkingSeen?: boolean
-  variant?: ReleaseNotePopupVariant
-}
+  note: ReleaseNoteResponseDto;
+  open: boolean;
+  onClose: () => void;
+  isMarkingSeen?: boolean;
+  variant?: ReleaseNotePopupVariant;
+};
 
 export function ReleaseNotePopup({
   note,
   open,
   onClose,
   isMarkingSeen = false,
-  variant = 'announcement',
+  variant = "announcement",
 }: ReleaseNotePopupProps) {
   const publishedAt =
-    typeof note.publishedAt === 'string' ? note.publishedAt : null
-  const isBrowse = variant === 'browse'
-  const isBusy = !isBrowse && isMarkingSeen
+    typeof note.publishedAt === "string" ? note.publishedAt : null;
+  const isBrowse = variant === "browse";
+  const isBusy = !isBrowse && isMarkingSeen;
 
   return (
-    <Dialog open={open} onOpenChange={(nextOpen) => !nextOpen && !isBusy && onClose()}>
+    <Dialog
+      open={open}
+      onOpenChange={(nextOpen) => !nextOpen && !isBusy && onClose()}
+    >
       <DialogContent
         className={cn(
-          'glass-strong flex max-h-[min(100dvh-2rem,90vh)] flex-col gap-0 overflow-hidden border-primary/20 p-0',
-          isBrowse ? 'sm:max-w-2xl' : 'sm:max-w-lg',
+          "glass-strong flex max-h-[min(100dvh-2rem,90vh)] flex-col gap-0 overflow-hidden border-primary/20 p-0",
+          isBrowse ? "sm:max-w-2xl" : "sm:max-w-lg",
         )}
         showCloseButton={!isBusy}
       >
-        <div className="pointer-events-none absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-primary/15 to-transparent" />
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-32 bg-linear-to-b from-primary/15 to-transparent" />
 
         <DialogHeader className="relative shrink-0 space-y-3 border-b border-foreground/10 px-5 pt-6 pb-4 text-left">
           <div className="flex items-center gap-2">
@@ -81,13 +84,13 @@ export function ReleaseNotePopup({
                 Fechando…
               </>
             ) : isBrowse ? (
-              'Fechar'
+              "Fechar"
             ) : (
-              'Entendi'
+              "Entendi"
             )}
           </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  )
+  );
 }
