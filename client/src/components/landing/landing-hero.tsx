@@ -20,7 +20,7 @@ const highlights = [
 
 export function LandingHero() {
   return (
-    <LandingSection className="relative pt-28 pb-16 sm:pt-36 sm:pb-20 lg:pt-40 lg:pb-24">
+    <LandingSection className="landing-hero-offset relative pb-16 sm:pb-20 lg:pb-24">
       <FadeIn>
         <Badge className="glass-subtle mb-5 max-w-full gap-1.5 rounded-full px-3 py-1.5 text-[0.7rem] font-medium sm:mb-6 sm:px-4 sm:text-xs">
           <Sparkles className="size-3.5 shrink-0 text-primary" />

@@ -13,7 +13,7 @@ export function LandingPage() {
     <div className="dark min-h-dvh overflow-x-clip">
       <AmbientBackground />
       <LandingNavbar />
-      <main className="pb-[env(safe-area-inset-bottom)]">
+      <main className="pb-safe">
         <LandingHero />
         <LandingDivider />
         <LandingFeatures />

@@ -21,7 +21,7 @@ export function DashboardLayout() {
               <AppBrandMark />
               <span className="truncate font-heading text-base font-semibold text-inherit">WeFinance</span>            </div>
           </header>
-          <div className="flex h-full min-h-0 flex-1 flex-col p-4 pb-[max(1rem,env(safe-area-inset-bottom))] md:p-6">
+          <div className="flex h-full min-h-0 flex-1 flex-col p-4 pb-safe-inset md:p-6">
             <DashboardPageTransition />
             <footer className="mt-4 shrink-0 text-center">
               <p className="text-[10px] text-muted-foreground/35 select-none">

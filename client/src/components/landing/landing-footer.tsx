@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom'
 
 export function LandingFooter() {
   return (
-    <footer className="border-t border-border/50 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-8 sm:pt-10">
+    <footer className="border-t border-border/50 pb-[max(1.5rem,var(--app-safe-bottom))] pt-8 sm:pt-10">
       <PageContainer className="flex flex-col items-center gap-6 text-center md:flex-row md:items-center md:justify-between md:text-left">
         <Link to="/" className="inline-flex items-center gap-2">
           <AppBrandMark size="sm" />

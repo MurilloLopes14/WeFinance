@@ -39,10 +39,11 @@ export function LandingNavbar() {
   return (
     <header
       className={cn(
-        'fixed inset-x-0 top-0 z-50 transition-all duration-500',
+        'app-fixed-header transition-all duration-500',
         scrolled || mobileOpen
-          ? 'glass-strong max-md-solid-surface py-2.5 shadow-lg sm:py-3'
-          : 'bg-transparent py-4 sm:py-5',
+          ? 'glass-strong max-md-solid-surface shadow-lg [--app-fixed-header-pb:0.625rem]'
+          : 'bg-transparent [--app-fixed-header-pb:1.25rem]',
+        scrolled || mobileOpen ? 'sm:[--app-fixed-header-pb:0.75rem]' : 'sm:[--app-fixed-header-pb:1.25rem]',
       )}
     >
       <PageContainer as="nav" className="flex items-center justify-between gap-3">

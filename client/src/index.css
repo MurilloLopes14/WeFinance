@@ -81,6 +81,13 @@
 :root {
   --radius: 0.875rem;
 
+  /* Safe area — env() pode ser 0 no Safari/PWA iOS; fallback via --safe-area-*-fallback */
+  --safe-area-top-fallback: 0px;
+  --safe-area-bottom-fallback: 0px;
+  --app-safe-top: max(env(safe-area-inset-top, 0px), var(--safe-area-top-fallback));
+  --app-safe-bottom: max(env(safe-area-inset-bottom, 0px), var(--safe-area-bottom-fallback));
+  --app-fixed-header-pb: 1rem;
+
   /* canvas */
   --background: oklch(0.97 0.012 255);
   --foreground: oklch(0.18 0.02 265);
@@ -326,13 +333,30 @@
 
   html {
     @apply scroll-smooth antialiased;
-    scroll-padding-top: 5.5rem;
+    color-scheme: dark light;
+    scroll-padding-top: calc(5.5rem + var(--app-safe-top));
     overflow-x: hidden;
   }
 
   @media (min-width: 640px) {
     html {
       scroll-padding-top: 6.5rem;
+    }
+  }
+
+  /* iOS WebKit: status bar sobrepõe conteúdo quando env() retorna 0 */
+  @supports (-webkit-touch-callout: none) {
+    @media (max-width: 767px) {
+      :root {
+        --safe-area-top-fallback: 2.75rem;
+      }
+    }
+  }
+
+  @media (display-mode: standalone) {
+    :root {
+      --safe-area-top-fallback: max(var(--safe-area-top-fallback), 2.75rem);
+      --safe-area-bottom-fallback: max(var(--safe-area-bottom-fallback), 0.5rem);
     }
   }
 
@@ -446,8 +470,7 @@
     position: sticky;
     top: 0;
     z-index: 30;
-    /* env() pode ser 0 no PWA iOS — min 2.75rem em standalone cobre a status bar */
-    --dashboard-safe-top: max(env(safe-area-inset-top, 0px), 1rem);
+    --dashboard-safe-top: var(--app-safe-top);
     min-height: calc(3.5rem + var(--dashboard-safe-top));
     padding-top: constant(safe-area-inset-top);
     padding-top: var(--dashboard-safe-top);
@@ -458,12 +481,6 @@
     box-shadow: 0 1px 12px oklch(0 0 0 / 12%);
     backdrop-filter: blur(20px) saturate(1.25);
     -webkit-backdrop-filter: blur(20px) saturate(1.25);
-  }
-
-  @media (display-mode: standalone) {
-    .dashboard-mobile-topbar {
-      --dashboard-safe-top: max(env(safe-area-inset-top, 0px), 2.75rem);
-    }
   }
 
   .dashboard-mobile-topbar [data-sidebar="trigger"] {
@@ -480,8 +497,8 @@
     --sidebar-foreground: oklch(0.96 0.01 250);
     --sidebar-accent: oklch(1 0 0 / 8%);
     --sidebar-border: oklch(1 0 0 / 14%);
-    --sidebar-mobile-safe-top: max(env(safe-area-inset-top, 0px), 1rem);
-    --sidebar-mobile-safe-bottom: env(safe-area-inset-bottom, 0px);
+    --sidebar-mobile-safe-top: var(--app-safe-top);
+    --sidebar-mobile-safe-bottom: var(--app-safe-bottom);
     background: var(--sidebar) !important;
     backdrop-filter: blur(24px) saturate(1.25);
     -webkit-backdrop-filter: blur(24px) saturate(1.25);
@@ -495,8 +512,8 @@
 
   @media (display-mode: standalone) {
     [data-sidebar="sidebar"][data-mobile="true"] {
-      --sidebar-mobile-safe-top: max(env(safe-area-inset-top, 0px), 2.75rem);
-      --sidebar-mobile-safe-bottom: max(env(safe-area-inset-bottom, 0px), 0.5rem);
+      --sidebar-mobile-safe-top: var(--app-safe-top);
+      --sidebar-mobile-safe-bottom: var(--app-safe-bottom);
     }
   }
 
@@ -991,5 +1008,47 @@
       var(--shadow-glow-primary),
       0 0 24px oklch(from var(--glow-primary) l c h / 38%);
     transform: translateY(-1px);
+  }
+
+  /* ── Safe area (iOS) — usar em headers fixos no topo ── */
+  .pt-safe {
+    padding-top: constant(safe-area-inset-top);
+    padding-top: var(--app-safe-top);
+  }
+
+  .pb-safe {
+    padding-bottom: constant(safe-area-inset-bottom);
+    padding-bottom: var(--app-safe-bottom);
+  }
+
+  .pb-safe-inset {
+    padding-bottom: max(1rem, var(--app-safe-bottom));
+  }
+
+  .app-fixed-header {
+    position: fixed;
+    inset-inline: 0;
+    top: 0;
+    z-index: 50;
+    padding-top: constant(safe-area-inset-top);
+    padding-top: var(--app-safe-top);
+    padding-bottom: var(--app-fixed-header-pb);
+    box-sizing: border-box;
+  }
+
+  .landing-hero-offset {
+    padding-top: calc(7.5rem + var(--app-safe-top));
+  }
+
+  @media (min-width: 640px) {
+    .landing-hero-offset {
+      padding-top: calc(9rem + var(--app-safe-top));
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .landing-hero-offset {
+      padding-top: calc(10rem + var(--app-safe-top));
+    }
   }
 }

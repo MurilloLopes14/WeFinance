@@ -11,7 +11,7 @@ type AuthLayoutProps = {
 
 export function AuthLayout({ children, className }: AuthLayoutProps) {
   return (
-    <div className="dark relative flex min-h-dvh flex-col overflow-x-clip px-4 py-6 sm:px-6">
+    <div className="dark relative flex min-h-dvh flex-col overflow-x-clip px-4 pb-6 pt-safe sm:px-6">
       <AmbientBackground />
 
       <header className="relative z-10 mx-auto flex w-full max-w-lg items-center justify-between">
@@ -26,7 +26,7 @@ export function AuthLayout({ children, className }: AuthLayoutProps) {
 
       <main
         className={cn(
-          'relative z-10 mx-auto flex w-full max-w-lg flex-1 flex-col justify-center pb-[env(safe-area-inset-bottom)]',
+          'relative z-10 mx-auto flex w-full max-w-lg flex-1 flex-col justify-center pb-safe',
           className,
         )}
       >
