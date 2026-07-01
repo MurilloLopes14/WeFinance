@@ -5,13 +5,14 @@ import {
   NotFoundException,
   UnprocessableEntityException,
 } from '@nestjs/common';
-import { and, eq } from 'drizzle-orm';
+import { and, eq, getTableColumns } from 'drizzle-orm';
 import { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import { DRIZZLE } from '../database/database.constants';
 import * as schema from '../database/schema';
 import { accounts, users } from '../database/schema';
+import { creditInvoiceDueDay } from '../common/utils/credit.utils';
 import { HouseholdsService } from '../households/households.service';
-import { AccountResponseDto } from './dto/account-response.dto';
+import { AccountOwnerDto, AccountResponseDto } from './dto/account-response.dto';
 import { CreateAccountDto } from './dto/create-account.dto';
 import { UpdateAccountDto } from './dto/update-account.dto';
 import { AccountProjectionDto } from './dto/account-projection.dto';
@@ -54,7 +55,7 @@ export class AccountsService {
       })
       .returning();
 
-    return this.format(account);
+    return this.formatWithUser(account);
   }
 
   async findAll(
@@ -64,11 +65,22 @@ export class AccountsService {
     await this.householdsService.assertMember(householdId, requesterId);
 
     const rows = await this.db
-      .select()
+      .select({
+        ...getTableColumns(accounts),
+        ownerName: users.name,
+        ownerEmail: users.email,
+        ownerUserId: users.id,
+      })
       .from(accounts)
+      .leftJoin(users, eq(accounts.userId, users.id))
       .where(eq(accounts.householdId, householdId));
 
-    return rows.map(this.format);
+    return rows.map((row) => {
+      const userObj: AccountOwnerDto | null = row.ownerUserId
+        ? { id: row.ownerUserId, name: row.ownerName!, email: row.ownerEmail! }
+        : null;
+      return this.format(row, userObj);
+    });
   }
 
   async findOne(
@@ -78,7 +90,7 @@ export class AccountsService {
   ): Promise<AccountResponseDto> {
     await this.householdsService.assertMember(householdId, requesterId);
     const account = await this.findAccount(householdId, accountId);
-    return this.format(account);
+    return this.formatWithUser(account);
   }
 
   async update(
@@ -123,7 +135,7 @@ export class AccountsService {
       )
       .returning();
 
-    return this.format(updated);
+    return this.formatWithUser(updated);
   }
 
   async remove(
@@ -231,11 +243,24 @@ export class AccountsService {
     });
   }
 
-  private format(account: Account): AccountResponseDto {
+  private async formatWithUser(account: Account): Promise<AccountResponseDto> {
+    let userObj: AccountOwnerDto | null = null;
+    if (account.userId) {
+      const [u] = await this.db
+        .select({ id: users.id, name: users.name, email: users.email })
+        .from(users)
+        .where(eq(users.id, account.userId))
+        .limit(1);
+      if (u) userObj = u;
+    }
+    return this.format(account, userObj);
+  }
+
+  private format(account: Account, user: AccountOwnerDto | null = null): AccountResponseDto {
     return {
       id: account.id,
       householdId: account.householdId,
-      userId: account.userId,
+      user,
       name: account.name,
       type: account.type,
       institution: account.institution ?? null,
@@ -246,17 +271,13 @@ export class AccountsService {
       maturityDate: account.maturityDate ?? null,
       creditLimit: account.creditLimit != null ? parseFloat(account.creditLimit) : null,
       invoiceClosingDay: account.invoiceClosingDay ?? null,
-      invoiceDueDay: account.invoiceClosingDay != null ? invoiceDueDay(account.invoiceClosingDay) : null,
+      invoiceDueDay: account.invoiceClosingDay != null ? creditInvoiceDueDay(account.invoiceClosingDay) : null,
       createdAt: account.createdAt,
       updatedAt: account.updatedAt,
     };
   }
 }
 
-function invoiceDueDay(closingDay: number): number {
-  const due = closingDay + 7;
-  return due > 31 ? due - 31 : due;
-}
 
 function calcProjection(
   balance: number,

@@ -17,7 +17,7 @@ import {
   FormDialogHeader,
 } from '@/components/object/form-dialog-shell'
 import { getApiErrorMessage } from '@/lib/get-api-error-message'
-import { isReleaseNotePublished, toPublishedAtIso } from '@/lib/release-note-helpers'
+import { isReleaseNotePublished, toUpdatePublishedAt, getReleaseNotePublishedAtIso } from '@/lib/release-note-helpers'
 import {
   releaseNoteFormSchema,
   type ReleaseNoteFormValues,
@@ -86,9 +86,7 @@ export function ReleaseNoteEditModal({ note, open, onOpenChange }: ReleaseNoteEd
   const onSubmit = (values: ReleaseNoteFormValues) => {
     if (!note) return
 
-    const wasPublished = isReleaseNotePublished(note)
-    const existingPublishedAt =
-      typeof note.publishedAt === 'string' ? note.publishedAt : null
+    const existingPublishedAt = getReleaseNotePublishedAtIso(note.publishedAt)
 
     updateMutation.mutate({
       id: note.id,
@@ -96,11 +94,7 @@ export function ReleaseNoteEditModal({ note, open, onOpenChange }: ReleaseNoteEd
         version: values.version,
         title: values.title,
         content: values.content,
-        publishedAt: values.publishNow
-          ? wasPublished && existingPublishedAt
-            ? existingPublishedAt
-            : toPublishedAtIso(true)
-          : null,
+        publishedAt: toUpdatePublishedAt(values.publishNow, existingPublishedAt),
       },
     })
   }

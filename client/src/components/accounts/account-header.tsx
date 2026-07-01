@@ -1,10 +1,9 @@
 import type { HouseholdResponseDto } from '@/api/generated/models/householdResponseDto'
 import type { AccountResponseDtoType } from '@/api/generated/models/accountResponseDtoType'
-import { ObjectHeader, type ObjectHeaderCreateAction } from '@/components/object/object-header'
+import { ObjectHeader, ObjectFilterSelectContent, type ObjectHeaderCreateAction } from '@/components/object/object-header'
 import { Label } from '@/components/ui/label'
 import {
   Select,
-  SelectContent,
   SelectGroup,
   SelectItem,
   SelectTrigger,
@@ -100,7 +99,7 @@ export function AccountHeader({
                   >
                     <SelectValue placeholder="Selecione o grupo" />
                   </SelectTrigger>
-                  <SelectContent className="glass-strong glow-border">
+                  <ObjectFilterSelectContent>
                     <SelectGroup>
                       <SelectItem value="all">Todos os grupos</SelectItem>
                       {households.map((household) => (
@@ -109,7 +108,7 @@ export function AccountHeader({
                         </SelectItem>
                       ))}
                     </SelectGroup>
-                  </SelectContent>
+                  </ObjectFilterSelectContent>
                 </Select>
               </div>
             )}
@@ -133,7 +132,7 @@ export function AccountHeader({
                 <SelectTrigger id="account-filter-type" className="w-full rounded-xl">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent className="glass-strong glow-border">
+                <ObjectFilterSelectContent>
                   <SelectGroup>
                     {accountTypeOptions.map((option) => (
                       <SelectItem key={option.value} value={option.value}>
@@ -141,7 +140,7 @@ export function AccountHeader({
                       </SelectItem>
                     ))}
                   </SelectGroup>
-                </SelectContent>
+                </ObjectFilterSelectContent>
               </Select>
             </div>
           </div>

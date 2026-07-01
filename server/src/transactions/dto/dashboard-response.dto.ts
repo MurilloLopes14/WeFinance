@@ -48,6 +48,9 @@ export class PersonalSummaryResponseDto {
   @ApiProperty({ description: 'Total net worth (availableBalance + investedBalance)' })
   totalNetWorth: number;
 
+  @ApiProperty({ description: 'Total a pagar nas faturas dos cartões pessoais no ciclo atual' })
+  toBeSpent: number;
+
   @ApiProperty({ type: [CreditAccountSummaryDto], description: 'Resumo de fatura por cartão de crédito' })
   creditAccounts: CreditAccountSummaryDto[];
 }

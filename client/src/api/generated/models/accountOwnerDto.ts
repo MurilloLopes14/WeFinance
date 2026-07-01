@@ -6,10 +6,8 @@
  * OpenAPI spec version: 1.0
  */
 
-export interface TransactionOwnerDto {
+export interface AccountOwnerDto {
   id: string;
   name: string;
   email: string;
-  /** @nullable */
-  avatarUrl?: string | null;
 }

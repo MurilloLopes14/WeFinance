@@ -10,10 +10,6 @@ import {
   usePayeesControllerFindAll,
 } from '@/api/generated/payees/payees'
 import {
-  getSubscriptionsControllerFindAllQueryKey,
-} from '@/api/generated/subscriptions/subscriptions'
-import {
-  getTransactionsControllerFindAllQueryKey,
   useTransactionsControllerCreate,
 } from '@/api/generated/transactions/transactions'
 import { Button } from '@/components/ui/button'
@@ -32,6 +28,7 @@ import { useAuthSession } from '@/hooks/use-auth-session'
 import { findHouseholdInList } from '@/lib/household-helpers'
 import { householdsListParams } from '@/lib/household-api-helpers'
 import { getApiErrorMessage } from '@/lib/get-api-error-message'
+import { invalidateTransactionDependentQueries } from '@/lib/transaction-api-helpers'
 import { resolveTransactionSplits, getInitialCustomSplitRows } from '@/lib/transaction-split-helpers'
 import { TransactionFormFields } from '@/pages/transactions/transaction-form-fields'
 import {
@@ -133,14 +130,7 @@ export function TransactionCreateModal({
         onOpenChange(false)
         reset(createDefaultTransactionFormValues())
 
-        await Promise.all([
-          queryClient.invalidateQueries({
-            queryKey: getTransactionsControllerFindAllQueryKey(variables.householdId),
-          }),
-          queryClient.invalidateQueries({
-            queryKey: getSubscriptionsControllerFindAllQueryKey(variables.householdId),
-          }),
-        ])
+        await invalidateTransactionDependentQueries(queryClient, variables.householdId)
       },
       onError: (error) => {
         toast.error(getApiErrorMessage(error, 'Não foi possível criar a transação'))

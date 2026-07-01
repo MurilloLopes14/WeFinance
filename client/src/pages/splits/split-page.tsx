@@ -1,7 +1,6 @@
 import { useCategoriesControllerFindAll } from '@/api/generated/categories/categories'
 import {
   useHouseholdsControllerFindAll,
-  useHouseholdsControllerFindOne,
 } from '@/api/generated/households/households'
 import { useTransactionsControllerFindAll } from '@/api/generated/transactions/transactions'
 import { ObjectCollectionState } from '@/components/object/object-collection-state'
@@ -12,6 +11,7 @@ import { SplitTableSkeleton } from '@/components/splits/split-table-skeleton'
 import { SplitsDataTable } from '@/components/splits/splits-data-table'
 import { householdsListParams } from '@/lib/household-api-helpers'
 import {
+  buildMemberNameByUserId,
   filterSplitTableRows,
   flattenTransactionsToSplitRows,
   transactionHasSharedSplit,
@@ -82,10 +82,6 @@ export function SplitPage() {
     query: { enabled: Boolean(selectedHouseholdId) },
   })
 
-  const { data: householdDetail } = useHouseholdsControllerFindOne(selectedHouseholdId, {
-    query: { enabled: Boolean(selectedHouseholdId) },
-  })
-
   const { data: categories } = useCategoriesControllerFindAll(selectedHouseholdId, {
     query: { enabled: Boolean(selectedHouseholdId) },
   })
@@ -95,12 +91,20 @@ export function SplitPage() {
     [households, selectedHouseholdId],
   )
 
+  const transactionsOnPage = transactionsPage?.data ?? []
+
   const memberNameByUserId = useMemo(
     () =>
-      Object.fromEntries(
-        (householdDetail?.members ?? []).map((member) => [member.userId, member.user.name]),
+      buildMemberNameByUserId(
+        transactionsOnPage,
+        Object.fromEntries(
+          (selectedHousehold?.members ?? []).map((member) => [
+            member.userId,
+            member.user.name,
+          ]),
+        ),
       ),
-    [householdDetail?.members],
+    [selectedHousehold?.members, transactionsOnPage],
   )
 
   const categoryNameById = useMemo(
@@ -108,8 +112,6 @@ export function SplitPage() {
       Object.fromEntries((categories ?? []).map((category) => [category.id, category.name])),
     [categories],
   )
-
-  const transactionsOnPage = transactionsPage?.data ?? []
 
   const transactionsWithSplitsOnPage = useMemo(
     () => transactionsOnPage.filter(transactionHasSharedSplit),

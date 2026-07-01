@@ -1,10 +1,9 @@
 import type { HouseholdResponseDto } from '@/api/generated/models/householdResponseDto'
-import { ObjectHeader } from '@/components/object/object-header'
+import { ObjectHeader, ObjectFilterSelectContent } from '@/components/object/object-header'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import {
   Select,
-  SelectContent,
   SelectGroup,
   SelectItem,
   SelectTrigger,
@@ -75,7 +74,7 @@ export function SplitHeader({
                   <SelectTrigger id="split-filter-household" className="w-full rounded-xl">
                     <SelectValue placeholder="Selecione o grupo" />
                   </SelectTrigger>
-                  <SelectContent className="glass-strong glow-border">
+                  <ObjectFilterSelectContent>
                     <SelectGroup>
                       {households.map((household) => (
                         <SelectItem key={household.id} value={household.id}>
@@ -83,7 +82,7 @@ export function SplitHeader({
                         </SelectItem>
                       ))}
                     </SelectGroup>
-                  </SelectContent>
+                  </ObjectFilterSelectContent>
                 </Select>
               </div>
             )}

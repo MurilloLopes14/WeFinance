@@ -117,6 +117,11 @@ const creditFieldsSchema = z.object({
 const accountBaseFormSchema = z
   .object({
     householdId: z.string().uuid('Selecione um grupo'),
+    userId: z
+      .string()
+      .uuid('Selecione um membro válido')
+      .optional()
+      .or(z.literal('')),
     name: z
       .string()
       .trim()
@@ -181,6 +186,7 @@ const creditDefaultFields = {
 
 export const defaultAccountFormValues: AccountFormValues = {
   householdId: '',
+  userId: '',
   name: '',
   type: CreateAccountDtoType.checking,
   institution: '',
@@ -192,6 +198,7 @@ export const defaultAccountFormValues: AccountFormValues = {
 
 export const defaultAccountEditFormValues: AccountEditFormValues = {
   householdId: '',
+  userId: '',
   name: '',
   type: CreateAccountDtoType.checking,
   institution: '',

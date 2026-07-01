@@ -1,13 +1,12 @@
 import type { AccountResponseDto } from '@/api/generated/models/accountResponseDto'
 import type { HouseholdResponseDto } from '@/api/generated/models/householdResponseDto'
 import type { TransactionsControllerFindAllType } from '@/api/generated/models/transactionsControllerFindAllType'
-import { ObjectHeader, type ObjectHeaderCreateAction } from '@/components/object/object-header'
+import { ObjectHeader, ObjectFilterSelectContent, type ObjectHeaderCreateAction } from '@/components/object/object-header'
 import { TransactionExportPopover } from '@/components/transactions/transaction-export-popover'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import {
   Select,
-  SelectContent,
   SelectGroup,
   SelectItem,
   SelectTrigger,
@@ -20,6 +19,7 @@ export type TransactionFilters = {
   month: string
   type: TransactionsControllerFindAllType | 'all'
   accountId: string | 'all'
+  onlyMine: boolean
 }
 
 type TransactionHeaderProps = {
@@ -56,7 +56,8 @@ export function TransactionHeader({
   const totalActiveFilters =
     (filters.month ? 1 : 0) +
     (filters.type === 'all' ? 0 : 1) +
-    (filters.accountId === 'all' ? 0 : 1)
+    (filters.accountId === 'all' ? 0 : 1) +
+    (filters.onlyMine ? 1 : 0)
 
   return (
     <ObjectHeader
@@ -76,6 +77,7 @@ export function TransactionHeader({
           month: '',
           type: 'all',
           accountId: 'all',
+          onlyMine: false,
         })
       }
       headerActions={
@@ -111,7 +113,7 @@ export function TransactionHeader({
                   >
                     <SelectValue placeholder="Selecione o grupo" />
                   </SelectTrigger>
-                  <SelectContent className="glass-strong glow-border">
+                  <ObjectFilterSelectContent>
                     <SelectGroup>
                       {households.map((household) => (
                         <SelectItem key={household.id} value={household.id}>
@@ -119,7 +121,7 @@ export function TransactionHeader({
                         </SelectItem>
                       ))}
                     </SelectGroup>
-                  </SelectContent>
+                  </ObjectFilterSelectContent>
                 </Select>
               </div>
             )}
@@ -159,7 +161,7 @@ export function TransactionHeader({
                 <SelectTrigger id="transaction-filter-type" className="w-full rounded-xl">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent className="glass-strong glow-border">
+                <ObjectFilterSelectContent>
                   <SelectGroup>
                     {transactionTypeOptions.map((option) => (
                       <SelectItem key={option.value} value={option.value}>
@@ -167,7 +169,7 @@ export function TransactionHeader({
                       </SelectItem>
                     ))}
                   </SelectGroup>
-                </SelectContent>
+                </ObjectFilterSelectContent>
               </Select>
             </div>
 
@@ -193,7 +195,7 @@ export function TransactionHeader({
                 <SelectTrigger id="transaction-filter-account" className="w-full rounded-xl">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent className="glass-strong glow-border">
+                <ObjectFilterSelectContent>
                   <SelectGroup>
                     <SelectItem value="all">Todas as contas</SelectItem>
                     {accounts.map((account) => (
@@ -202,7 +204,7 @@ export function TransactionHeader({
                       </SelectItem>
                     ))}
                   </SelectGroup>
-                </SelectContent>
+                </ObjectFilterSelectContent>
               </Select>
             </div>
           </div>

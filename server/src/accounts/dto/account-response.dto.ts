@@ -1,5 +1,16 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
+export class AccountOwnerDto {
+  @ApiProperty()
+  id: string;
+
+  @ApiProperty()
+  name: string;
+
+  @ApiProperty()
+  email: string;
+}
+
 export class AccountResponseDto {
   @ApiProperty()
   id: string;
@@ -7,8 +18,8 @@ export class AccountResponseDto {
   @ApiProperty()
   householdId: string;
 
-  @ApiPropertyOptional({ type: String, nullable: true })
-  userId: string | null;
+  @ApiPropertyOptional({ type: AccountOwnerDto, nullable: true })
+  user: AccountOwnerDto | null;
 
   @ApiProperty({ example: 'Nubank Crédito' })
   name: string;

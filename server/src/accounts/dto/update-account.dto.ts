@@ -78,4 +78,8 @@ export class UpdateAccountDto {
   @Max(28)
   invoiceClosingDay?: number | null;
 
+  @ApiPropertyOptional({ type: Number, nullable: true, description: 'Ignorado — campo computado (invoiceClosingDay + 7), não armazenado.' })
+  @IsOptional()
+  @IsInt()
+  invoiceDueDay?: number | null;
 }

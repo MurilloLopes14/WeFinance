@@ -37,4 +37,9 @@ export interface UpdateAccountDto {
    * @nullable
    */
   invoiceClosingDay?: number | null;
+  /**
+   * Ignorado — campo computado (invoiceClosingDay + 7), não armazenado.
+   * @nullable
+   */
+  invoiceDueDay?: number | null;
 }

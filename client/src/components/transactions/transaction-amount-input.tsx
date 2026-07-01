@@ -5,6 +5,7 @@ import {
   formatCurrencyInputFromDigits,
   parseCurrencyInputDigits,
 } from '@/lib/currency-input-helpers'
+import { getTransactionAmountClassName } from '@/lib/transaction-helpers'
 import { cn } from '@/lib/utils'
 import { useEffect, useRef, useState } from 'react'
 
@@ -16,19 +17,6 @@ type TransactionAmountInputProps = {
   disabled?: boolean
   type: CreateTransactionDtoType
   className?: string
-}
-
-function getAmountInputClassName(type: CreateTransactionDtoType): string {
-  switch (type) {
-    case CreateTransactionDtoType.income:
-      return 'text-emerald-600 dark:text-emerald-400'
-    case CreateTransactionDtoType.expense:
-      return 'text-destructive'
-    case CreateTransactionDtoType.transfer:
-      return 'text-amber-600 dark:text-amber-400'
-    default:
-      return 'text-foreground'
-  }
 }
 
 export function TransactionAmountInput({
@@ -82,7 +70,7 @@ export function TransactionAmountInput({
       onBlur={handleBlur}
       className={cn(
         'rounded-xl font-medium tabular-nums',
-        getAmountInputClassName(type),
+        getTransactionAmountClassName(type),
         className,
       )}
     />

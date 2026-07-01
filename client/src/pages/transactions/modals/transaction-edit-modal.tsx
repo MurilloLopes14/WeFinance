@@ -11,7 +11,6 @@ import {
   usePayeesControllerFindAll,
 } from '@/api/generated/payees/payees'
 import {
-  getTransactionsControllerFindAllQueryKey,
   useTransactionsControllerUpdate,
 } from '@/api/generated/transactions/transactions'
 import { Button } from '@/components/ui/button'
@@ -30,6 +29,7 @@ import { useAuthSession } from '@/hooks/use-auth-session'
 import { findHouseholdInList } from '@/lib/household-helpers'
 import { householdsListParams } from '@/lib/household-api-helpers'
 import { getApiErrorMessage } from '@/lib/get-api-error-message'
+import { invalidateTransactionDependentQueries } from '@/lib/transaction-api-helpers'
 import {
   resolveTransactionSplits,
   type TransactionSplitMode,
@@ -149,9 +149,7 @@ export function TransactionEditModal({
   const updateMutation = useTransactionsControllerUpdate({
     mutation: {
       onSuccess: async (_data, variables) => {
-        await queryClient.invalidateQueries({
-          queryKey: getTransactionsControllerFindAllQueryKey(variables.householdId),
-        })
+        await invalidateTransactionDependentQueries(queryClient, variables.householdId)
         toast.success('Transação atualizada com sucesso')
         onOpenChange(false)
       },

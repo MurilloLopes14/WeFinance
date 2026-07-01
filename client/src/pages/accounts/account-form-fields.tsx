@@ -1,6 +1,8 @@
 import { HouseholdComboboxField } from '@/components/households/household-combobox-field'
 import { ColorPresetPicker } from '@/components/color-preset-picker'
 import { HouseholdGatedFormSection } from '@/components/object/household-gated-form-section'
+import { UserSearchField } from '@/components/users/user-search-field'
+import { useHouseholdsControllerFindMembers } from '@/api/generated/households/households'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import {
@@ -23,6 +25,7 @@ import {
   type AccountFormValues,
 } from '@/pages/accounts/account-form-schema'
 import type { FieldErrors, UseFormRegister, UseFormSetValue, UseFormWatch } from 'react-hook-form'
+import { useEffect, useRef } from 'react'
 
 type AccountFormFieldsProps = {
   register: UseFormRegister<AccountFormValues | AccountEditFormValues>
@@ -42,6 +45,7 @@ export function AccountFormFields({
   variant = 'create',
 }: AccountFormFieldsProps) {
   const householdId = watch('householdId')
+  const userId = watch('userId')
   const type = watch('type')
   const yieldGranularity = watch('yieldGranularity')
   const creditLimit = watch('creditLimit')
@@ -52,6 +56,31 @@ export function AccountFormFields({
 
   const budgetNumberInputClassName =
     '[appearance:textfield] [-moz-appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none'
+
+  const {
+    data: members = [],
+    isLoading: isLoadingMembers,
+  } = useHouseholdsControllerFindMembers(householdId, {
+    query: { enabled: Boolean(householdId) },
+  })
+
+  const previousHouseholdIdRef = useRef(householdId)
+
+  useEffect(() => {
+    if (householdDisabled) {
+      previousHouseholdIdRef.current = householdId
+      return
+    }
+
+    if (
+      previousHouseholdIdRef.current &&
+      previousHouseholdIdRef.current !== householdId
+    ) {
+      setValue('userId', '', { shouldValidate: true })
+    }
+
+    previousHouseholdIdRef.current = householdId
+  }, [householdDisabled, householdId, setValue])
 
   return (
     <div className="min-w-0 space-y-4">
@@ -65,6 +94,19 @@ export function AccountFormFields({
       />
 
       <HouseholdGatedFormSection householdId={householdId}>
+      <UserSearchField
+        members={members}
+        value={userId ?? ''}
+        onValueChange={(nextUserId) =>
+          setValue('userId', nextUserId, { shouldValidate: true })
+        }
+        disabled={fieldsDisabled}
+        isLoading={isLoadingMembers}
+        error={errors.userId?.message}
+        id="account-owner"
+        label="Dono da Conta"
+      />
+
       <div className="space-y-2">
         <Label htmlFor="account-name">Nome da conta</Label>
         <Input

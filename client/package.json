@@ -8,10 +8,10 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "api:sync": "node scripts/sync-openapi.mjs",
-    "api:generate": "orval --config orval.config.ts",
-    "api:watch": "orval --config orval.config.ts --watch",
-    "api:update": "npm run api:sync && npm run api:generate"
+    "generate:sync": "node scripts/sync-openapi.mjs",
+    "generate": "orval --config orval.config.ts",
+    "generate:watch": "orval --config orval.config.ts --watch",
+    "generate:update": "npm run generate:sync && npm run generate"
   },
   "dependencies": {
     "@base-ui/react": "^1.5.0",

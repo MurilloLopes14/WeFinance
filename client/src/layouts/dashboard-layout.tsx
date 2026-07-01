@@ -5,7 +5,7 @@ import { TransactionCreateProvider } from '@/contexts/transaction-create-context
 import { PrivacyModeProvider } from '@/contexts/privacy-mode-context'
 import { ReleaseNotesGate } from '@/components/release-notes/release-notes-gate'
 import { AppTourProvider } from '@/components/tour/app-tour-provider'
-import { Outlet } from 'react-router-dom'
+import { DashboardPageTransition } from '@/layouts/dashboard-page-transition'
 export function DashboardLayout() {
   return (
     <SidebarProvider className="dashboard-shell">
@@ -22,7 +22,7 @@ export function DashboardLayout() {
               <span className="truncate font-heading text-base font-semibold text-inherit">WeFinance</span>            </div>
           </header>
           <div className="flex h-full min-h-0 flex-1 flex-col p-4 pb-[max(1rem,env(safe-area-inset-bottom))] md:p-6">
-            <Outlet />
+            <DashboardPageTransition />
             <footer className="mt-4 shrink-0 text-center">
               <p className="text-[10px] text-muted-foreground/35 select-none">
                 © {new Date().getFullYear()} WeFinance · Todos os direitos reservados

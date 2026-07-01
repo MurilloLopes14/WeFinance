@@ -2,7 +2,6 @@ import { useAccountsControllerFindAll } from '@/api/generated/accounts/accounts'
 import { useCategoriesControllerFindAll } from '@/api/generated/categories/categories'
 import { useHouseholdsControllerFindAll } from '@/api/generated/households/households'
 import {
-  getTransactionsControllerFindAllQueryKey,
   useTransactionsControllerFindAll,
   useTransactionsControllerRemove,
 } from '@/api/generated/transactions/transactions'
@@ -15,12 +14,14 @@ import { TransactionsDataTable } from '@/components/transactions/transactions-da
 import { ObjectCollectionState } from '@/components/object/object-collection-state'
 import { ObjectEmptyState } from '@/components/object/object-empty-state'
 import { ObjectPageContent, ObjectPageLayout } from '@/components/object/object-page-layout'
+import { Label } from '@/components/ui/label'
+import { Switch } from '@/components/ui/switch'
 import { useTransactionCreate } from '@/contexts/transaction-create-context'
 import { useAuthSession } from '@/hooks/use-auth-session'
 import { useHouseholdInsights } from '@/hooks/use-household-insights'
 import { getApiErrorMessage } from '@/lib/get-api-error-message'
 import { householdsListParams } from '@/lib/household-api-helpers'
-import { buildTransactionListParams } from '@/lib/transaction-api-helpers'
+import { buildTransactionListParams, invalidateTransactionDependentQueries } from '@/lib/transaction-api-helpers'
 import { formatInsightMonthLabel } from '@/lib/insight-helpers'
 import { canMutateTransaction, getCurrentMonthParam, getTransactionTypeLabel } from '@/lib/transaction-helpers'
 import { TransactionEditModal } from '@/pages/transactions/modals/transaction-edit-modal'
@@ -36,6 +37,7 @@ function createDefaultFilters(householdId: string): TransactionFilters {
     month: '',
     type: 'all',
     accountId: 'all',
+    onlyMine: false,
   }
 }
 
@@ -80,7 +82,7 @@ export function TransactionPage() {
 
   useEffect(() => {
     setPage(1)
-  }, [filters.householdId, filters.month, filters.type, filters.accountId, search])
+  }, [filters.householdId, filters.month, filters.type, filters.accountId, filters.onlyMine, search])
 
   useEffect(() => {
     const state = location.state as { openCreate?: boolean } | null
@@ -91,8 +93,8 @@ export function TransactionPage() {
   }, [location.pathname, location.state, navigate, openCreate, selectedHouseholdId])
 
   const listParams = useMemo(
-    () => buildTransactionListParams(filters, page),
-    [filters, page],
+    () => buildTransactionListParams(filters, page, currentUser?.id),
+    [filters, page, currentUser?.id],
   )
 
   const {
@@ -177,9 +179,7 @@ export function TransactionPage() {
   const deleteMutation = useTransactionsControllerRemove({
     mutation: {
       onSuccess: async (_, variables) => {
-        await queryClient.invalidateQueries({
-          queryKey: getTransactionsControllerFindAllQueryKey(variables.householdId),
-        })
+        await invalidateTransactionDependentQueries(queryClient, variables.householdId)
         toast.success('Transação excluída com sucesso')
         setDeleteTransaction(null)
       },
@@ -235,6 +235,28 @@ export function TransactionPage() {
           }}
         />
       )}
+
+      {hasAnyHousehold && currentUser ? (
+        <div className="flex w-fit items-center gap-2.5 rounded-xl border border-border/60 bg-muted/30 px-3 py-2">
+          <Switch
+            id="transactions-only-mine"
+            size="sm"
+            checked={filters.onlyMine}
+            onCheckedChange={(checked) => {
+              setFilters((current) => ({
+                ...current,
+                onlyMine: checked === true,
+              }))
+            }}
+          />
+          <Label
+            htmlFor="transactions-only-mine"
+            className="cursor-pointer whitespace-nowrap text-sm font-medium"
+          >
+            Filtrar somente minhas
+          </Label>
+        </div>
+      ) : null}
 
       <ObjectPageContent tourAnchor="transactions-table">
         <ObjectCollectionState

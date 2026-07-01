@@ -20,6 +20,8 @@ export interface PersonalSummaryResponseDto {
   investedBalance: number;
   /** Total net worth (availableBalance + investedBalance) */
   totalNetWorth: number;
+  /** Total a pagar nas faturas dos cartões pessoais no ciclo atual */
+  toBeSpent: number;
   /** Resumo de fatura por cartão de crédito */
   creditAccounts: CreditAccountSummaryDto[];
 }

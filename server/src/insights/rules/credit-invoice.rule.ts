@@ -1,6 +1,7 @@
 import { InsightDto } from '../dto/insight-response.dto';
 import { InsightsContext } from '../insights.types';
 import { InsightRule } from './insight-rule.interface';
+import { creditInvoiceDueDay } from '../../common/utils/credit.utils';
 
 export class CreditInvoiceRule implements InsightRule {
   readonly key = 'credit_invoice';
@@ -18,7 +19,7 @@ export class CreditInvoiceRule implements InsightRule {
 
       if (daysUntilClosing > 3) continue;
 
-      const dueDay = invoiceDueDay(acc.invoiceClosingDay);
+      const dueDay = creditInvoiceDueDay(acc.invoiceClosingDay);
       const dueText = ` Pague até o dia ${dueDay}.`;
 
       if (daysUntilClosing === 0) {
@@ -48,11 +49,6 @@ export class CreditInvoiceRule implements InsightRule {
 
     return insights.length ? insights : null;
   }
-}
-
-function invoiceDueDay(closingDay: number): number {
-  const due = closingDay + 7;
-  return due > 31 ? due - 31 : due;
 }
 
 function closingDaysFromNow(closingDay: number, todayDay: number): number {

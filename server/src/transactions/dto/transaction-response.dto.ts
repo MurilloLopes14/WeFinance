@@ -7,6 +7,9 @@ export class TransactionOwnerDto {
   @ApiProperty()
   name: string;
 
+  @ApiProperty()
+  email: string;
+
   @ApiPropertyOptional({ type: String, nullable: true })
   avatarUrl: string | null;
 }
@@ -150,4 +153,7 @@ export class TransactionSummaryResponseDto {
 
   @ApiProperty({ description: 'Total net worth (availableBalance + investedBalance)' })
   totalNetWorth: number;
+
+  @ApiProperty({ description: 'Total a pagar nas faturas dos cartões de crédito do grupo no ciclo atual' })
+  toBeSpent: number;
 }

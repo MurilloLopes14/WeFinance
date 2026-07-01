@@ -42,13 +42,17 @@ import {
 } from './dto/dashboard-response.dto';
 import { FilterBalanceHistoryDto, FilterCategoryBreakdownDto, FilterExportDto } from './dto/filter-report.dto';
 import { TransactionsService } from './transactions.service';
+import { TransactionReportsService } from './transactions-reports.service';
 
 @ApiTags('Transactions')
 @ApiBearerAuth('JWT-auth')
 @UseGuards(JwtAuthGuard)
 @Controller('households/:householdId/transactions')
 export class TransactionsController {
-  constructor(private readonly transactionsService: TransactionsService) {}
+  constructor(
+    private readonly transactionsService: TransactionsService,
+    private readonly reportsService: TransactionReportsService,
+  ) {}
 
   @Post()
   @ApiOperation({ summary: 'Create a transaction (expense, income, or transfer)' })
@@ -82,7 +86,7 @@ export class TransactionsController {
     @Query('month') month: string | undefined,
     @CurrentUser() user: AuthenticatedUser,
   ) {
-    return this.transactionsService.getSummary(householdId, user.id, month);
+    return this.reportsService.getSummary(householdId, user.id, month);
   }
 
   @Get('report/personal-summary')
@@ -94,7 +98,7 @@ export class TransactionsController {
     @Query('month') month: string | undefined,
     @CurrentUser() user: AuthenticatedUser,
   ) {
-    return this.transactionsService.getPersonalSummary(householdId, user.id, month);
+    return this.reportsService.getPersonalSummary(householdId, user.id, month);
   }
 
   @Get('report/category-breakdown')
@@ -105,7 +109,7 @@ export class TransactionsController {
     @Query() query: FilterCategoryBreakdownDto,
     @CurrentUser() user: AuthenticatedUser,
   ) {
-    return this.transactionsService.getCategoryBreakdown(
+    return this.reportsService.getCategoryBreakdown(
       householdId,
       user.id,
       query.scope ?? 'household',
@@ -121,7 +125,7 @@ export class TransactionsController {
     @Query('month') month: string | undefined,
     @CurrentUser() user: AuthenticatedUser,
   ) {
-    return this.transactionsService.getDailySummary(householdId, user.id, month);
+    return this.reportsService.getDailySummary(householdId, user.id, month);
   }
 
   @Get('report/export')
@@ -134,7 +138,7 @@ export class TransactionsController {
     @CurrentUser() user: AuthenticatedUser,
     @Res({ passthrough: true }) res: Response,
   ): Promise<StreamableFile> {
-    const csv = await this.transactionsService.exportCsv(householdId, user.id, query);
+    const csv = await this.reportsService.exportCsv(householdId, user.id, query);
     const datePart =
       query.from && query.to
         ? `${query.from}-a-${query.to}`
@@ -152,7 +156,7 @@ export class TransactionsController {
     @Query() query: FilterBalanceHistoryDto,
     @CurrentUser() user: AuthenticatedUser,
   ) {
-    return this.transactionsService.getBalanceHistory(
+    return this.reportsService.getBalanceHistory(
       householdId,
       user.id,
       query.months ?? 6,

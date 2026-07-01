@@ -44,6 +44,7 @@ type AccountEditModalProps = {
 function toFormValues(account: AccountResponseDto): AccountEditFormValues {
   return {
     householdId: account.householdId,
+    userId: account.user?.id ?? '',
     name: account.name,
     type: account.type,
     institution: account.institution ?? '',
@@ -134,6 +135,7 @@ export function AccountEditModal({
       data: {
         name: values.name,
         type: values.type,
+        userId: values.userId || null,
         institution: values.institution || null,
         color: values.color || undefined,
         ...buildInvestmentAccountPayload(values, { clearWhenNotInvestment: true }),

@@ -28,6 +28,7 @@ import { AUTH_SESSION_QUERY_KEY } from '@/hooks/use-auth-session'
 import { useAuthSession } from '@/hooks/use-auth-session'
 import { isAdmin } from '@/lib/user-helpers'
 import { cn } from '@/lib/utils'
+import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 import { ChevronRight, LogOut, PanelLeft } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { NavLink, useLocation, useNavigate } from 'react-router-dom'
@@ -37,6 +38,9 @@ function AppLogo() {
   return <AppBrandMark />
 }
 
+const GROUPS_SUB_ITEM_STAGGER_S = 0.045
+const GROUPS_SUB_ITEM_DURATION_S = 0.2
+
 export function AppSidebar() {
   const location = useLocation()
   const navigate = useNavigate()
@@ -45,6 +49,7 @@ export function AppSidebar() {
   const isCollapsed = state === 'collapsed'
 
   const { data: user } = useAuthSession()
+  const shouldReduceMotion = useReducedMotion()
   const secondaryNavItems = dashboardSecondaryNav.filter(
     (item) => !item.adminOnly || isAdmin(user?.role),
   )
@@ -156,22 +161,51 @@ export function AppSidebar() {
                   />
                 </SidebarMenuButton>
 
-                {groupsOpen && (
-                  <SidebarMenuSub>
-                    {dashboardGroupsNav.items.map((item) => (
-                      <SidebarMenuSubItem key={item.url}>
-                        <SidebarMenuSubButton
-                          render={<NavLink to={item.url} onClick={closeMobileSidebar} />}
-                          isActive={location.pathname === item.url}
-                          className="text-base [&_svg]:size-4.5"
-                        >
-                          <item.icon />
-                          <span>{item.title}</span>
-                        </SidebarMenuSubButton>
-                      </SidebarMenuSubItem>
-                    ))}
-                  </SidebarMenuSub>
-                )}
+                <AnimatePresence initial={false}>
+                  {groupsOpen ? (
+                    <motion.div
+                      key="groups-sub-menu"
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: 'auto', opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{
+                        duration: shouldReduceMotion ? 0 : 0.18,
+                        ease: 'easeOut',
+                      }}
+                      className="overflow-hidden"
+                    >
+                      <SidebarMenuSub>
+                        {dashboardGroupsNav.items.map((item, index) => (
+                          <SidebarMenuSubItem key={item.url}>
+                            <motion.div
+                              className="min-w-0"
+                              initial={
+                                shouldReduceMotion
+                                  ? false
+                                  : { opacity: 0, x: -8 }
+                              }
+                              animate={{ opacity: 1, x: 0 }}
+                              transition={{
+                                duration: shouldReduceMotion ? 0 : GROUPS_SUB_ITEM_DURATION_S,
+                                delay: shouldReduceMotion ? 0 : index * GROUPS_SUB_ITEM_STAGGER_S,
+                                ease: [0.25, 0.1, 0.25, 1],
+                              }}
+                            >
+                              <SidebarMenuSubButton
+                                render={<NavLink to={item.url} onClick={closeMobileSidebar} />}
+                                isActive={location.pathname === item.url}
+                                className="text-base [&_svg]:size-4.5"
+                              >
+                                <item.icon />
+                                <span>{item.title}</span>
+                              </SidebarMenuSubButton>
+                            </motion.div>
+                          </SidebarMenuSubItem>
+                        ))}
+                      </SidebarMenuSub>
+                    </motion.div>
+                  ) : null}
+                </AnimatePresence>
               </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>

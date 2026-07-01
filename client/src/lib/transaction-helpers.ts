@@ -55,6 +55,8 @@ export function getTransactionAmountClassName(type: TransactionResponseDtoType):
       return 'text-destructive'
     case 'income':
       return 'text-emerald-600 dark:text-emerald-400'
+    case 'transfer':
+      return 'text-amber-600 dark:text-amber-400'
     default:
       return 'text-foreground'
   }

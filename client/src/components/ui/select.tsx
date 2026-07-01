@@ -59,6 +59,7 @@ function SelectTrigger({
 function SelectContent({
   className,
   children,
+  variant = "default",
   side = "bottom",
   sideOffset = 4,
   align = "start",
@@ -69,7 +70,11 @@ function SelectContent({
   Pick<
     SelectPrimitive.Positioner.Props,
     "align" | "alignOffset" | "side" | "sideOffset" | "alignItemWithTrigger"
-  >) {
+  > & {
+    variant?: "default" | "compact"
+  }) {
+  const isCompact = variant === "compact"
+
   return (
     <SelectPrimitive.Portal>
       <SelectPrimitive.Positioner
@@ -82,13 +87,27 @@ function SelectContent({
       >
         <SelectPrimitive.Popup
           data-slot="select-content"
+          data-variant={variant}
           data-align-trigger={alignItemWithTrigger}
-          className={cn("relative isolate z-[250] max-h-(--available-height) w-(--anchor-width) max-w-[calc(100vw-2rem)] min-w-0 origin-(--transform-origin) overflow-x-hidden overflow-y-auto rounded-lg dropdown-surface text-popover-foreground duration-100 sm:min-w-36 data-[align-trigger=true]:animate-none data-[side=bottom]:slide-in-from-top-2 data-[side=inline-end]:slide-in-from-left-2 data-[side=inline-start]:slide-in-from-right-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0", className )}
+          className={cn(
+            "relative isolate z-[250] w-(--anchor-width) max-w-[calc(100vw-2rem)] min-w-0 origin-(--transform-origin) rounded-lg dropdown-surface text-popover-foreground duration-100 sm:min-w-36 data-[align-trigger=true]:animate-none data-[side=bottom]:slide-in-from-top-2 data-[side=inline-end]:slide-in-from-left-2 data-[side=inline-start]:slide-in-from-right-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0",
+            isCompact
+              ? "max-h-none overflow-hidden"
+              : "max-h-(--available-height) overflow-x-hidden overflow-y-auto",
+            className,
+          )}
           {...props}
         >
-          <SelectScrollUpButton />
-          <SelectPrimitive.List>{children}</SelectPrimitive.List>
-          <SelectScrollDownButton />
+          {!isCompact ? <SelectScrollUpButton /> : null}
+          <SelectPrimitive.List
+            className={cn(
+              isCompact &&
+                "max-h-60 overflow-x-hidden overflow-y-auto overscroll-contain scrollbar-discreet",
+            )}
+          >
+            {children}
+          </SelectPrimitive.List>
+          {!isCompact ? <SelectScrollDownButton /> : null}
         </SelectPrimitive.Popup>
       </SelectPrimitive.Positioner>
     </SelectPrimitive.Portal>

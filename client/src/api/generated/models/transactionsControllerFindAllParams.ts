@@ -18,6 +18,10 @@ type?: TransactionsControllerFindAllType;
 accountId?: string;
 status?: TransactionsControllerFindAllStatus;
 /**
+ * Filter by transaction creator (user UUID)
+ */
+ownerId?: string;
+/**
  * Ordenação por data
  */
 order?: TransactionsControllerFindAllOrder;

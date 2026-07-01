@@ -1,8 +1,7 @@
-import { ObjectHeader, type ObjectHeaderCreateAction } from '@/components/object/object-header'
+import { ObjectHeader, ObjectFilterSelectContent, type ObjectHeaderCreateAction } from '@/components/object/object-header'
 import { Label } from '@/components/ui/label'
 import {
   Select,
-  SelectContent,
   SelectGroup,
   SelectItem,
   SelectTrigger,
@@ -75,7 +74,7 @@ export function HouseholdHeader({
               <SelectTrigger id="household-filter-split" className="w-full rounded-xl">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent className="glass-strong glow-border">
+              <ObjectFilterSelectContent>
                 <SelectGroup>
                   {splitTypeOptions.map((option) => (
                     <SelectItem key={option.value} value={option.value}>
@@ -83,7 +82,7 @@ export function HouseholdHeader({
                     </SelectItem>
                   ))}
                 </SelectGroup>
-              </SelectContent>
+              </ObjectFilterSelectContent>
             </Select>
           </div>
         ) : undefined

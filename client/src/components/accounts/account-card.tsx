@@ -81,9 +81,19 @@ export function AccountCard({
         />
 
         <div className="min-w-0 flex-1 overflow-hidden">
-          <CardTitle className="truncate text-base leading-snug font-medium">
-            {account.name}
-          </CardTitle>
+          <div className="flex min-w-0 items-center gap-1.5">
+            <CardTitle className="min-w-0 truncate text-base leading-snug font-medium">
+              {account.name}
+            </CardTitle>
+            {account.user?.name ? (
+              <Badge
+                variant="outline"
+                className={cn(accountBadgeClassName, 'max-w-[42%] shrink-0 truncate')}
+              >
+                {account.user.name}
+              </Badge>
+            ) : null}
+          </div>
 
           <SensitiveValue
             size="lg"

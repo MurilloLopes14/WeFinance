@@ -64,9 +64,6 @@ export function DashboardPerspectiveTabs({
                 }
               : undefined
           }
-          creditAccounts={
-            isLoading ? [] : (personalSummary?.creditAccounts ?? [])
-          }
           currency={currency}
           isLoading={isLoading}
         />
@@ -89,6 +86,8 @@ export function DashboardPerspectiveTabs({
                 }
               : undefined
           }
+          includeToBePaidCard
+          toBePaid={householdSummary?.toBeSpent ?? 0}
           currency={currency}
           isLoading={isLoading}
         />

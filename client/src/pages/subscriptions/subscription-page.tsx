@@ -93,7 +93,7 @@ export function SubscriptionPage() {
     queries: householdIdsForFetch.map((householdId) => ({
       queryKey: getSubscriptionsControllerFindAllQueryKey(householdId),
       queryFn: ({ signal }: { signal?: AbortSignal }) =>
-        subscriptionsControllerFindAll(householdId, undefined, signal),
+        subscriptionsControllerFindAll(householdId, undefined, undefined, signal),
       enabled: Boolean(householdId),
     })),
   })

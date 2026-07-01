@@ -5,11 +5,9 @@
  * Shared Finance Management API
  * OpenAPI spec version: 1.0
  */
+import type { AccountOwnerDto } from './accountOwnerDto';
 
-export interface TransactionOwnerDto {
-  id: string;
-  name: string;
-  email: string;
-  /** @nullable */
-  avatarUrl?: string | null;
-}
+/**
+ * @nullable
+ */
+export type AccountResponseDtoUser = AccountOwnerDto | null;

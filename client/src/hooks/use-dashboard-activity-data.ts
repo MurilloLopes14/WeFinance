@@ -27,9 +27,7 @@ export function useDashboardActivityData(householdId: string, month: string) {
     isLoading: isLoadingSubscriptions,
     isError: isErrorSubscriptions,
     refetch: refetchSubscriptions,
-  } = useSubscriptionsControllerFindAll(householdId, {
-    query: { enabled },
-  })
+  } = useSubscriptionsControllerFindAll(householdId, undefined, { query: { enabled } })
 
   return {
     recentTransactions: transactionsPage?.data ?? [],

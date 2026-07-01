@@ -105,7 +105,9 @@ export function AccountPage() {
       const matchesSearch =
         normalizedSearch.length === 0 ||
         account.name.toLowerCase().includes(normalizedSearch) ||
-        (account.institution?.toLowerCase().includes(normalizedSearch) ?? false)
+        (account.institution?.toLowerCase().includes(normalizedSearch) ?? false) ||
+        (account.user?.name.toLowerCase().includes(normalizedSearch) ?? false) ||
+        (account.user?.email.toLowerCase().includes(normalizedSearch) ?? false)
 
       const matchesType = filters.type === 'all' || account.type === filters.type
 

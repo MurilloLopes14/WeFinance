@@ -33,6 +33,11 @@ export class FilterTransactionsDto {
   @IsEnum(['draft', 'cleared', 'reconciled'])
   status?: 'draft' | 'cleared' | 'reconciled';
 
+  @ApiPropertyOptional({ description: 'Filter by transaction creator (user UUID)' })
+  @IsOptional()
+  @IsUUID()
+  ownerId?: string;
+
   @ApiPropertyOptional({ enum: ['asc', 'desc'], default: 'desc', description: 'Ordenação por data' })
   @IsOptional()
   @IsEnum(['asc', 'desc'])

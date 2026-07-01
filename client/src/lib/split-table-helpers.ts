@@ -23,9 +23,28 @@ export function transactionHasSharedSplit(transaction: TransactionResponseDto): 
   return (transaction.splits?.length ?? 0) > 1
 }
 
+export function buildMemberNameByUserId(
+  transactions: TransactionResponseDto[],
+  householdMemberNames: Record<string, string | undefined> = {},
+): Record<string, string> {
+  const map: Record<string, string> = {}
+
+  for (const [userId, name] of Object.entries(householdMemberNames)) {
+    if (name) map[userId] = name
+  }
+
+  for (const transaction of transactions) {
+    for (const member of transaction.splitPreview?.members ?? []) {
+      if (!map[member.id]) map[member.id] = member.name
+    }
+  }
+
+  return map
+}
+
 export function flattenTransactionsToSplitRows(
   transactions: TransactionResponseDto[],
-  memberNameByUserId: Record<string, string | undefined>,
+  memberNameByUserId: Record<string, string | undefined> | Record<string, string>,
 ): SplitTableRow[] {
   const rows: SplitTableRow[] = []
 

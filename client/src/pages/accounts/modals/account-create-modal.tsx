@@ -74,6 +74,7 @@ export function AccountCreateModal({ open, onOpenChange }: AccountCreateModalPro
       data: {
         name: values.name,
         type: values.type,
+        userId: values.userId || undefined,
         institution: values.institution || undefined,
         balanceManual: values.balanceManual,
         color: values.color || undefined,

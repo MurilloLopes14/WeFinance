@@ -6,11 +6,13 @@
  * OpenAPI spec version: 1.0
  */
 
+export * from './accountOwnerDto';
 export * from './accountProjectionDto';
 export * from './accountProjectionDtoGranularity';
 export * from './accountProjectionDtoMaturityDate';
 export * from './accountResponseDto';
 export * from './accountResponseDtoType';
+export * from './accountResponseDtoUser';
 export * from './accountResponseDtoYieldGranularity';
 export * from './accountsControllerGetProjectionParams';
 export * from './authResponseDto';

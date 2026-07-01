@@ -18,4 +18,6 @@ export interface TransactionSummaryResponseDto {
   investedBalance: number;
   /** Total net worth (availableBalance + investedBalance) */
   totalNetWorth: number;
+  /** Total a pagar nas faturas dos cartões de crédito do grupo no ciclo atual */
+  toBeSpent: number;
 }

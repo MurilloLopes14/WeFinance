@@ -61,3 +61,24 @@ export function getHouseholdNameMap(
     (households ?? []).map((household) => [household.id, household.name]),
   )
 }
+
+export function filterMembersByQuery(
+  members: HouseholdMemberResponseDto[],
+  query: string,
+): HouseholdMemberResponseDto[] {
+  const normalized = query.trim().toLowerCase()
+  if (!normalized) return members
+
+  return members.filter(
+    (member) =>
+      member.user.name.toLowerCase().includes(normalized) ||
+      member.user.email.toLowerCase().includes(normalized),
+  )
+}
+
+export function getMemberDisplayName(
+  members: HouseholdMemberResponseDto[],
+  userId: string,
+): string | undefined {
+  return members.find((member) => member.userId === userId)?.user.name
+}

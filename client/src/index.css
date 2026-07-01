@@ -940,6 +940,41 @@
     background: oklch(from var(--glow-primary) l c h / 38%);
   }
 
+  .scrollbar-discreet {
+    scrollbar-width: thin;
+    scrollbar-color: transparent transparent;
+  }
+
+  .scrollbar-discreet:hover,
+  .scrollbar-discreet:focus-within {
+    scrollbar-color: oklch(from var(--foreground) l c h / 18%) transparent;
+  }
+
+  .scrollbar-discreet::-webkit-scrollbar {
+    width: 5px;
+    height: 5px;
+  }
+
+  .scrollbar-discreet::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .scrollbar-discreet::-webkit-scrollbar-thumb {
+    background: transparent;
+    border-radius: 999px;
+    transition: background 150ms ease;
+  }
+
+  .scrollbar-discreet:hover::-webkit-scrollbar-thumb,
+  .scrollbar-discreet:focus-within::-webkit-scrollbar-thumb {
+    background: oklch(from var(--foreground) l c h / 16%);
+  }
+
+  .scrollbar-discreet:hover::-webkit-scrollbar-thumb:hover,
+  .scrollbar-discreet:focus-within::-webkit-scrollbar-thumb:hover {
+    background: oklch(from var(--foreground) l c h / 28%);
+  }
+
   /* ── React Joyride — botão primário no estilo WeFinance ── */
   #react-joyride-portal button[data-action='primary'] {
     background: var(--primary) !important;

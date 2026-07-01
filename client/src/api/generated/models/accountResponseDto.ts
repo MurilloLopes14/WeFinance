@@ -5,6 +5,7 @@
  * Shared Finance Management API
  * OpenAPI spec version: 1.0
  */
+import type { AccountResponseDtoUser } from './accountResponseDtoUser';
 import type { AccountResponseDtoType } from './accountResponseDtoType';
 import type { AccountResponseDtoYieldGranularity } from './accountResponseDtoYieldGranularity';
 
@@ -12,7 +13,7 @@ export interface AccountResponseDto {
   id: string;
   householdId: string;
   /** @nullable */
-  userId?: string | null;
+  user?: AccountResponseDtoUser;
   name: string;
   type: AccountResponseDtoType;
   /** @nullable */

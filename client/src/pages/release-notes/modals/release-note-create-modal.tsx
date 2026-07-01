@@ -16,7 +16,7 @@ import {
   FormDialogHeader,
 } from '@/components/object/form-dialog-shell'
 import { getApiErrorMessage } from '@/lib/get-api-error-message'
-import { toPublishedAtIso } from '@/lib/release-note-helpers'
+import { toCreatePublishedAt } from '@/lib/release-note-helpers'
 import {
   defaultReleaseNoteFormValues,
   releaseNoteFormSchema,
@@ -72,7 +72,7 @@ export function ReleaseNoteCreateModal({ open, onOpenChange }: ReleaseNoteCreate
         version: values.version,
         title: values.title,
         content: values.content,
-        publishedAt: toPublishedAtIso(values.publishNow),
+        publishedAt: toCreatePublishedAt(values.publishNow),
       },
     })
   }

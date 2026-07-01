@@ -11,9 +11,10 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
+import { SelectContent } from '@/components/ui/select'
 import { cn } from '@/lib/utils'
 import { Plus, Search, SlidersHorizontal } from 'lucide-react'
-import { useState, type ReactNode } from 'react'
+import { useState, type ComponentProps, type ReactNode } from 'react'
 
 export type ObjectHeaderCreateAction = {
   label: string
@@ -37,6 +38,20 @@ type ObjectHeaderProps = {
   tourAnchor?: string
   toolbarTourAnchor?: string
   className?: string
+}
+
+/** Select dropdown para filtros do ObjectHeader — scroll nativo discreto, sem setas. */
+export function ObjectFilterSelectContent({
+  className,
+  ...props
+}: Omit<ComponentProps<typeof SelectContent>, 'variant'>) {
+  return (
+    <SelectContent
+      variant="compact"
+      className={cn('glass-strong glow-border', className)}
+      {...props}
+    />
+  )
 }
 
 export function ObjectHeader({
@@ -148,7 +163,7 @@ export function ObjectHeader({
               <DialogDescription>{filtersDescription}</DialogDescription>
             </DialogHeader>
 
-            <div className="py-1">{filtersContent}</div>
+            <div className="object-header-filters py-1">{filtersContent}</div>
 
             <DialogFooter className="gap-2 sm:gap-0">
               <Button

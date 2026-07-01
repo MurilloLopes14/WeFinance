@@ -1,10 +1,9 @@
 import type { HouseholdResponseDto } from '@/api/generated/models/householdResponseDto'
 import type { SubscriptionResponseDtoType } from '@/api/generated/models/subscriptionResponseDtoType'
-import { ObjectHeader, type ObjectHeaderCreateAction } from '@/components/object/object-header'
+import { ObjectHeader, ObjectFilterSelectContent, type ObjectHeaderCreateAction } from '@/components/object/object-header'
 import { Label } from '@/components/ui/label'
 import {
   Select,
-  SelectContent,
   SelectGroup,
   SelectItem,
   SelectTrigger,
@@ -106,7 +105,7 @@ export function SubscriptionHeader({
                   >
                     <SelectValue placeholder="Selecione o grupo" />
                   </SelectTrigger>
-                  <SelectContent className="glass-strong glow-border">
+                  <ObjectFilterSelectContent>
                     <SelectGroup>
                       <SelectItem value="all">Todos os grupos</SelectItem>
                       {households.map((household) => (
@@ -115,7 +114,7 @@ export function SubscriptionHeader({
                         </SelectItem>
                       ))}
                     </SelectGroup>
-                  </SelectContent>
+                  </ObjectFilterSelectContent>
                 </Select>
               </div>
             )}
@@ -139,7 +138,7 @@ export function SubscriptionHeader({
                 <SelectTrigger id="subscription-filter-type" className="w-full rounded-xl">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent className="glass-strong glow-border">
+                <ObjectFilterSelectContent>
                   <SelectGroup>
                     {typeOptions.map((option) => (
                       <SelectItem key={option.value} value={option.value}>
@@ -147,7 +146,7 @@ export function SubscriptionHeader({
                       </SelectItem>
                     ))}
                   </SelectGroup>
-                </SelectContent>
+                </ObjectFilterSelectContent>
               </Select>
             </div>
 
@@ -170,7 +169,7 @@ export function SubscriptionHeader({
                 <SelectTrigger id="subscription-filter-active" className="w-full rounded-xl">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent className="glass-strong glow-border">
+                <ObjectFilterSelectContent>
                   <SelectGroup>
                     {activeOptions.map((option) => (
                       <SelectItem key={option.value} value={option.value}>
@@ -178,7 +177,7 @@ export function SubscriptionHeader({
                       </SelectItem>
                     ))}
                   </SelectGroup>
-                </SelectContent>
+                </ObjectFilterSelectContent>
               </Select>
             </div>
           </div>

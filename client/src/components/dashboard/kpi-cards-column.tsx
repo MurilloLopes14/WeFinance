@@ -22,6 +22,10 @@ type KpiCardsColumnProps = {
   isLoading: boolean
   label?: string
   accountBalances?: AccountBalanceBreakdown
+  /** Exibe o card "A pagar" com o total informado (ex.: resumo do grupo). */
+  toBePaid?: number
+  /** Reserva espaço para o card "A pagar" no layout (ex.: aba Grupo). */
+  includeToBePaidCard?: boolean
   creditAccounts?: CreditAccountSummaryDto[]
   className?: string
 }
@@ -32,14 +36,18 @@ export function KpiCardsColumn({
   isLoading,
   label,
   accountBalances,
+  toBePaid,
+  includeToBePaidCard = false,
   creditAccounts,
   className,
 }: KpiCardsColumnProps) {
   const showAccountBalances = accountBalances !== undefined
-  const showCreditSection = creditAccounts !== undefined
-  const totalToBePaid =
+  const showToBePaidCard = includeToBePaidCard || toBePaid !== undefined
+  const creditAccountsToBePaid =
     creditAccounts?.reduce((sum, account) => sum + account.toBeSpent, 0) ?? 0
-  const hasCreditAccounts = (creditAccounts?.length ?? 0) > 0
+  const resolvedToBePaid = toBePaid ?? creditAccountsToBePaid
+  const showCreditAccountsCard =
+    !showToBePaidCard && creditAccounts !== undefined && creditAccounts.length > 0
 
   const kpiCards = useMemo(() => {
     const cards: Omit<KpiCardProps, 'currency'>[] = [
@@ -80,10 +88,10 @@ export function KpiCardsColumn({
       )
     }
 
-    if (showCreditSection && hasCreditAccounts) {
+    if (showToBePaidCard || showCreditAccountsCard) {
       cards.push({
         label: 'A pagar',
-        value: totalToBePaid,
+        value: resolvedToBePaid,
         variant: 'toBePaid',
       })
     }
@@ -91,19 +99,20 @@ export function KpiCardsColumn({
     return cards
   }, [
     accountBalances,
+    creditAccounts,
     data?.balance,
     data?.totalExpenses,
     data?.totalIncome,
-    hasCreditAccounts,
+    resolvedToBePaid,
     showAccountBalances,
-    showCreditSection,
-    totalToBePaid,
+    showCreditAccountsCard,
+    showToBePaidCard,
   ])
 
   const skeletonCount = isLoading
     ? showAccountBalances
-      ? 6 + (showCreditSection && hasCreditAccounts ? 1 : 0)
-      : 3
+      ? 6 + (showToBePaidCard || showCreditAccountsCard ? 1 : 0)
+      : 3 + (showToBePaidCard || showCreditAccountsCard ? 1 : 0)
     : kpiCards.length
 
   return (

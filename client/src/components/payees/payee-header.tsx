@@ -1,9 +1,8 @@
 import type { HouseholdResponseDto } from '@/api/generated/models/householdResponseDto'
-import { ObjectHeader, type ObjectHeaderCreateAction } from '@/components/object/object-header'
+import { ObjectHeader, ObjectFilterSelectContent, type ObjectHeaderCreateAction } from '@/components/object/object-header'
 import { Label } from '@/components/ui/label'
 import {
   Select,
-  SelectContent,
   SelectGroup,
   SelectItem,
   SelectTrigger,
@@ -79,7 +78,7 @@ export function PayeeHeader({
                   >
                     <SelectValue placeholder="Selecione o grupo" />
                   </SelectTrigger>
-                  <SelectContent className="glass-strong glow-border">
+                  <ObjectFilterSelectContent>
                     <SelectGroup>
                       <SelectItem value="all">Todos os grupos</SelectItem>
                       {households.map((household) => (
@@ -88,7 +87,7 @@ export function PayeeHeader({
                         </SelectItem>
                       ))}
                     </SelectGroup>
-                  </SelectContent>
+                  </ObjectFilterSelectContent>
                 </Select>
               </div>
             )}
