@@ -16,8 +16,11 @@ import { User, Users } from 'lucide-react'
 export const insightCardGridClassName =
   'grid w-full auto-rows-min grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3'
 
+/** Máx. 4 colunas × 3 linhas na página de transações (ver COMPACT_MAX_INLINE_INSIGHTS). */
 export const insightCardCompactGridClassName =
-  'grid w-full min-w-0 auto-rows-min grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5'
+  'grid w-full min-w-0 auto-rows-min grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4'
+
+export const COMPACT_MAX_INLINE_INSIGHTS = 12
 
 type InsightCardProps = {
   insight: EnrichedInsight

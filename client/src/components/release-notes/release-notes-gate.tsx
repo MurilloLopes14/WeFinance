@@ -42,6 +42,7 @@ export function ReleaseNotesGate() {
     <ReleaseNotePopup
       note={latestNote}
       open={open}
+      variant="announcement"
       onClose={handleClose}
       isMarkingSeen={markSeenMutation.isPending}
     />

@@ -92,7 +92,6 @@ export const dashboardSecondaryNav: DashboardNavItem[] = [
     title: 'Notas de versão',
     url: '/dashboard/notas-de-versao',
     icon: ScrollText,
-    adminOnly: true,
   },
 ]
 

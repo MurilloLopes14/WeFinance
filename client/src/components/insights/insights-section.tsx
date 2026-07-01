@@ -1,4 +1,5 @@
 import {
+  COMPACT_MAX_INLINE_INSIGHTS,
   InsightCard,
   insightCardCompactGridClassName,
   insightCardGridClassName,
@@ -118,7 +119,7 @@ function InsightsDesktopPanel({
           description={description}
           compact={layout === 'compact'}
         />
-        <InsightsGridSkeleton layout={layout} count={layout === 'compact' ? 6 : 3} />
+        <InsightsGridSkeleton layout={layout} count={layout === 'compact' ? 8 : 3} />
       </section>
     )
   }
@@ -136,9 +137,8 @@ function InsightsDesktopPanel({
   }
 
   if (layout === 'compact') {
-    const maxInlineInsights = 8
-    const inlineInsights = insights.slice(0, maxInlineInsights)
-    const hasOverflow = insights.length > maxInlineInsights
+    const inlineInsights = insights.slice(0, COMPACT_MAX_INLINE_INSIGHTS)
+    const hasOverflow = insights.length > COMPACT_MAX_INLINE_INSIGHTS
 
     return (
       <section

@@ -11,13 +11,17 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { formatReleaseNoteDate } from '@/lib/release-note-helpers'
+import { cn } from '@/lib/utils'
 import { Loader2, Sparkles } from 'lucide-react'
+
+type ReleaseNotePopupVariant = 'announcement' | 'browse'
 
 type ReleaseNotePopupProps = {
   note: ReleaseNoteResponseDto
   open: boolean
   onClose: () => void
   isMarkingSeen?: boolean
+  variant?: ReleaseNotePopupVariant
 }
 
 export function ReleaseNotePopup({
@@ -25,15 +29,21 @@ export function ReleaseNotePopup({
   open,
   onClose,
   isMarkingSeen = false,
+  variant = 'announcement',
 }: ReleaseNotePopupProps) {
   const publishedAt =
     typeof note.publishedAt === 'string' ? note.publishedAt : null
+  const isBrowse = variant === 'browse'
+  const isBusy = !isBrowse && isMarkingSeen
 
   return (
-    <Dialog open={open} onOpenChange={(nextOpen) => !nextOpen && !isMarkingSeen && onClose()}>
+    <Dialog open={open} onOpenChange={(nextOpen) => !nextOpen && !isBusy && onClose()}>
       <DialogContent
-        className="glass-strong flex max-h-[min(100dvh-2rem,90vh)] flex-col gap-0 overflow-hidden border-primary/20 p-0 sm:max-w-lg"
-        showCloseButton={!isMarkingSeen}
+        className={cn(
+          'glass-strong flex max-h-[min(100dvh-2rem,90vh)] flex-col gap-0 overflow-hidden border-primary/20 p-0',
+          isBrowse ? 'sm:max-w-2xl' : 'sm:max-w-lg',
+        )}
+        showCloseButton={!isBusy}
       >
         <div className="pointer-events-none absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-primary/15 to-transparent" />
 
@@ -63,13 +73,15 @@ export function ReleaseNotePopup({
             type="button"
             className="w-full sm:w-auto"
             onClick={onClose}
-            disabled={isMarkingSeen}
+            disabled={isBusy}
           >
-            {isMarkingSeen ? (
+            {isBusy ? (
               <>
                 <Loader2 className="size-4 animate-spin" aria-hidden="true" />
                 Fechando…
               </>
+            ) : isBrowse ? (
+              'Fechar'
             ) : (
               'Entendi'
             )}

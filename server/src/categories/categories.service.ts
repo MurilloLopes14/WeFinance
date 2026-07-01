@@ -4,7 +4,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { and, eq, isNull } from 'drizzle-orm';
+import { and, asc, eq, isNull } from 'drizzle-orm';
 import { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import { DRIZZLE } from '../database/database.constants';
 import * as schema from '../database/schema';
@@ -68,7 +68,8 @@ export class CategoriesService {
     const rows = await this.db
       .select()
       .from(categories)
-      .where(eq(categories.householdId, householdId));
+      .where(eq(categories.householdId, householdId))
+      .orderBy(asc(categories.name));
 
     const budgetByCategoryId =
       await this.budgetsService.getCategoryBudgetAmountsForHousehold(householdId);

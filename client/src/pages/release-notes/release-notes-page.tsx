@@ -8,6 +8,7 @@ import {
 import { ReleaseNoteCard } from '@/components/release-notes/release-note-card'
 import { ReleaseNoteCardGridSkeleton } from '@/components/release-notes/release-note-card-grid-skeleton'
 import { ReleaseNoteHeader } from '@/components/release-notes/release-note-header'
+import { ReleaseNotePopup } from '@/components/release-notes/release-note-popup'
 import { ObjectCollectionState } from '@/components/object/object-collection-state'
 import { ObjectDeleteConfirmDialog } from '@/components/object/object-delete-confirm-dialog'
 import { ObjectEmptyState } from '@/components/object/object-empty-state'
@@ -19,16 +20,16 @@ import { isAdmin } from '@/lib/user-helpers'
 import { ReleaseNoteCreateModal } from '@/pages/release-notes/modals/release-note-create-modal'
 import { ReleaseNoteEditModal } from '@/pages/release-notes/modals/release-note-edit-modal'
 import { ScrollText } from 'lucide-react'
-import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useState } from 'react'
 import { toast } from 'sonner'
 import { useQueryClient } from '@tanstack/react-query'
 
 export function ReleaseNotesPage() {
-  const navigate = useNavigate()
   const queryClient = useQueryClient()
-  const { data: user, isLoading: isLoadingUser } = useAuthSession()
+  const { data: user } = useAuthSession()
+  const canManage = isAdmin(user?.role)
   const [createOpen, setCreateOpen] = useState(false)
+  const [viewNote, setViewNote] = useState<ReleaseNoteResponseDto | null>(null)
   const [editNote, setEditNote] = useState<ReleaseNoteResponseDto | null>(null)
   const [deleteNote, setDeleteNote] = useState<ReleaseNoteResponseDto | null>(null)
 
@@ -37,15 +38,7 @@ export function ReleaseNotesPage() {
     isLoading: isLoadingNotes,
     isError,
     refetch,
-  } = useReleaseNotesControllerFindAll({
-    query: { enabled: isAdmin(user?.role) },
-  })
-
-  useEffect(() => {
-    if (!isLoadingUser && user && !isAdmin(user.role)) {
-      navigate('/dashboard', { replace: true })
-    }
-  }, [isLoadingUser, user, navigate])
+  } = useReleaseNotesControllerFindAll()
 
   const deleteMutation = useReleaseNotesControllerRemove({
     mutation: {
@@ -65,15 +58,14 @@ export function ReleaseNotesPage() {
     },
   })
 
-  if (isLoadingUser || (user && !isAdmin(user.role))) {
-    return null
-  }
-
   const hasNotes = (notes?.length ?? 0) > 0
 
   return (
     <ObjectPageLayout>
-      <ReleaseNoteHeader onCreate={() => setCreateOpen(true)} />
+      <ReleaseNoteHeader
+        readOnly={!canManage}
+        onCreate={canManage ? () => setCreateOpen(true) : undefined}
+      />
 
       <ObjectPageContent>
         <ObjectCollectionState
@@ -86,13 +78,21 @@ export function ReleaseNotesPage() {
             <ObjectEmptyState
               icon={ScrollText}
               title="Nenhuma nota publicada"
-              description="Crie a primeira nota de versão para comunicar novidades aos usuários do WeFinance."
-              actions={[
-                {
-                  label: 'Nova versão',
-                  onClick: () => setCreateOpen(true),
-                },
-              ]}
+              description={
+                canManage
+                  ? 'Crie a primeira nota de versão para comunicar novidades aos usuários do WeFinance.'
+                  : 'Quando houver uma nova versão, ela aparecerá aqui para consulta.'
+              }
+              actions={
+                canManage
+                  ? [
+                      {
+                        label: 'Nova versão',
+                        onClick: () => setCreateOpen(true),
+                      },
+                    ]
+                  : undefined
+              }
             />
           }
         >
@@ -101,37 +101,51 @@ export function ReleaseNotesPage() {
               <ReleaseNoteCard
                 key={note.id}
                 note={note}
-                onEdit={setEditNote}
-                onDelete={setDeleteNote}
+                onView={setViewNote}
+                onEdit={canManage ? setEditNote : undefined}
+                onDelete={canManage ? setDeleteNote : undefined}
               />
             ))}
           </div>
         </ObjectCollectionState>
       </ObjectPageContent>
 
-      <ReleaseNoteCreateModal open={createOpen} onOpenChange={setCreateOpen} />
+      {viewNote && (
+        <ReleaseNotePopup
+          note={viewNote}
+          open={viewNote !== null}
+          variant="browse"
+          onClose={() => setViewNote(null)}
+        />
+      )}
 
-      <ReleaseNoteEditModal
-        note={editNote}
-        open={editNote !== null}
-        onOpenChange={(open) => {
-          if (!open) setEditNote(null)
-        }}
-      />
+      {canManage && (
+        <>
+          <ReleaseNoteCreateModal open={createOpen} onOpenChange={setCreateOpen} />
 
-      <ObjectDeleteConfirmDialog
-        open={deleteNote !== null}
-        onOpenChange={(open) => {
-          if (!open) setDeleteNote(null)
-        }}
-        title="Excluir nota de versão"
-        description={`Tem certeza que deseja excluir a versão "${deleteNote?.version}"? Esta ação não pode ser desfeita.`}
-        onConfirm={() => {
-          if (!deleteNote) return
-          deleteMutation.mutate({ id: deleteNote.id })
-        }}
-        isPending={deleteMutation.isPending}
-      />
+          <ReleaseNoteEditModal
+            note={editNote}
+            open={editNote !== null}
+            onOpenChange={(open) => {
+              if (!open) setEditNote(null)
+            }}
+          />
+
+          <ObjectDeleteConfirmDialog
+            open={deleteNote !== null}
+            onOpenChange={(open) => {
+              if (!open) setDeleteNote(null)
+            }}
+            title="Excluir nota de versão"
+            description={`Tem certeza que deseja excluir a versão "${deleteNote?.version}"? Esta ação não pode ser desfeita.`}
+            onConfirm={() => {
+              if (!deleteNote) return
+              deleteMutation.mutate({ id: deleteNote.id })
+            }}
+            isPending={deleteMutation.isPending}
+          />
+        </>
+      )}
     </ObjectPageLayout>
   )
 }

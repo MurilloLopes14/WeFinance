@@ -2,16 +2,18 @@ import type { ReleaseNoteResponseDto } from '@/api/generated/models/releaseNoteR
 import { ReleaseNoteMarkdown } from '@/components/release-notes/release-note-markdown'
 import { ObjectCardActionsMenu, type ObjectCardAction } from '@/components/object/object-card-actions-menu'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import { Card, CardTitle } from '@/components/ui/card'
 import {
   formatReleaseNoteDate,
   isReleaseNotePublished,
 } from '@/lib/release-note-helpers'
 import { cn } from '@/lib/utils'
-import { Pencil, ScrollText, Trash2 } from 'lucide-react'
+import { Eye, Pencil, ScrollText, Trash2 } from 'lucide-react'
 
 type ReleaseNoteCardProps = {
   note: ReleaseNoteResponseDto
+  onView?: (note: ReleaseNoteResponseDto) => void
   onEdit?: (note: ReleaseNoteResponseDto) => void
   onDelete?: (note: ReleaseNoteResponseDto) => void
   className?: string
@@ -19,6 +21,7 @@ type ReleaseNoteCardProps = {
 
 export function ReleaseNoteCard({
   note,
+  onView,
   onEdit,
   onDelete,
   className,
@@ -80,7 +83,21 @@ export function ReleaseNoteCard({
           </p>
         </div>
 
-        {actions.length > 0 && <ObjectCardActionsMenu actions={actions} />}
+        <div className="flex shrink-0 items-center gap-1">
+          {onView && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="size-8 rounded-lg"
+              aria-label={`Ver nota v${note.version}`}
+              onClick={() => onView(note)}
+            >
+              <Eye className="size-4" aria-hidden="true" />
+            </Button>
+          )}
+          {actions.length > 0 && <ObjectCardActionsMenu actions={actions} />}
+        </div>
       </div>
 
       <div className="max-h-48 overflow-hidden px-4 py-3">
