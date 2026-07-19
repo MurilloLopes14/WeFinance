@@ -2,7 +2,7 @@ import {
   getHouseholdsControllerGetInviteCodeQueryKey,
   useHouseholdsControllerGetInviteCode,
   useHouseholdsControllerRegenerateInviteCode,
-} from '@/api/generated/households/households'
+} from "@/api/generated/households/households";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -12,109 +12,107 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '@/components/ui/alert-dialog'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import { Skeleton } from '@/components/ui/skeleton'
-import { getApiErrorMessage } from '@/lib/get-api-error-message'
+} from "@/components/ui/alert-dialog";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import { getApiErrorMessage } from "@/lib/get-api-error-message";
 import {
   copyInviteCode,
   formatInviteCodeDisplay,
   shareHouseholdInvite,
-} from '@/lib/household-invite-helpers'
-import { Check, Copy, Loader2, RefreshCw, Share2 } from 'lucide-react'
-import { useEffect, useState } from 'react'
-import { toast } from 'sonner'
-import { useQueryClient } from '@tanstack/react-query'
+} from "@/lib/household-invite-helpers";
+import { Check, Copy, Loader2, RefreshCw, Share2 } from "lucide-react";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
+import { useQueryClient } from "@tanstack/react-query";
 
 type HouseholdInviteCodePanelProps = {
-  householdId: string
-  householdName: string
-  enabled?: boolean
-}
+  householdId: string;
+  householdName: string;
+  enabled?: boolean;
+};
 
 export function HouseholdInviteCodePanel({
   householdId,
   householdName,
   enabled = true,
 }: HouseholdInviteCodePanelProps) {
-  const queryClient = useQueryClient()
-  const [copied, setCopied] = useState(false)
-  const [regenerateOpen, setRegenerateOpen] = useState(false)
-  const [regenerateSuccess, setRegenerateSuccess] = useState(false)
+  const queryClient = useQueryClient();
+  const [copied, setCopied] = useState(false);
+  const [regenerateOpen, setRegenerateOpen] = useState(false);
+  const [regenerateSuccess, setRegenerateSuccess] = useState(false);
 
-  const {
-    data,
-    isLoading,
-    isError,
-    refetch,
-  } = useHouseholdsControllerGetInviteCode(householdId, {
-    query: { enabled: enabled && Boolean(householdId) },
-  })
+  const { data, isLoading, isError, refetch } =
+    useHouseholdsControllerGetInviteCode(householdId, {
+      query: { enabled: enabled && Boolean(householdId) },
+    });
 
-  const inviteCode = data?.inviteCode ?? ''
+  const inviteCode = data?.inviteCode ?? "";
 
   useEffect(() => {
-    if (!copied) return
+    if (!copied) return;
 
-    const timeout = window.setTimeout(() => setCopied(false), 2000)
-    return () => window.clearTimeout(timeout)
-  }, [copied])
+    const timeout = window.setTimeout(() => setCopied(false), 2000);
+    return () => window.clearTimeout(timeout);
+  }, [copied]);
 
   useEffect(() => {
-    if (!regenerateSuccess) return
+    if (!regenerateSuccess) return;
 
-    const timeout = window.setTimeout(() => setRegenerateSuccess(false), 3000)
-    return () => window.clearTimeout(timeout)
-  }, [regenerateSuccess])
+    const timeout = window.setTimeout(() => setRegenerateSuccess(false), 3000);
+    return () => window.clearTimeout(timeout);
+  }, [regenerateSuccess]);
 
   const regenerateMutation = useHouseholdsControllerRegenerateInviteCode({
     mutation: {
       onSuccess: async () => {
         await queryClient.invalidateQueries({
           queryKey: getHouseholdsControllerGetInviteCodeQueryKey(householdId),
-        })
-        setRegenerateSuccess(true)
-        setRegenerateOpen(false)
+        });
+        setRegenerateSuccess(true);
+        setRegenerateOpen(false);
       },
       onError: (error) => {
-        toast.error(getApiErrorMessage(error, 'Não foi possível gerar um novo código'))
+        toast.error(
+          getApiErrorMessage(error, "Não foi possível gerar um novo código"),
+        );
       },
     },
-  })
+  });
 
   const handleCopy = async () => {
-    if (!inviteCode) return
+    if (!inviteCode) return;
 
     try {
-      await copyInviteCode(inviteCode)
-      setCopied(true)
-      toast.success('Código copiado')
+      await copyInviteCode(inviteCode);
+      setCopied(true);
+      toast.success("Código copiado");
     } catch {
-      toast.error('Não foi possível copiar o código')
+      toast.error("Não foi possível copiar o código");
     }
-  }
+  };
 
   const handleShare = async () => {
-    if (!inviteCode) return
+    if (!inviteCode) return;
 
     try {
-      const result = await shareHouseholdInvite(householdName, inviteCode)
-      if (result === 'copied') {
-        toast.success('Mensagem de convite copiada')
+      const result = await shareHouseholdInvite(householdName, inviteCode);
+      if (result === "copied") {
+        toast.success("Mensagem de convite copiada");
       }
     } catch (error) {
-      if (error instanceof DOMException && error.name === 'AbortError') return
-      toast.error('Não foi possível compartilhar o convite')
+      if (error instanceof DOMException && error.name === "AbortError") return;
+      toast.error("Não foi possível compartilhar o convite");
     }
-  }
+  };
 
   const handleRegenerate = () => {
-    if (!householdId) return
-    regenerateMutation.mutate({ id: householdId })
-  }
+    if (!householdId) return;
+    regenerateMutation.mutate({ id: householdId });
+  };
 
-  const isBusy = regenerateMutation.isPending
+  const isBusy = regenerateMutation.isPending;
 
   return (
     <>
@@ -133,7 +131,12 @@ export function HouseholdInviteCodePanel({
             <p className="text-sm text-muted-foreground">
               Não foi possível carregar o código de convite.
             </p>
-            <Button type="button" variant="outline" className="rounded-xl" onClick={() => refetch()}>
+            <Button
+              type="button"
+              variant="outline"
+              className="rounded-xl"
+              onClick={() => refetch()}
+            >
               Tentar novamente
             </Button>
           </div>
@@ -192,7 +195,7 @@ export function HouseholdInviteCodePanel({
           <Button
             type="button"
             variant="ghost"
-            className="rounded-xl text-muted-foreground hover:text-destructive"
+            className="rounded-xl text-muted-foreground hover:text-neon-cyan"
             disabled={!inviteCode || isLoading || isError || isBusy}
             onClick={() => setRegenerateOpen(true)}
           >
@@ -211,8 +214,8 @@ export function HouseholdInviteCodePanel({
           <AlertDialogHeader>
             <AlertDialogTitle>Gerar novo código?</AlertDialogTitle>
             <AlertDialogDescription>
-              O código atual deixará de funcionar. Quem ainda não entrou precisará receber o
-              novo código para acessar o grupo.
+              O código atual deixará de funcionar. Quem ainda não entrou
+              precisará receber o novo código para acessar o grupo.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -231,5 +234,5 @@ export function HouseholdInviteCodePanel({
         </AlertDialogContent>
       </AlertDialog>
     </>
-  )
+  );
 }

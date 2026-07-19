@@ -46,6 +46,7 @@ export function buildTransactionListParams(
     month: filters.month || undefined,
     type: filters.type === 'all' ? undefined : filters.type,
     accountId: filters.accountId === 'all' ? undefined : filters.accountId,
+    categoryId: filters.categoryId === 'all' ? undefined : filters.categoryId,
     ownerId:
       filters.onlyMine && currentUserId ? currentUserId : undefined,
     order: 'desc',

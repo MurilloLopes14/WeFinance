@@ -33,6 +33,7 @@ type ObjectHeaderProps = {
   activeFiltersCount?: number
   onApplyFilters?: () => void
   onClearFilters?: () => void
+  onFiltersOpenChange?: (open: boolean) => void
   createAction?: ObjectHeaderCreateAction
   headerActions?: ReactNode
   tourAnchor?: string
@@ -66,6 +67,7 @@ export function ObjectHeader({
   activeFiltersCount = 0,
   onApplyFilters,
   onClearFilters,
+  onFiltersOpenChange,
   createAction,
   headerActions,
   tourAnchor,
@@ -75,14 +77,19 @@ export function ObjectHeader({
   const [filtersOpen, setFiltersOpen] = useState(false)
   const hasFilters = Boolean(filtersContent)
 
+  const handleFiltersOpenChange = (open: boolean) => {
+    setFiltersOpen(open)
+    onFiltersOpenChange?.(open)
+  }
+
   const handleApplyFilters = () => {
     onApplyFilters?.()
-    setFiltersOpen(false)
+    handleFiltersOpenChange(false)
   }
 
   const handleClearFilters = () => {
     onClearFilters?.()
-    setFiltersOpen(false)
+    handleFiltersOpenChange(false)
   }
 
   return (
@@ -139,7 +146,7 @@ export function ObjectHeader({
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => setFiltersOpen(true)}
+                onClick={() => handleFiltersOpenChange(true)}
                 className="glass-subtle h-10 shrink-0 rounded-xl px-4"
               >
                 <SlidersHorizontal className="size-4" />
@@ -156,7 +163,7 @@ export function ObjectHeader({
       </header>
 
       {hasFilters && (
-        <Dialog open={filtersOpen} onOpenChange={setFiltersOpen}>
+        <Dialog open={filtersOpen} onOpenChange={handleFiltersOpenChange}>
           <DialogContent className="glass-strong glow-border sm:max-w-md">
             <DialogHeader>
               <DialogTitle>{filtersTitle}</DialogTitle>

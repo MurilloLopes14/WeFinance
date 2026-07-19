@@ -23,10 +23,10 @@ import { ObjectPageContent, ObjectPageLayout } from '@/components/object/object-
 import { useAuthSession } from '@/hooks/use-auth-session'
 import { householdsListParams } from '@/lib/household-api-helpers'
 import {
+  canManageAnyHousehold,
   findHouseholdInList,
   getHouseholdNameMap,
-  isHouseholdOwner,
-  isOwnerOfAnyHousehold,
+  isHouseholdAtLeastModerator,
 } from '@/lib/household-helpers'
 import { SubscriptionCreateModal } from '@/pages/subscriptions/modals/subscription-create-modal'
 import { SubscriptionEditModal } from '@/pages/subscriptions/modals/subscription-edit-modal'
@@ -75,7 +75,7 @@ export function SubscriptionPage() {
     return map
   }, [households])
 
-  const canCreateSubscription = isOwnerOfAnyHousehold(households, currentUser?.id)
+  const canCreateSubscription = canManageAnyHousehold(households, currentUser?.id)
 
   const householdIdsForFetch = useMemo(() => {
     if (!households?.length) return []
@@ -179,7 +179,7 @@ export function SubscriptionPage() {
 
   const canEditSubscription = (subscription: SubscriptionResponseDto) => {
     const household = findHouseholdInList(households, subscription.householdId)
-    return isHouseholdOwner(household?.members, currentUser?.id)
+    return isHouseholdAtLeastModerator(household?.members, currentUser?.id)
   }
 
   const deleteMutation = useSubscriptionsControllerRemove({

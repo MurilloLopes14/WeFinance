@@ -1,11 +1,13 @@
 import { Button } from '@/components/ui/button'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
+import type { ReactNode } from 'react'
 
 type TablePaginationFooterProps = {
   summary: string
   page: number
   totalPages: number
   onPageChange: (page: number) => void
+  trailing?: ReactNode
 }
 
 export function TablePaginationFooter({
@@ -13,12 +15,16 @@ export function TablePaginationFooter({
   page,
   totalPages,
   onPageChange,
+  trailing,
 }: TablePaginationFooterProps) {
   if (totalPages <= 0) return null
 
   return (
     <div className="flex flex-col gap-3 border-t border-foreground/10 pt-4 sm:flex-row sm:items-center sm:justify-between">
-      <p className="text-sm text-muted-foreground">{summary}</p>
+      <div className="flex min-w-0 flex-col gap-1 sm:flex-row sm:items-center sm:gap-3">
+        <p className="text-sm text-muted-foreground">{summary}</p>
+        {trailing}
+      </div>
 
       <div className="flex items-center gap-2">
         <Button

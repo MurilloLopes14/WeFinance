@@ -34,6 +34,7 @@ function createDefaultFilters(householdId: string): TransactionFilters {
     month: '',
     type: 'all',
     accountId: 'all',
+    categoryId: 'all',
     onlyMine: false,
   }
 }
@@ -79,7 +80,15 @@ export function TransactionPage() {
 
   useEffect(() => {
     setPage(1)
-  }, [filters.householdId, filters.month, filters.type, filters.accountId, filters.onlyMine, search])
+  }, [
+    filters.householdId,
+    filters.month,
+    filters.type,
+    filters.accountId,
+    filters.categoryId,
+    filters.onlyMine,
+    search,
+  ])
 
   useEffect(() => {
     const state = location.state as { openCreate?: boolean } | null
@@ -195,6 +204,7 @@ export function TransactionPage() {
         onFiltersChange={handleFiltersChange}
         households={households ?? []}
         accounts={accounts ?? []}
+        categories={categories ?? []}
         showToolbar={hasAnyHousehold}
         createAction={{
           label: 'Nova transação',

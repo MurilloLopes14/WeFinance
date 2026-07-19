@@ -11,7 +11,7 @@ import {
 import { Label } from '@/components/ui/label'
 import { filterPayeesByQuery } from '@/lib/payee-helpers'
 import { cn } from '@/lib/utils'
-import { Loader2, Plus } from 'lucide-react'
+import { Check, Loader2, Plus } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 
 type PayeeSearchFieldProps = {
@@ -51,13 +51,13 @@ export function PayeeSearchField({
   )
 
   useEffect(() => {
-    if (!value) {
-      setInputValue('')
+    if (selectedPayee) {
+      setInputValue(selectedPayee.name)
       return
     }
 
-    if (selectedPayee) {
-      setInputValue(selectedPayee.name)
+    if (!value) {
+      setInputValue('')
     }
   }, [value, selectedPayee?.id, selectedPayee?.name])
 
@@ -67,10 +67,15 @@ export function PayeeSearchField({
   )
 
   const trimmedQuery = inputValue.trim()
+  const exactMatch = filteredPayees.some(
+    (payee) => payee.name.toLowerCase() === trimmedQuery.toLowerCase(),
+  )
   const showQuickCreate =
     allowQuickCreate &&
     Boolean(trimmedQuery) &&
-    !filteredPayees.some((payee) => payee.name.toLowerCase() === trimmedQuery.toLowerCase())
+    !exactMatch &&
+    !selectedPayee &&
+    !isQuickCreating
 
   const handleInputChange = (nextValue: string) => {
     setInputValue(nextValue)
@@ -106,8 +111,12 @@ export function PayeeSearchField({
         />
         <ComboboxContent className="glow-border">
           <ComboboxList>
-            {filteredPayees.length === 0 && !showQuickCreate ? (
-              <ComboboxEmpty>Nenhum beneficiário encontrado</ComboboxEmpty>
+            {filteredPayees.length === 0 ? (
+              <ComboboxEmpty>
+                {isQuickCreating
+                  ? 'Cadastrando beneficiário...'
+                  : 'Nenhum beneficiário encontrado'}
+              </ComboboxEmpty>
             ) : (
               filteredPayees.map((payee) => (
                 <ComboboxItem key={payee.id} value={payee}>
@@ -119,6 +128,20 @@ export function PayeeSearchField({
         </ComboboxContent>
       </Combobox>
 
+      {isQuickCreating && (
+        <p className="flex items-center gap-2 text-xs text-muted-foreground">
+          <Loader2 className="size-3.5 animate-spin" />
+          Cadastrando &quot;{trimmedQuery || 'beneficiário'}&quot;...
+        </p>
+      )}
+
+      {selectedPayee && !isQuickCreating && (
+        <p className="flex items-center gap-1.5 text-xs text-emerald-600 dark:text-emerald-400">
+          <Check className="size-3.5" />
+          Usando {selectedPayee.name}
+        </p>
+      )}
+
       {showQuickCreate && onQuickCreate && (
         <Button
           type="button"
@@ -126,13 +149,13 @@ export function PayeeSearchField({
           size="sm"
           className="h-8 rounded-xl text-xs"
           disabled={disabled || isQuickCreating}
-          onClick={onQuickCreate}
+          onClick={(event) => {
+            event.preventDefault()
+            event.stopPropagation()
+            onQuickCreate()
+          }}
         >
-          {isQuickCreating ? (
-            <Loader2 className="size-3.5 animate-spin" />
-          ) : (
-            <Plus className="size-3.5" />
-          )}
+          <Plus className="size-3.5" />
           Cadastrar &quot;{trimmedQuery}&quot; e usar
         </Button>
       )}

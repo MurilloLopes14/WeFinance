@@ -10,4 +10,6 @@ export interface MemberUserDto {
   id: string;
   name: string;
   email: string;
+  /** @nullable */
+  avatarUrl?: string | null;
 }

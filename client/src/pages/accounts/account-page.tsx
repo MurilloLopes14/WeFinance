@@ -21,10 +21,10 @@ import { ObjectPageContent, ObjectPageLayout } from '@/components/object/object-
 import { useAuthSession } from '@/hooks/use-auth-session'
 import { householdsListParams } from '@/lib/household-api-helpers'
 import {
+  canManageAnyHousehold,
   findHouseholdInList,
   getHouseholdNameMap,
-  isHouseholdOwner,
-  isOwnerOfAnyHousehold,
+  isHouseholdAtLeastModerator,
 } from '@/lib/household-helpers'
 import { AccountCreateModal } from '@/pages/accounts/modals/account-create-modal'
 import { AccountEditModal } from '@/pages/accounts/modals/account-edit-modal'
@@ -70,7 +70,7 @@ export function AccountPage() {
     [households],
   )
 
-  const canCreateAccount = isOwnerOfAnyHousehold(households, currentUser?.id)
+  const canCreateAccount = canManageAnyHousehold(households, currentUser?.id)
 
   const householdIdsForFetch = useMemo(() => {
     if (!households?.length) return []
@@ -130,7 +130,7 @@ export function AccountPage() {
 
   const canEditAccount = (account: AccountResponseDto) => {
     const household = findHouseholdInList(households, account.householdId)
-    return isHouseholdOwner(household?.members, currentUser?.id)
+    return isHouseholdAtLeastModerator(household?.members, currentUser?.id)
   }
 
   const deleteMutation = useAccountsControllerRemove({

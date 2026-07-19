@@ -780,6 +780,10 @@ export class TransactionsService {
       conditions.push(eq(transactions.createdById, filters.ownerId));
     }
 
+    if (filters.categoryId) {
+      conditions.push(eq(transactions.categoryId, filters.categoryId));
+    }
+
     return and(...conditions) as SQL;
   }
 

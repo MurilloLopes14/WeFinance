@@ -4,6 +4,7 @@ import type { PayeeResponseDto } from '@/api/generated/models/payeeResponseDto'
 import { PayeeSearchField } from '@/components/payees/payee-search-field'
 import { HouseholdComboboxField } from '@/components/households/household-combobox-field'
 import { HouseholdGatedFormSection } from '@/components/object/household-gated-form-section'
+import { TransactionAmountInput } from '@/components/transactions/transaction-amount-input'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -49,6 +50,7 @@ export function SubscriptionFormFields({
 }: SubscriptionFormFieldsProps) {
   const householdId = watch('householdId')
   const type = watch('type')
+  const amount = watch('amount')
   const accountId = watch('accountId')
   const active = watch('active')
   const hasPayee = watch('hasPayee')
@@ -124,15 +126,12 @@ export function SubscriptionFormFields({
 
         <div className="space-y-2">
           <Label htmlFor="subscription-amount">Valor</Label>
-          <Input
+          <TransactionAmountInput
             id="subscription-amount"
-            type="number"
-            min={0.01}
-            step="0.01"
-            placeholder="0,00"
-            className="rounded-xl"
+            value={Number.isFinite(amount) ? amount : 0}
+            onChange={(value) => setValue('amount', value, { shouldValidate: true })}
             disabled={fieldsDisabled}
-            {...register('amount', { valueAsNumber: true })}
+            type={type}
           />
           {errors.amount && (
             <p className="text-sm text-destructive">{errors.amount.message}</p>

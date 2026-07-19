@@ -12,6 +12,20 @@ export function isHouseholdOwner(
   )
 }
 
+/** Owner or moderator — mirrors `assertAtLeastModerator` on the API. */
+export function isHouseholdAtLeastModerator(
+  members: HouseholdMemberResponseDto[] | undefined,
+  userId: string | undefined,
+): boolean {
+  if (!members?.length || !userId) return false
+
+  return members.some(
+    (member) =>
+      member.userId === userId &&
+      (member.role === 'owner' || member.role === 'moderator'),
+  )
+}
+
 export function getHouseholdOwnerFromList(
   members: HouseholdMemberResponseDto[] | undefined,
   userId: string | undefined,
@@ -60,6 +74,38 @@ export function isOwnerOfAnyHousehold(
 
   return households.some((household) =>
     isHouseholdOwner(household.members, userId),
+  )
+}
+
+export function canManageAnyHousehold(
+  households: HouseholdResponseDto[] | undefined,
+  userId: string | undefined,
+): boolean {
+  if (!households?.length || !userId) return false
+
+  return households.some((household) =>
+    isHouseholdAtLeastModerator(household.members, userId),
+  )
+}
+
+/** True if the user belongs to the household with any role. */
+export function isHouseholdMember(
+  members: HouseholdMemberResponseDto[] | undefined,
+  userId: string | undefined,
+): boolean {
+  if (!members?.length || !userId) return false
+
+  return members.some((member) => member.userId === userId)
+}
+
+export function isMemberOfAnyHousehold(
+  households: HouseholdResponseDto[] | undefined,
+  userId: string | undefined,
+): boolean {
+  if (!households?.length || !userId) return false
+
+  return households.some((household) =>
+    isHouseholdMember(household.members, userId),
   )
 }
 

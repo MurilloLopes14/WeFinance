@@ -280,7 +280,7 @@ export class HouseholdsService {
       .returning();
 
     const [user] = await this.db
-      .select({ id: users.id, name: users.name, email: users.email })
+      .select({ id: users.id, name: users.name, email: users.email, avatarUrl: users.avatarUrl })
       .from(users)
       .where(eq(users.id, updated.userId))
       .limit(1);
@@ -330,6 +330,7 @@ export class HouseholdsService {
           id: users.id,
           name: users.name,
           email: users.email,
+          avatarUrl: users.avatarUrl,
         },
       })
       .from(householdMembers)
@@ -347,7 +348,7 @@ export class HouseholdsService {
 
   private formatMember(
     member: HouseholdMember,
-    user: { id: string; name: string; email: string },
+    user: { id: string; name: string; email: string; avatarUrl: string | null },
   ): HouseholdMemberResponseDto {
     return {
       id: member.id,
@@ -356,7 +357,7 @@ export class HouseholdsService {
       role: member.role,
       splitValue: parseFloat(member.splitValue),
       joinedAt: member.joinedAt,
-      user,
+      user: { ...user, avatarUrl: user.avatarUrl ?? null },
     };
   }
 }

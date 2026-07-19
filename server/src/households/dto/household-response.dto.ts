@@ -9,6 +9,9 @@ export class MemberUserDto {
 
   @ApiProperty()
   email: string;
+
+  @ApiPropertyOptional({ type: String, nullable: true })
+  avatarUrl: string | null;
 }
 
 export class HouseholdMemberResponseDto {

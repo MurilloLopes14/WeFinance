@@ -24,7 +24,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
-import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -84,6 +84,9 @@ function MemberRow({
   return (
     <div className="glass-subtle flex items-center gap-3 rounded-xl px-3 py-2.5 ring-1 ring-foreground/10">
       <Avatar size="sm">
+        {member.user.avatarUrl ? (
+          <AvatarImage src={member.user.avatarUrl} alt={member.user.name} />
+        ) : null}
         <AvatarFallback className="bg-primary/15 text-xs font-medium text-primary">
           {getUserInitials(member.user.name)}
         </AvatarFallback>

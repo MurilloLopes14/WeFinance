@@ -6,8 +6,6 @@ import {
   useHouseholdsControllerFindMembers,
 } from '@/api/generated/households/households'
 import {
-  getPayeesControllerFindAllQueryKey,
-  payeesControllerCreate,
   usePayeesControllerFindAll,
 } from '@/api/generated/payees/payees'
 import {
@@ -29,6 +27,8 @@ import { useAuthSession } from '@/hooks/use-auth-session'
 import { findHouseholdInList } from '@/lib/household-helpers'
 import { householdsListParams } from '@/lib/household-api-helpers'
 import { getApiErrorMessage } from '@/lib/get-api-error-message'
+import { ensureHouseholdPayee } from '@/lib/payee-quick-create'
+import { getPayeePartyLabel } from '@/lib/payee-helpers'
 import { invalidateTransactionDependentQueries } from '@/lib/transaction-api-helpers'
 import {
   resolveTransactionSplits,
@@ -169,16 +169,15 @@ export function TransactionEditModal({
     const name = values.payeeName?.trim()
     if (!name || !values.householdId) return undefined
 
-    const created = await payeesControllerCreate(values.householdId, {
+    const payee = await ensureHouseholdPayee({
+      queryClient,
+      householdId: values.householdId,
       name,
       defaultCategoryId: values.categoryId || undefined,
+      knownPayees: payees,
     })
 
-    await queryClient.invalidateQueries({
-      queryKey: getPayeesControllerFindAllQueryKey(values.householdId),
-    })
-
-    return created.id
+    return payee.id
   }
 
   const submitTransaction = async (values: TransactionFormValues) => {
@@ -243,31 +242,45 @@ export function TransactionEditModal({
   const handleQuickCreatePayee = async () => {
     const values = getValues()
     const name = values.payeeName?.trim()
+    const partyLabel = getPayeePartyLabel(values.type)
 
-    if (!values.householdId || !name) return
+    if (!values.householdId) {
+      toast.error('Selecione um grupo antes de cadastrar')
+      return
+    }
+
+    if (!name) {
+      toast.error(`Digite o nome do ${partyLabel} para cadastrar`)
+      return
+    }
 
     setIsQuickCreatingPayee(true)
 
     try {
-      const created = await payeesControllerCreate(values.householdId, {
+      const created = await ensureHouseholdPayee({
+        queryClient,
+        householdId: values.householdId,
         name,
         defaultCategoryId: values.categoryId || undefined,
-      })
-
-      await queryClient.invalidateQueries({
-        queryKey: getPayeesControllerFindAllQueryKey(values.householdId),
+        knownPayees: payees,
       })
 
       setValue('payeeId', created.id, { shouldValidate: true })
       setValue('payeeName', created.name, { shouldValidate: true })
 
-      if (created.defaultCategoryId && typeof created.defaultCategoryId === 'string' && !values.categoryId) {
+      if (
+        created.defaultCategoryId &&
+        typeof created.defaultCategoryId === 'string' &&
+        !values.categoryId
+      ) {
         setValue('categoryId', created.defaultCategoryId, { shouldValidate: true })
       }
 
-      toast.success('Beneficiário cadastrado')
+      toast.success(
+        `${partyLabel.charAt(0).toUpperCase()}${partyLabel.slice(1)} pronto para uso`,
+      )
     } catch (error) {
-      toast.error(getApiErrorMessage(error, 'Não foi possível cadastrar o beneficiário'))
+      toast.error(getApiErrorMessage(error, `Não foi possível cadastrar o ${partyLabel}`))
     } finally {
       setIsQuickCreatingPayee(false)
     }

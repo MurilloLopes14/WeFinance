@@ -16,6 +16,10 @@ export type TransactionsControllerFindAllParams = {
 month?: string;
 type?: TransactionsControllerFindAllType;
 accountId?: string;
+/**
+ * Filter by category (category UUID)
+ */
+categoryId?: string;
 status?: TransactionsControllerFindAllStatus;
 /**
  * Filter by transaction creator (user UUID)

@@ -22,10 +22,10 @@ import { useAuthSession } from '@/hooks/use-auth-session'
 import { findCategoryInList } from '@/lib/category-helpers'
 import { householdsListParams } from '@/lib/household-api-helpers'
 import {
+  canManageAnyHousehold,
   findHouseholdInList,
   getHouseholdNameMap,
-  isHouseholdOwner,
-  isOwnerOfAnyHousehold,
+  isHouseholdAtLeastModerator,
 } from '@/lib/household-helpers'
 import { CategoryCreateModal } from '@/pages/categories/modals/category-create-modal'
 import { CategoryEditModal } from '@/pages/categories/modals/category-edit-modal'
@@ -63,7 +63,7 @@ export function CategoryPage() {
     [households],
   )
 
-  const canCreateCategory = isOwnerOfAnyHousehold(households, currentUser?.id)
+  const canCreateCategory = canManageAnyHousehold(households, currentUser?.id)
 
   const householdIdsForFetch = useMemo(() => {
     if (!households?.length) return []
@@ -120,7 +120,7 @@ export function CategoryPage() {
 
   const canEditCategory = (category: CategoryResponseDto) => {
     const household = findHouseholdInList(households, category.householdId)
-    return isHouseholdOwner(household?.members, currentUser?.id)
+    return isHouseholdAtLeastModerator(household?.members, currentUser?.id)
   }
 
   const deleteMutation = useCategoriesControllerRemove({

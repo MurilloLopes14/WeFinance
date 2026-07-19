@@ -25,7 +25,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import { formatAccountBalance } from '@/lib/account-helpers'
 import { getPayeePartyLabel } from '@/lib/payee-helpers'
-import { isHouseholdOwner } from '@/lib/household-helpers'
+import { isHouseholdAtLeastModerator } from '@/lib/household-helpers'
 import {
   findSubscriptionInList,
   getPendingInstallmentNumbers,
@@ -106,14 +106,14 @@ export function TransactionFormFields({
   const installmentNumber = watch('installmentNumber')
   const fieldsDisabled = !householdId
   const isEditMode = mode === 'edit'
-  const isOwner = isHouseholdOwner(members, currentUserId)
+  const isAtLeastModerator = isHouseholdAtLeastModerator(members, currentUserId)
 
   const { data: installmentSubscriptions = [] } = useSubscriptionsControllerFindAll(
     householdId,
     { isInstallment: true },
     {
       query: {
-        enabled: Boolean(householdId) && isOwner && mode === 'create',
+        enabled: Boolean(householdId) && isAtLeastModerator && mode === 'create',
       },
     },
   )
@@ -153,7 +153,7 @@ export function TransactionFormFields({
 
   const isTransfer = type === CreateTransactionDtoType.transfer
   const showSplitSection = !isTransfer && !advancesInstallment
-  const showAdvanceInstallmentSection = isOwner && mode === 'create' && !isTransfer
+  const showAdvanceInstallmentSection = isAtLeastModerator && mode === 'create' && !isTransfer
   const showAmountField = !advancesInstallment
   const isFutureDate = isFutureTransactionDate(date)
   const transferAccountsLocked = isEditMode && isTransfer

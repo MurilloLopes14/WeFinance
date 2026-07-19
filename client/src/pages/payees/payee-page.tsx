@@ -21,8 +21,8 @@ import { householdsListParams } from '@/lib/household-api-helpers'
 import {
   findHouseholdInList,
   getHouseholdNameMap,
-  isHouseholdOwner,
-  isOwnerOfAnyHousehold,
+  isHouseholdMember,
+  isMemberOfAnyHousehold,
 } from '@/lib/household-helpers'
 import { getApiErrorMessage } from '@/lib/get-api-error-message'
 import {
@@ -66,7 +66,7 @@ export function PayeePage() {
     [households],
   )
 
-  const canCreatePayee = isOwnerOfAnyHousehold(households, currentUser?.id)
+  const canCreatePayee = isMemberOfAnyHousehold(households, currentUser?.id)
 
   const householdIdsForFetch = useMemo(() => {
     if (!households?.length) return []
@@ -150,7 +150,7 @@ export function PayeePage() {
   const canManagePayee = useCallback(
     (payee: PayeeResponseDto) => {
       const household = findHouseholdInList(households, payee.householdId)
-      return isHouseholdOwner(household?.members, currentUser?.id)
+      return isHouseholdMember(household?.members, currentUser?.id)
     },
     [currentUser?.id, households],
   )

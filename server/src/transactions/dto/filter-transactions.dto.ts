@@ -28,6 +28,11 @@ export class FilterTransactionsDto {
   @IsUUID()
   accountId?: string;
 
+  @ApiPropertyOptional({ description: 'Filter by category (category UUID)' })
+  @IsOptional()
+  @IsUUID()
+  categoryId?: string;
+
   @ApiPropertyOptional({ enum: ['draft', 'cleared', 'reconciled'] })
   @IsOptional()
   @IsEnum(['draft', 'cleared', 'reconciled'])
