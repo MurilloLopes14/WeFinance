@@ -4,6 +4,7 @@ import {
   Injectable,
   Logger,
   NotFoundException,
+  OnModuleInit,
 } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { and, eq, lte, sql } from 'drizzle-orm';
@@ -27,7 +28,7 @@ import { SubscriptionResponseDto } from './dto/subscription-response.dto';
 type Subscription = typeof subscriptions.$inferSelect;
 
 @Injectable()
-export class SubscriptionsService {
+export class SubscriptionsService implements OnModuleInit {
   private readonly logger = new Logger(SubscriptionsService.name);
 
   constructor(
@@ -35,6 +36,10 @@ export class SubscriptionsService {
     private readonly householdsService: HouseholdsService,
     private readonly eventsService: EventsService,
   ) {}
+
+  async onModuleInit(): Promise<void> {
+    await this.processDueSubscriptions();
+  }
 
   // ─── CRUD ────────────────────────────────────────────────────────────────
 
@@ -76,6 +81,11 @@ export class SubscriptionsService {
       { name: subscription.name },
       requesterId,
     );
+
+    if (subscription.nextRunAt <= todayIso()) {
+      const executed = await this.executeSubscription(subscription, requesterId);
+      return this.format(executed);
+    }
 
     return this.format(subscription);
   }
