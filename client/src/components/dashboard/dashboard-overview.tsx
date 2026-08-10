@@ -16,7 +16,6 @@ import { PrivacyToggleButton } from '@/components/privacy/privacy-toggle-button'
 import { useDashboardActivityData } from '@/hooks/use-dashboard-activity-data'
 import { useDashboardData } from '@/hooks/use-dashboard-data'
 import { useHouseholdInsights } from '@/hooks/use-household-insights'
-import type { BalanceHistoryRange } from '@/lib/dashboard-helpers'
 import { formatInsightMonthLabel } from '@/lib/insight-helpers'
 import { getCurrentMonthParam } from '@/lib/transaction-helpers'
 import { cn } from '@/lib/utils'
@@ -34,7 +33,6 @@ export function DashboardOverview({
   onHouseholdChange,
 }: DashboardOverviewProps) {
   const [month, setMonth] = useState(getCurrentMonthParam)
-  const [historyRange, setHistoryRange] = useState<BalanceHistoryRange>('current')
   const [perspective, setPerspective] = useState<DashboardPerspective>('personal')
   const [selectedDay, setSelectedDay] = useState<string | null>(null)
 
@@ -57,7 +55,7 @@ export function DashboardOverview({
     balanceChartMonth,
     isBalanceChartLoading,
     isLoading: isLoadingDashboard,
-  } = useDashboardData(householdId, month, historyRange)
+  } = useDashboardData(householdId, month, '1', perspective)
 
   const {
     recentTransactions,
@@ -87,8 +85,18 @@ export function DashboardOverview({
     perspective === 'personal' ? personalBreakdown.data : householdBreakdown.data
   const creditAccounts = personalSummary.data?.creditAccounts ?? []
   const showCreditPanel =
-    perspective === 'household' && (isLoadingDashboard || creditAccounts.length > 0)
+    perspective === 'personal' && (isLoadingDashboard || creditAccounts.length > 0)
   const dashboardSidePanelClassName = 'min-h-0 max-lg:min-h-52 lg:h-full'
+
+  const scopedInsights = useMemo(
+    () => insights.filter((insight) => insight.scope === perspective),
+    [insights, perspective],
+  )
+
+  const insightsDescription =
+    perspective === 'personal'
+      ? `Análises pessoais para ${formatInsightMonthLabel(month)}.`
+      : `Análises do grupo para ${formatInsightMonthLabel(month)}.`
 
   return (
     <section className="space-y-4" aria-label="Dashboard">
@@ -105,38 +113,8 @@ export function DashboardOverview({
           <PrivacyToggleButton className="sm:mt-0.5" />
         </div>
 
-        <div className="flex items-center justify-between gap-3">
-          <MonthSelector month={month} onChange={setMonth} tourAnchor="dashboard-month" />
-          <InsightsSection
-            variant="mobile"
-            insights={insights}
-            month={insightsMonth}
-            isLoading={isLoadingInsights}
-            isError={isInsightsError}
-            description={`Análises do grupo para ${formatInsightMonthLabel(month)}.`}
-            layout="compact"
-            tourAnchor="dashboard-insights"
-            onRetry={() => {
-              void refetchInsights()
-            }}
-            className="shrink-0"
-          />
-        </div>
+        <MonthSelector month={month} onChange={setMonth} tourAnchor="dashboard-month" />
       </header>
-
-      <InsightsSection
-        variant="desktop"
-        insights={insights}
-        month={insightsMonth}
-        isLoading={isLoadingInsights}
-        isError={isInsightsError}
-        description={`Análises do grupo para ${formatInsightMonthLabel(month)}.`}
-        layout="compact"
-        tourAnchor="dashboard-insights"
-        onRetry={() => {
-          void refetchInsights()
-        }}
-      />
 
       {hasHousehold ? (
         <div className="flex flex-col gap-4">
@@ -155,14 +133,48 @@ export function DashboardOverview({
             isLoading={isLoadingDashboard}
           />
 
+          <div
+            key={perspective}
+            className="motion-safe:animate-in motion-safe:fade-in-0 motion-safe:slide-in-from-top-1 motion-safe:duration-300"
+          >
+            <div className="flex justify-end md:block">
+              <InsightsSection
+                variant="mobile"
+                insights={scopedInsights}
+                month={insightsMonth}
+                isLoading={isLoadingInsights}
+                isError={isInsightsError}
+                description={insightsDescription}
+                layout="compact"
+                tourAnchor="dashboard-insights"
+                onRetry={() => {
+                  void refetchInsights()
+                }}
+                className="shrink-0"
+              />
+              <InsightsSection
+                variant="desktop"
+                insights={scopedInsights}
+                month={insightsMonth}
+                isLoading={isLoadingInsights}
+                isError={isInsightsError}
+                description={insightsDescription}
+                layout="compact"
+                tourAnchor="dashboard-insights"
+                onRetry={() => {
+                  void refetchInsights()
+                }}
+              />
+            </div>
+          </div>
+
           <div className="grid grid-cols-1 gap-4 lg:grid-cols-12" data-tour="dashboard-reports">
             <BalanceEvolutionChart
               className="lg:col-span-7"
               monthlyData={balanceHistory.data}
               dailyData={balanceChartDailyData?.data}
               dailyMonth={balanceChartMonth}
-              historyRange={historyRange}
-              onHistoryRangeChange={setHistoryRange}
+              historyRange="1"
               currency={currency}
               isLoading={isBalanceChartLoading}
             />

@@ -135,7 +135,7 @@ export function AccountEditModal({
       data: {
         name: values.name,
         type: values.type,
-        userId: values.userId || null,
+        userId: values.userId,
         institution: values.institution || null,
         color: values.color || undefined,
         ...buildInvestmentAccountPayload(values, { clearWhenNotInvestment: true }),

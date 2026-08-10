@@ -105,6 +105,9 @@ export class TransactionResponseDto {
   @ApiProperty()
   updatedAt: Date;
 
+  @ApiPropertyOptional({ type: String, nullable: true, description: 'Cor da categoria para exibir badge' })
+  categoryColor: string | null;
+
   @ApiProperty({ type: [TransactionSplitResponseDto] })
   splits: TransactionSplitResponseDto[];
 

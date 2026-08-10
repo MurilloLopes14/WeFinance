@@ -1,6 +1,7 @@
 import type { TransactionResponseDto } from '@/api/generated/models/transactionResponseDto'
 import { ObjectCardActionsMenu } from '@/components/object/object-card-actions-menu'
 import { Badge } from '@/components/ui/badge'
+import { TransactionCategoryBadge } from '@/components/transactions/transaction-category-badge'
 import { TransactionOwnerAvatar } from '@/components/transactions/transaction-owner-avatar'
 import {
   formatTransactionAmount,
@@ -70,13 +71,22 @@ export function createTransactionColumns(
     {
       accessorKey: 'categoryId',
       header: 'Categoria',
-      cell: ({ row }) => (
-        <span className="max-w-[140px] truncate text-muted-foreground">
-          {row.original.categoryId
-            ? (meta.categoryNameById[row.original.categoryId] ?? '—')
-            : '—'}
-        </span>
-      ),
+      cell: ({ row }) => {
+        const categoryName = row.original.categoryId
+          ? meta.categoryNameById[row.original.categoryId]
+          : undefined
+
+        if (!categoryName) {
+          return <span className="text-muted-foreground">—</span>
+        }
+
+        return (
+          <TransactionCategoryBadge
+            name={categoryName}
+            color={row.original.categoryColor}
+          />
+        )
+      },
     },
     {
       accessorKey: 'amount',

@@ -12,7 +12,7 @@ export interface CreateAccountDto {
   name: string;
   type: CreateAccountDtoType;
   /** UUID of the household member who owns this account */
-  userId?: string;
+  userId: string;
   institution?: string;
   balanceManual?: number;
   /** CSS color for UI display */

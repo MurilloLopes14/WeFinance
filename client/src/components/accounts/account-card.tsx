@@ -42,6 +42,12 @@ export function AccountCard({
   const accountColor = account.color ?? DEFAULT_PRESET_COLOR
   const currency = getAccountCurrency(account, householdCurrencyById)
   const isCredit = account.type === AccountResponseDtoType.credit
+  const balanceTone =
+    account.balanceManual > 0
+      ? 'positive'
+      : account.balanceManual < 0
+        ? 'negative'
+        : 'zero'
 
   const actions: ObjectCardAction[] = []
 
@@ -108,7 +114,14 @@ export function AccountCard({
 
           <SensitiveValue
             size="lg"
-            className="mt-1.5 block truncate text-lg leading-none font-semibold tracking-tight tabular-nums"
+            className={cn(
+              'mt-1.5 inline-block max-w-full text-lg leading-none font-semibold tracking-tight tabular-nums',
+              balanceTone === 'positive' &&
+                'account-balance-glow-positive text-emerald-600 dark:text-emerald-400',
+              balanceTone === 'negative' &&
+                'account-balance-glow-negative text-destructive',
+              balanceTone === 'zero' && 'text-foreground',
+            )}
           >
             {formatAccountBalance(account.balanceManual, currency)}
           </SensitiveValue>

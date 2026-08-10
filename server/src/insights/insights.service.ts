@@ -16,6 +16,11 @@ import { SavingsVsLastMonthRule } from './rules/savings-vs-last-month.rule';
 import { BudgetOverviewRule } from './rules/budget-overview.rule';
 import { InvestmentYieldRule } from './rules/investment-yield.rule';
 import { CreditInvoiceRule } from './rules/credit-invoice.rule';
+import { CategorySpikeRule } from './rules/category-spike.rule';
+import { NoIncomeAlertRule } from './rules/no-income-alert.rule';
+import { IncomeGrowthRule } from './rules/income-growth.rule';
+import { PositiveBalanceStreakRule } from './rules/positive-balance-streak.rule';
+import { CreditUtilizationRule } from './rules/credit-utilization.rule';
 
 const MAX_INSIGHTS = 8;
 
@@ -23,9 +28,11 @@ const MAX_INSIGHTS = 8;
 export class InsightsService {
   private readonly rules: InsightRule[] = [
     new CreditInvoiceRule(),
+    new CreditUtilizationRule(),
     new BudgetOverviewRule(),
     new InvestmentYieldRule(),
-    new CategoryShareRule(),
+    new NoIncomeAlertRule(),
+    new CategorySpikeRule(),
     new MonthOverMonthExpenseRule(),
     new MonthlyBalanceRule(),
     new SubscriptionVsCommonRule(),
@@ -33,7 +40,9 @@ export class InsightsService {
     new TopCategoryRule(),
     new PersonalSharedShareRule(),
     new SavingsVsLastMonthRule(),
+    new IncomeGrowthRule(),
     new RecurringIncomeRule(),
+    new PositiveBalanceStreakRule(),
   ];
 
   constructor(

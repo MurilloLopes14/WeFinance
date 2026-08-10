@@ -1,9 +1,10 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { and, asc, count, eq, gte, inArray, lt, lte, ne, SQL, sum } from 'drizzle-orm';
+import { and, asc, count, eq, gte, inArray, isNotNull, lt, lte, ne, sql, SQL, sum } from 'drizzle-orm';
+import { alias } from 'drizzle-orm/pg-core';
 import { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import { DRIZZLE } from '../database/database.constants';
 import * as schema from '../database/schema';
-import { accounts, categories, payees, transactionSplits, transactions, users } from '../database/schema';
+import { accounts, categories, households, householdMembers, payees, transactionSplits, transactions, users } from '../database/schema';
 import { currentMonth, monthDateRange, subtractMonths } from '../common/utils/month.utils';
 import { creditCycleStart, creditInvoiceDueDay } from '../common/utils/credit.utils';
 import { HouseholdsService } from '../households/households.service';
@@ -18,7 +19,18 @@ import {
   DailySummaryResponseDto,
   PersonalSummaryResponseDto,
 } from './dto/dashboard-response.dto';
-import { FilterExportDto } from './dto/filter-report.dto';
+import { FilterCategoryTimelineDto, FilterExportDto, FilterSplitFairnessDto, FilterTopPayeesDto } from './dto/filter-report.dto';
+import {
+  MemberFairnessDto,
+  SplitFairnessResponseDto,
+  SuggestedSettlementDto,
+} from './dto/split-fairness-response.dto';
+import {
+  CategoryTimelineDataPointDto,
+  CategoryTimelineResponseDto,
+  CategoryTimelineSeriesDto,
+} from './dto/category-timeline-response.dto';
+import { TopPayeeItemDto, TopPayeesResponseDto } from './dto/top-payees-response.dto';
 
 @Injectable()
 export class TransactionReportsService {
@@ -256,7 +268,11 @@ export class TransactionReportsService {
       const earliestCycleStart = [...cycleMap.values()].sort()[0];
 
       const cycleExpenseRows = await this.db
-        .select({ accountId: transactions.accountId, total: sum(transactions.amount) })
+        .select({
+          accountId: transactions.accountId,
+          date: transactions.date,
+          amount: transactions.amount,
+        })
         .from(transactions)
         .where(
           and(
@@ -265,12 +281,17 @@ export class TransactionReportsService {
             eq(transactions.type, 'expense'),
             ne(transactions.status, 'draft'),
           ),
-        )
-        .groupBy(transactions.accountId);
+        );
 
-      const spentByAccount = new Map(
-        cycleExpenseRows.map((r) => [r.accountId, parseFloat(r.total ?? '0')]),
-      );
+      const spentByAccount = new Map<string, number>();
+      for (const row of cycleExpenseRows) {
+        const cycleStart = cycleMap.get(row.accountId);
+        if (!cycleStart || row.date < cycleStart) continue;
+        spentByAccount.set(
+          row.accountId,
+          (spentByAccount.get(row.accountId) ?? 0) + parseFloat(row.amount),
+        );
+      }
 
       creditAccounts = activeCreditAccounts.map((a) => {
         const cycleStart = cycleMap.get(a.id)!;
@@ -707,9 +728,724 @@ export class TransactionReportsService {
 
     return lines.join('\r\n');
   }
+
+  // ─── Top payees report ───────────────────────────────────────────────────
+
+  async getTopPayees(
+    householdId: string,
+    requesterId: string,
+    filters: FilterTopPayeesDto,
+  ): Promise<TopPayeesResponseDto> {
+    await this.householdsService.assertMember(householdId, requesterId);
+
+    const { startDate, endDate, endIsExclusive } = resolveReportPeriod(filters);
+    const dateEndCond = endIsExclusive
+      ? lt(transactions.date, endDate)
+      : lte(transactions.date, endDate);
+    const scope = filters.scope ?? 'household';
+    const limit = filters.limit ?? 10;
+
+    const baseConditions = [
+      eq(transactions.householdId, householdId),
+      eq(transactions.type, 'expense'),
+      ne(transactions.status, 'draft'),
+      gte(transactions.date, startDate),
+      dateEndCond,
+      isNotNull(transactions.payeeId),
+    ];
+
+    const [rows, [totalRow]] = await Promise.all([
+      scope === 'personal'
+        ? this.db
+            .select({
+              payeeId: transactions.payeeId,
+              payeeName: payees.name,
+              total: sum(transactions.amount),
+              txCount: count(),
+            })
+            .from(transactions)
+            .innerJoin(accounts, eq(transactions.accountId, accounts.id))
+            .leftJoin(payees, eq(transactions.payeeId, payees.id))
+            .where(and(...baseConditions, eq(accounts.userId, requesterId)))
+            .groupBy(transactions.payeeId, payees.name)
+            .orderBy(asc(sql`1`))
+        : this.db
+            .select({
+              payeeId: transactions.payeeId,
+              payeeName: payees.name,
+              total: sum(transactions.amount),
+              txCount: count(),
+            })
+            .from(transactions)
+            .leftJoin(payees, eq(transactions.payeeId, payees.id))
+            .where(and(...baseConditions))
+            .groupBy(transactions.payeeId, payees.name)
+            .orderBy(asc(sql`1`)),
+
+      scope === 'personal'
+        ? this.db
+            .select({ total: sum(transactions.amount) })
+            .from(transactions)
+            .innerJoin(accounts, eq(transactions.accountId, accounts.id))
+            .where(and(...baseConditions, eq(accounts.userId, requesterId)))
+        : this.db
+            .select({ total: sum(transactions.amount) })
+            .from(transactions)
+            .where(and(...baseConditions)),
+    ]);
+
+    const totalExpenses = parseFloat(totalRow?.total ?? '0');
+
+    const sorted = [...rows]
+      .sort((a, b) => parseFloat(b.total ?? '0') - parseFloat(a.total ?? '0'))
+      .slice(0, limit);
+
+    const payeeList: TopPayeeItemDto[] = sorted.map((r) => {
+      const amount = parseFloat(r.total ?? '0');
+      return {
+        payeeId: r.payeeId ?? null,
+        name: r.payeeName ?? 'Sem favorecido',
+        amount: parseFloat(amount.toFixed(2)),
+        percentage: totalExpenses > 0
+          ? parseFloat(((amount / totalExpenses) * 100).toFixed(2))
+          : 0,
+        transactionCount: Number(r.txCount),
+      };
+    });
+
+    const displayTo = exclusiveEndToDisplay(endDate, endIsExclusive);
+
+    return { from: startDate, to: displayTo, scope, totalExpenses: parseFloat(totalExpenses.toFixed(2)), payees: payeeList };
+  }
+
+  // ─── Category timeline report ─────────────────────────────────────────────
+
+  private async getPersonalCategoryTimelineRows(
+    householdId: string,
+    requesterId: string,
+    fromDate: string,
+    toDate: string,
+  ): Promise<
+    Array<{
+      date: string;
+      amount: number;
+      categoryId: string | null;
+      categoryName: string | null;
+      categoryColor: string | null;
+    }>
+  > {
+    const [splitRows, directTxRows, splitTxIdRows] = await Promise.all([
+      this.db
+        .select({
+          date: transactions.date,
+          share: transactionSplits.share,
+          splitCategoryId: transactionSplits.categoryId,
+          txCategoryId: transactions.categoryId,
+        })
+        .from(transactionSplits)
+        .innerJoin(transactions, eq(transactionSplits.transactionId, transactions.id))
+        .where(
+          and(
+            eq(transactions.householdId, householdId),
+            eq(transactionSplits.userId, requesterId),
+            gte(transactions.date, fromDate),
+            lte(transactions.date, toDate),
+            eq(transactions.type, 'expense'),
+            ne(transactions.status, 'draft'),
+          ),
+        ),
+
+      this.db
+        .select({
+          id: transactions.id,
+          date: transactions.date,
+          categoryId: transactions.categoryId,
+          amount: transactions.amount,
+        })
+        .from(transactions)
+        .where(
+          and(
+            eq(transactions.householdId, householdId),
+            eq(transactions.createdById, requesterId),
+            gte(transactions.date, fromDate),
+            lte(transactions.date, toDate),
+            eq(transactions.type, 'expense'),
+            ne(transactions.status, 'draft'),
+          ),
+        ),
+
+      this.db
+        .select({ txId: transactionSplits.transactionId })
+        .from(transactionSplits)
+        .innerJoin(transactions, eq(transactionSplits.transactionId, transactions.id))
+        .where(
+          and(
+            eq(transactions.householdId, householdId),
+            gte(transactions.date, fromDate),
+            lte(transactions.date, toDate),
+            ne(transactions.status, 'draft'),
+          ),
+        ),
+    ]);
+
+    const splitTxIds = new Set(splitTxIdRows.map((row) => row.txId));
+    const directTxs = directTxRows.filter((row) => !splitTxIds.has(row.id));
+
+    const categoryIds = new Set<string>();
+    for (const row of splitRows) {
+      if (row.splitCategoryId) categoryIds.add(row.splitCategoryId);
+      if (row.txCategoryId) categoryIds.add(row.txCategoryId);
+    }
+    for (const row of directTxs) {
+      if (row.categoryId) categoryIds.add(row.categoryId);
+    }
+
+    const catRows = categoryIds.size
+      ? await this.db
+          .select({
+            id: categories.id,
+            name: categories.name,
+            color: categories.color,
+          })
+          .from(categories)
+          .where(inArray(categories.id, [...categoryIds]))
+      : [];
+
+    const catMap = new Map(catRows.map((category) => [category.id, category]));
+
+    const rows: Array<{
+      date: string;
+      amount: number;
+      categoryId: string | null;
+      categoryName: string | null;
+      categoryColor: string | null;
+    }> = [];
+
+    for (const split of splitRows) {
+      const categoryId = split.splitCategoryId ?? split.txCategoryId ?? null;
+      const info = categoryId ? catMap.get(categoryId) : undefined;
+      rows.push({
+        date: split.date,
+        amount: parseFloat(split.share),
+        categoryId,
+        categoryName: info?.name ?? null,
+        categoryColor: info?.color ?? null,
+      });
+    }
+
+    for (const tx of directTxs) {
+      const info = tx.categoryId ? catMap.get(tx.categoryId) : undefined;
+      rows.push({
+        date: tx.date,
+        amount: parseFloat(tx.amount),
+        categoryId: tx.categoryId,
+        categoryName: info?.name ?? null,
+        categoryColor: info?.color ?? null,
+      });
+    }
+
+    return rows;
+  }
+
+  async getCategoryTimeline(
+    householdId: string,
+    requesterId: string,
+    filters: FilterCategoryTimelineDto,
+  ): Promise<CategoryTimelineResponseDto> {
+    await this.householdsService.assertMember(householdId, requesterId);
+
+    const granularity = filters.granularity ?? 'monthly';
+    const scope = filters.scope ?? 'household';
+    const today = new Date().toISOString().split('T')[0];
+    const toDate = filters.to ?? today;
+    const fromDate = filters.from ?? subtractMonths(currentMonth(), 5) + '-01';
+
+    const conditions = [
+      eq(transactions.householdId, householdId),
+      eq(transactions.type, 'expense'),
+      ne(transactions.status, 'draft'),
+      gte(transactions.date, fromDate),
+      lte(transactions.date, toDate),
+    ];
+
+    // Personal = share atribuída ao usuário + despesas criadas por ele sem split
+    // (mesmo critério do breakdown pessoal — não depende de accounts.userId).
+    const rows =
+      scope === 'personal'
+        ? await this.getPersonalCategoryTimelineRows(
+            householdId,
+            requesterId,
+            fromDate,
+            toDate,
+          )
+        : (
+            await this.db
+              .select({
+                date: transactions.date,
+                amount: transactions.amount,
+                categoryId: transactions.categoryId,
+                categoryName: categories.name,
+                categoryColor: categories.color,
+              })
+              .from(transactions)
+              .leftJoin(categories, eq(transactions.categoryId, categories.id))
+              .where(and(...conditions))
+          ).map((row) => ({
+            date: row.date,
+            amount: parseFloat(row.amount),
+            categoryId: row.categoryId,
+            categoryName: row.categoryName,
+            categoryColor: row.categoryColor,
+          }));
+
+    // Collect unique categories that appear at least once
+    const categoryMeta = new Map<string, { name: string; color: string | null }>();
+    for (const row of rows) {
+      const key = row.categoryId ?? '__none__';
+      if (!categoryMeta.has(key)) {
+        categoryMeta.set(key, {
+          name: row.categoryName ?? 'Sem categoria',
+          color: row.categoryColor ?? null,
+        });
+      }
+    }
+
+    const bucketKeys = generateBucketKeys(fromDate, toDate, granularity);
+
+    // Accumulate amounts per (categoryKey, bucketKey)
+    const amounts = new Map<string, Map<string, number>>();
+    for (const row of rows) {
+      const catKey = row.categoryId ?? '__none__';
+      const bKey = toBucketKey(row.date, granularity);
+      if (!amounts.has(catKey)) amounts.set(catKey, new Map());
+      const prev = amounts.get(catKey)!.get(bKey) ?? 0;
+      amounts.get(catKey)!.set(bKey, prev + row.amount);
+    }
+
+    const series: CategoryTimelineSeriesDto[] = [];
+    for (const [catKey, meta] of categoryMeta) {
+      const catAmounts = amounts.get(catKey) ?? new Map();
+      const data: CategoryTimelineDataPointDto[] = bucketKeys.map((bKey) => ({
+        key: bKey,
+        ...bucketDateRange(bKey, granularity),
+        amount: parseFloat((catAmounts.get(bKey) ?? 0).toFixed(2)),
+      }));
+      series.push({
+        categoryId: catKey === '__none__' ? null : catKey,
+        name: meta.name,
+        color: meta.color,
+        data,
+      });
+    }
+
+    series.sort((a, b) => {
+      const totalA = a.data.reduce((s, d) => s + d.amount, 0);
+      const totalB = b.data.reduce((s, d) => s + d.amount, 0);
+      return totalB - totalA;
+    });
+
+    return { granularity, from: fromDate, to: toDate, scope, series };
+  }
+
+  // ─── Split fairness report ────────────────────────────────────────────────
+
+  async getSplitFairness(
+    householdId: string,
+    requesterId: string,
+    filters: FilterSplitFairnessDto,
+  ): Promise<SplitFairnessResponseDto> {
+    await this.householdsService.assertMember(householdId, requesterId);
+
+    const { startDate, endDate, endIsExclusive } = resolveReportPeriod(filters);
+    const dateEndCond = endIsExclusive
+      ? lt(transactions.date, endDate)
+      : lte(transactions.date, endDate);
+
+    const fromAcc = alias(accounts, 'from_acc');
+    const toAcc = alias(accounts, 'to_acc');
+
+    const [
+      memberRows,
+      householdRows,
+      expenseRows,
+      settlementRows,
+      splitAssignmentRows,
+      splitPaidRows,
+      unsplitRows,
+    ] = await Promise.all([
+      this.db
+        .select({
+          userId: householdMembers.userId,
+          splitValue: householdMembers.splitValue,
+          name: users.name,
+          avatarUrl: users.avatarUrl,
+        })
+        .from(householdMembers)
+        .innerJoin(users, eq(users.id, householdMembers.userId))
+        .where(eq(householdMembers.householdId, householdId)),
+
+      this.db
+        .select({ defaultSplitType: households.defaultSplitType })
+        .from(households)
+        .where(eq(households.id, householdId))
+        .limit(1),
+
+      this.db
+        .select({
+          // Contas compartilhadas (sem titular) caem no createdBy da despesa.
+          userId: sql<string>`coalesce(${accounts.userId}, ${transactions.createdById})`.as(
+            'userId',
+          ),
+          total: sum(transactions.amount),
+        })
+        .from(transactions)
+        .innerJoin(accounts, eq(transactions.accountId, accounts.id))
+        .where(and(
+          eq(transactions.householdId, householdId),
+          eq(transactions.type, 'expense'),
+          ne(transactions.status, 'draft'),
+          gte(transactions.date, startDate),
+          dateEndCond,
+        ))
+        .groupBy(sql`coalesce(${accounts.userId}, ${transactions.createdById})`),
+
+      this.db
+        .select({
+          fromUserId: fromAcc.userId,
+          toUserId: toAcc.userId,
+          total: sum(transactions.amount),
+        })
+        .from(transactions)
+        .innerJoin(fromAcc, eq(transactions.accountId, fromAcc.id))
+        .innerJoin(toAcc, eq(transactions.transferToId, toAcc.id))
+        .where(and(
+          eq(transactions.householdId, householdId),
+          eq(transactions.type, 'transfer'),
+          ne(transactions.status, 'draft'),
+          gte(transactions.date, startDate),
+          dateEndCond,
+        ))
+        .groupBy(fromAcc.userId, toAcc.userId),
+
+      this.db
+        .select({ userId: transactionSplits.userId, total: sum(transactionSplits.share) })
+        .from(transactionSplits)
+        .innerJoin(transactions, eq(transactionSplits.transactionId, transactions.id))
+        .where(and(
+          eq(transactions.householdId, householdId),
+          gte(transactions.date, startDate),
+          dateEndCond,
+        ))
+        .groupBy(transactionSplits.userId),
+
+      this.db
+        .select({
+          userId: sql<string>`coalesce(${accounts.userId}, ${transactions.createdById})`.as(
+            'userId',
+          ),
+          total: sum(transactions.amount),
+        })
+        .from(transactions)
+        .innerJoin(accounts, eq(transactions.accountId, accounts.id))
+        .where(and(
+          eq(transactions.householdId, householdId),
+          eq(transactions.type, 'expense'),
+          ne(transactions.status, 'draft'),
+          gte(transactions.date, startDate),
+          dateEndCond,
+          sql`EXISTS (SELECT 1 FROM "transaction_splits" WHERE "transaction_splits"."transaction_id" = ${transactions.id})`,
+        ))
+        .groupBy(sql`coalesce(${accounts.userId}, ${transactions.createdById})`),
+
+      this.db
+        .select({ unsplitCount: count() })
+        .from(transactions)
+        .where(and(
+          eq(transactions.householdId, householdId),
+          eq(transactions.type, 'expense'),
+          ne(transactions.status, 'draft'),
+          gte(transactions.date, startDate),
+          dateEndCond,
+          sql`NOT EXISTS (SELECT 1 FROM "transaction_splits" WHERE "transaction_splits"."transaction_id" = ${transactions.id})`,
+        )),
+    ]);
+
+    const householdRow = householdRows[0];
+    const memberUserIds = new Set(memberRows.map((m) => m.userId));
+    const memberCount = memberRows.length;
+
+    const totalHouseholdExpenses = expenseRows.reduce((acc, r) => acc + parseFloat(r.total ?? '0'), 0);
+
+    const expenseByUserId = new Map<string, number>(
+      expenseRows
+        .filter((r) => r.userId && memberUserIds.has(r.userId))
+        .map((r) => [r.userId!, parseFloat(r.total ?? '0')]),
+    );
+
+    const settlementsReceivedByUserId = new Map<string, number>();
+    const settlementsPaidByUserId = new Map<string, number>();
+    for (const s of settlementRows) {
+      if (!s.fromUserId || !s.toUserId) continue;
+      if (!memberUserIds.has(s.fromUserId) || !memberUserIds.has(s.toUserId)) continue;
+      if (s.fromUserId === s.toUserId) continue;
+      const amount = parseFloat(s.total ?? '0');
+      settlementsReceivedByUserId.set(s.toUserId, (settlementsReceivedByUserId.get(s.toUserId) ?? 0) + amount);
+      settlementsPaidByUserId.set(s.fromUserId, (settlementsPaidByUserId.get(s.fromUserId) ?? 0) + amount);
+    }
+
+    const splitAssignedByUserId = new Map<string, number>(
+      splitAssignmentRows
+        .filter((r) => memberUserIds.has(r.userId))
+        .map((r) => [r.userId, parseFloat(r.total ?? '0')]),
+    );
+
+    const splitPaidByUserId = new Map<string, number>(
+      splitPaidRows
+        .filter((r) => r.userId && memberUserIds.has(r.userId))
+        .map((r) => [r.userId!, parseFloat(r.total ?? '0')]),
+    );
+
+    const members: MemberFairnessDto[] = memberRows.map((m) => {
+      const agreedSplitPercent = householdRow.defaultSplitType === 'equal'
+        ? parseFloat((100 / memberCount).toFixed(4))
+        : parseFloat(m.splitValue);
+
+      const expectedAmount = parseFloat(((agreedSplitPercent / 100) * totalHouseholdExpenses).toFixed(2));
+      const actualPaid = expenseByUserId.get(m.userId) ?? 0;
+      const settlementsReceived = settlementsReceivedByUserId.get(m.userId) ?? 0;
+      const settlementsPaid = settlementsPaidByUserId.get(m.userId) ?? 0;
+      const netBalance = parseFloat((actualPaid + settlementsPaid - settlementsReceived - expectedAmount).toFixed(2));
+
+      const explicitSplitPaid = splitPaidByUserId.get(m.userId) ?? 0;
+      const explicitSplitAssigned = splitAssignedByUserId.get(m.userId) ?? 0;
+
+      return {
+        userId: m.userId,
+        name: m.name,
+        avatarUrl: m.avatarUrl ?? null,
+        agreedSplitPercent,
+        expectedAmount,
+        actualPaid: parseFloat(actualPaid.toFixed(2)),
+        settlementsReceived: parseFloat(settlementsReceived.toFixed(2)),
+        settlementsPaid: parseFloat(settlementsPaid.toFixed(2)),
+        netBalance,
+        explicitSplitPaid: parseFloat(explicitSplitPaid.toFixed(2)),
+        explicitSplitAssigned: parseFloat(explicitSplitAssigned.toFixed(2)),
+        explicitSplitBalance: parseFloat((explicitSplitPaid - explicitSplitAssigned).toFixed(2)),
+      };
+    });
+
+    const displayTo = exclusiveEndToDisplay(endDate, endIsExclusive);
+
+    return {
+      period: { from: startDate, to: displayTo },
+      totalHouseholdExpenses: parseFloat(totalHouseholdExpenses.toFixed(2)),
+      members,
+      suggestedSettlements: computeSettlements(members),
+      unsplitTransactionCount: Number(unsplitRows[0]?.unsplitCount ?? 0),
+    };
+  }
 }
 
 function csvCell(value: string): string {
   const s = String(value ?? '');
   return /[",\r\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+}
+
+type Granularity = 'weekly' | 'monthly' | 'quarterly' | 'semiannual' | 'annual';
+
+function isoWeekNumber(d: Date): number {
+  const tmp = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
+  const day = tmp.getUTCDay() || 7;
+  tmp.setUTCDate(tmp.getUTCDate() + 4 - day);
+  const yearStart = new Date(Date.UTC(tmp.getUTCFullYear(), 0, 1));
+  return Math.ceil(((tmp.getTime() - yearStart.getTime()) / 86_400_000 + 1) / 7);
+}
+
+function isoWeekYear(d: Date): number {
+  const tmp = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
+  const day = tmp.getUTCDay() || 7;
+  tmp.setUTCDate(tmp.getUTCDate() + 4 - day);
+  return tmp.getUTCFullYear();
+}
+
+function toBucketKey(dateStr: string, granularity: Granularity): string {
+  const d = new Date(dateStr + 'T00:00:00Z');
+  const year = d.getUTCFullYear();
+  const month = d.getUTCMonth() + 1;
+  switch (granularity) {
+    case 'weekly':
+      return `${isoWeekYear(d)}-W${String(isoWeekNumber(d)).padStart(2, '0')}`;
+    case 'monthly':
+      return `${year}-${String(month).padStart(2, '0')}`;
+    case 'quarterly':
+      return `${year}-Q${Math.ceil(month / 3)}`;
+    case 'semiannual':
+      return `${year}-H${month <= 6 ? 1 : 2}`;
+    case 'annual':
+      return `${year}`;
+  }
+}
+
+function bucketDateRange(key: string, granularity: Granularity): { from: string; to: string } {
+  switch (granularity) {
+    case 'weekly': {
+      const [yearStr, weekStr] = key.split('-W');
+      const year = parseInt(yearStr);
+      const week = parseInt(weekStr);
+      const jan4 = new Date(Date.UTC(year, 0, 4));
+      const dayOfWeek = jan4.getUTCDay() || 7;
+      const weekStart = new Date(jan4.getTime() - (dayOfWeek - 1) * 86_400_000 + (week - 1) * 7 * 86_400_000);
+      const weekEnd = new Date(weekStart.getTime() + 6 * 86_400_000);
+      return { from: weekStart.toISOString().split('T')[0], to: weekEnd.toISOString().split('T')[0] };
+    }
+    case 'monthly': {
+      const [y, m] = key.split('-').map(Number);
+      const lastDay = new Date(Date.UTC(y, m, 0));
+      return { from: `${y}-${String(m).padStart(2, '0')}-01`, to: lastDay.toISOString().split('T')[0] };
+    }
+    case 'quarterly': {
+      const [yearStr, qStr] = key.split('-Q');
+      const y = parseInt(yearStr);
+      const q = parseInt(qStr);
+      const sm = (q - 1) * 3 + 1;
+      const em = q * 3;
+      const lastDay = new Date(Date.UTC(y, em, 0));
+      return { from: `${y}-${String(sm).padStart(2, '0')}-01`, to: lastDay.toISOString().split('T')[0] };
+    }
+    case 'semiannual': {
+      const [yearStr, hStr] = key.split('-H');
+      const y = parseInt(yearStr);
+      const h = parseInt(hStr);
+      const sm = h === 1 ? 1 : 7;
+      const em = h === 1 ? 6 : 12;
+      const lastDay = new Date(Date.UTC(y, em, 0));
+      return { from: `${y}-${String(sm).padStart(2, '0')}-01`, to: lastDay.toISOString().split('T')[0] };
+    }
+    case 'annual': {
+      const y = parseInt(key);
+      return { from: `${y}-01-01`, to: `${y}-12-31` };
+    }
+  }
+}
+
+function generateBucketKeys(from: string, to: string, granularity: Granularity): string[] {
+  const keys: string[] = [];
+  const toDate = new Date(to + 'T00:00:00Z');
+
+  switch (granularity) {
+    case 'weekly': {
+      const d = new Date(from + 'T00:00:00Z');
+      const day = d.getUTCDay() || 7;
+      d.setUTCDate(d.getUTCDate() - (day - 1));
+      while (d <= toDate) {
+        keys.push(toBucketKey(d.toISOString().split('T')[0], 'weekly'));
+        d.setUTCDate(d.getUTCDate() + 7);
+      }
+      break;
+    }
+    case 'monthly': {
+      let [y, m] = from.split('-').map(Number);
+      const [toY, toM] = to.split('-').map(Number);
+      while (y < toY || (y === toY && m <= toM)) {
+        keys.push(`${y}-${String(m).padStart(2, '0')}`);
+        m++;
+        if (m > 12) { m = 1; y++; }
+      }
+      break;
+    }
+    case 'quarterly': {
+      const [fy, fm] = from.split('-').map(Number);
+      const [ty, tm] = to.split('-').map(Number);
+      let y = fy;
+      let q = Math.ceil(fm / 3);
+      const toQ = Math.ceil(tm / 3);
+      while (y < ty || (y === ty && q <= toQ)) {
+        keys.push(`${y}-Q${q}`);
+        q++;
+        if (q > 4) { q = 1; y++; }
+      }
+      break;
+    }
+    case 'semiannual': {
+      const [fy, fm] = from.split('-').map(Number);
+      const [ty, tm] = to.split('-').map(Number);
+      let y = fy;
+      let h = fm <= 6 ? 1 : 2;
+      const toH = tm <= 6 ? 1 : 2;
+      while (y < ty || (y === ty && h <= toH)) {
+        keys.push(`${y}-H${h}`);
+        h++;
+        if (h > 2) { h = 1; y++; }
+      }
+      break;
+    }
+    case 'annual': {
+      const fromY = parseInt(from.split('-')[0]);
+      const toY = parseInt(to.split('-')[0]);
+      for (let y = fromY; y <= toY; y++) keys.push(`${y}`);
+      break;
+    }
+  }
+  return keys;
+}
+
+function resolveReportPeriod(filters: { month?: string; from?: string; to?: string }): {
+  startDate: string;
+  endDate: string;
+  endIsExclusive: boolean;
+} {
+  if (filters.month) {
+    const { startDate, endDate } = monthDateRange(filters.month);
+    return { startDate, endDate, endIsExclusive: true };
+  }
+  if (filters.from || filters.to) {
+    const today = new Date().toISOString().split('T')[0];
+    return { startDate: filters.from ?? '2000-01-01', endDate: filters.to ?? today, endIsExclusive: false };
+  }
+  const { startDate, endDate } = monthDateRange(currentMonth());
+  return { startDate, endDate, endIsExclusive: true };
+}
+
+function exclusiveEndToDisplay(endDate: string, endIsExclusive: boolean): string {
+  if (!endIsExclusive) return endDate;
+  return new Date(new Date(endDate + 'T00:00:00Z').getTime() - 86_400_000).toISOString().split('T')[0];
+}
+
+function computeSettlements(members: MemberFairnessDto[]): SuggestedSettlementDto[] {
+  const creditors = members
+    .filter((m) => m.netBalance > 0.01)
+    .map((m) => ({ userId: m.userId, name: m.name, balance: m.netBalance }))
+    .sort((a, b) => b.balance - a.balance);
+
+  const debtors = members
+    .filter((m) => m.netBalance < -0.01)
+    .map((m) => ({ userId: m.userId, name: m.name, balance: Math.abs(m.netBalance) }))
+    .sort((a, b) => b.balance - a.balance);
+
+  const settlements: SuggestedSettlementDto[] = [];
+
+  let ci = 0;
+  let di = 0;
+  while (ci < creditors.length && di < debtors.length) {
+    const creditor = creditors[ci];
+    const debtor = debtors[di];
+    const amount = parseFloat(Math.min(creditor.balance, debtor.balance).toFixed(2));
+
+    settlements.push({
+      fromUserId: debtor.userId,
+      fromUserName: debtor.name,
+      toUserId: creditor.userId,
+      toUserName: creditor.name,
+      amount,
+    });
+
+    creditor.balance = parseFloat((creditor.balance - amount).toFixed(2));
+    debtor.balance = parseFloat((debtor.balance - amount).toFixed(2));
+
+    if (creditor.balance <= 0.01) ci++;
+    if (debtor.balance <= 0.01) di++;
+  }
+
+  return settlements;
 }

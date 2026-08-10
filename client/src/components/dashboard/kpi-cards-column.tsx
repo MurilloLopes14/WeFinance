@@ -1,7 +1,6 @@
 import { KpiCard } from '@/components/dashboard/kpi-card'
 import type { KpiCardProps } from '@/components/dashboard/kpi-card'
 import { Skeleton } from '@/components/ui/skeleton'
-import type { CreditAccountSummaryDto } from '@/api/generated/models/creditAccountSummaryDto'
 import type { TransactionSummaryResponseDto } from '@/api/generated/models/transactionSummaryResponseDto'
 import { cn } from '@/lib/utils'
 import { useMemo } from 'react'
@@ -22,11 +21,10 @@ type KpiCardsColumnProps = {
   isLoading: boolean
   label?: string
   accountBalances?: AccountBalanceBreakdown
-  /** Exibe o card "A pagar" com o total informado (ex.: resumo do grupo). */
+  /** Exibe o card "A pagar" com o total informado. */
   toBePaid?: number
-  /** Reserva espaço para o card "A pagar" no layout (ex.: aba Grupo). */
+  /** Reserva espaço para o card "A pagar" no layout, inclusive durante o loading. */
   includeToBePaidCard?: boolean
-  creditAccounts?: CreditAccountSummaryDto[]
   className?: string
 }
 
@@ -38,16 +36,11 @@ export function KpiCardsColumn({
   accountBalances,
   toBePaid,
   includeToBePaidCard = false,
-  creditAccounts,
   className,
 }: KpiCardsColumnProps) {
   const showAccountBalances = accountBalances !== undefined
   const showToBePaidCard = includeToBePaidCard || toBePaid !== undefined
-  const creditAccountsToBePaid =
-    creditAccounts?.reduce((sum, account) => sum + account.toBeSpent, 0) ?? 0
-  const resolvedToBePaid = toBePaid ?? creditAccountsToBePaid
-  const showCreditAccountsCard =
-    !showToBePaidCard && creditAccounts !== undefined && creditAccounts.length > 0
+  const resolvedToBePaid = toBePaid ?? 0
 
   const kpiCards = useMemo(() => {
     const cards: Omit<KpiCardProps, 'currency'>[] = [
@@ -88,7 +81,7 @@ export function KpiCardsColumn({
       )
     }
 
-    if (showToBePaidCard || showCreditAccountsCard) {
+    if (showToBePaidCard) {
       cards.push({
         label: 'A pagar',
         value: resolvedToBePaid,
@@ -99,20 +92,16 @@ export function KpiCardsColumn({
     return cards
   }, [
     accountBalances,
-    creditAccounts,
     data?.balance,
     data?.totalExpenses,
     data?.totalIncome,
     resolvedToBePaid,
     showAccountBalances,
-    showCreditAccountsCard,
     showToBePaidCard,
   ])
 
   const skeletonCount = isLoading
-    ? showAccountBalances
-      ? 6 + (showToBePaidCard || showCreditAccountsCard ? 1 : 0)
-      : 3 + (showToBePaidCard || showCreditAccountsCard ? 1 : 0)
+    ? (showAccountBalances ? 6 : 3) + (showToBePaidCard ? 1 : 0)
     : kpiCards.length
 
   return (

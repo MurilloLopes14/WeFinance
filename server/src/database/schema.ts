@@ -118,7 +118,9 @@ export const accounts = pgTable('accounts', {
   householdId: uuid('household_id')
     .references(() => households.id, { onDelete: 'cascade' })
     .notNull(),
-  userId: uuid('user_id').references(() => users.id, { onDelete: 'set null' }),
+  userId: uuid('user_id')
+    .references(() => users.id, { onDelete: 'cascade' })
+    .notNull(),
   name: varchar('name', { length: 100 }).notNull(),
   type: accountTypeEnum('type').notNull(),
   institution: varchar('institution', { length: 100 }),

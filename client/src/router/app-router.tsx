@@ -14,6 +14,7 @@ import { ReleaseNotesPage } from '@/pages/release-notes/release-notes-page'
 import { HelpPage } from '@/pages/help/help-page'
 import { PayeePage } from '@/pages/payees/payee-page'
 import { TransactionPage } from '@/pages/transactions/transaction-page'
+import { ReportsPage } from '@/pages/reports/reports-page'
 import {
   dashboardGroupsNav,
   dashboardMainNav,
@@ -63,6 +64,8 @@ export function AppRouter() {
                 element={
                   item.url === '/dashboard/transacoes' ? (
                     <TransactionPage />
+                  ) : item.url === '/dashboard/relatorios' ? (
+                    <ReportsPage />
                   ) : (
                     <DashboardPlaceholderPage
                       title={item.title}

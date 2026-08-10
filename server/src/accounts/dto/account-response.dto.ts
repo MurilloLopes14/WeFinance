@@ -18,8 +18,8 @@ export class AccountResponseDto {
   @ApiProperty()
   householdId: string;
 
-  @ApiPropertyOptional({ type: AccountOwnerDto, nullable: true })
-  user: AccountOwnerDto | null;
+  @ApiProperty({ type: AccountOwnerDto })
+  user: AccountOwnerDto;
 
   @ApiProperty({ example: 'Nubank Crédito' })
   name: string;

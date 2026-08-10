@@ -25,6 +25,7 @@ type UserSearchFieldProps = {
   error?: string
   id?: string
   label?: string
+  required?: boolean
   className?: string
 }
 
@@ -37,6 +38,7 @@ export function UserSearchField({
   error,
   id = 'user-search',
   label = 'Dono da Conta',
+  required = false,
   className,
 }: UserSearchFieldProps) {
   const [inputValue, setInputValue] = useState('')
@@ -74,12 +76,16 @@ export function UserSearchField({
 
   return (
     <div className={cn('space-y-2', className)}>
-      <Label htmlFor={id}>{label}</Label>
+      <Label htmlFor={id}>
+        {label}
+        {required ? <span className="text-destructive"> *</span> : null}
+      </Label>
       <Combobox
         items={filteredMembers}
         value={selectedMember}
         disabled={fieldsDisabled}
         onValueChange={(item: HouseholdMemberResponseDto | null) => {
+          if (required && !item) return
           onValueChange(item?.userId ?? '')
           setInputValue(item?.user.name ?? '')
         }}
@@ -92,8 +98,9 @@ export function UserSearchField({
           placeholder={isLoading ? 'Carregando membros…' : 'Buscar membro do grupo…'}
           className="w-full rounded-xl glass-subtle"
           disabled={fieldsDisabled}
-          showClear={!fieldsDisabled}
+          showClear={!fieldsDisabled && !required}
           spellCheck={false}
+          aria-required={required || undefined}
         />
         <ComboboxContent className="glow-border">
           <ComboboxList>

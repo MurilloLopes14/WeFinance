@@ -1,5 +1,6 @@
 import type { TransactionResponseDto } from '@/api/generated/models/transactionResponseDto'
 import { ObjectCardActionsMenu, type ObjectCardAction } from '@/components/object/object-card-actions-menu'
+import { TransactionCategoryBadge } from '@/components/transactions/transaction-category-badge'
 import { TransactionOwnerAvatar } from '@/components/transactions/transaction-owner-avatar'
 import { Badge } from '@/components/ui/badge'
 import { Card } from '@/components/ui/card'
@@ -98,9 +99,11 @@ export function TransactionCard({
               </Badge>
             ) : null}
             {categoryName ? (
-              <span className="min-w-0 truncate text-xs text-muted-foreground">
-                {categoryName}
-              </span>
+              <TransactionCategoryBadge
+                name={categoryName}
+                color={transaction.categoryColor}
+                className="max-w-[46%]"
+              />
             ) : null}
           </div>
         </div>

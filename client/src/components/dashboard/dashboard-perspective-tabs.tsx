@@ -41,12 +41,15 @@ export function DashboardPerspectiveTabs({
       }}
       className="gap-4"
     >
-      <TabsList className="w-full sm:w-fit" data-tour="dashboard-perspective">
-        <TabsTrigger value="personal">
+      <TabsList
+        className="h-11 w-full touch-manipulation sm:h-9 sm:w-fit"
+        data-tour="dashboard-perspective"
+      >
+        <TabsTrigger value="personal" className="min-h-9 touch-manipulation">
           <User />
           Você
         </TabsTrigger>
-        <TabsTrigger value="household">
+        <TabsTrigger value="household" className="min-h-9 touch-manipulation">
           <Users />
           Grupo
         </TabsTrigger>

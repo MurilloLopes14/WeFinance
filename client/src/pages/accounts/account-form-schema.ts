@@ -119,9 +119,8 @@ const accountBaseFormSchema = z
     householdId: z.string().uuid('Selecione um grupo'),
     userId: z
       .string()
-      .uuid('Selecione um membro válido')
-      .optional()
-      .or(z.literal('')),
+      .min(1, 'Selecione o dono da conta')
+      .uuid('Selecione o dono da conta'),
     name: z
       .string()
       .trim()

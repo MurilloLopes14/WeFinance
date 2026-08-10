@@ -7,6 +7,7 @@ import {
   HelpCircle,
   Landmark,
   LayoutDashboard,
+  LineChart,
   PieChart,
   PiggyBank,
   ScrollText,
@@ -38,6 +39,11 @@ export const dashboardMainNav: DashboardNavItem[] = [
     title: 'Transações',
     url: '/dashboard/transacoes',
     icon: ArrowLeftRight,
+  },
+  {
+    title: 'Relatórios',
+    url: '/dashboard/relatorios',
+    icon: LineChart,
   },
 ]
 

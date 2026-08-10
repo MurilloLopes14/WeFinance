@@ -93,6 +93,14 @@ export const transactionFormSchema = z
       })
     }
 
+    if (!values.categoryId) {
+      context.addIssue({
+        code: 'custom',
+        path: ['categoryId'],
+        message: 'Selecione uma categoria',
+      })
+    }
+
     if (values.hasPayee) {
       const hasSelectedPayee = Boolean(values.payeeId)
       const hasQuickCreateName = Boolean(values.payeeName?.trim())

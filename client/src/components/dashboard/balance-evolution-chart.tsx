@@ -28,6 +28,7 @@ import { SENSITIVE_MASK_LABEL } from '@/components/privacy/sensitive-value'
 import { useSensitiveCurrencyFormatter, useSensitiveCurrencyText } from '@/hooks/use-sensitive-currency-formatter'
 import { formatTransactionDate } from '@/lib/transaction-helpers'
 import { cn } from '@/lib/utils'
+import type { ReactNode } from 'react'
 import { CartesianGrid, Line, LineChart, ReferenceLine, XAxis, YAxis } from 'recharts'
 
 type BalanceEvolutionChartProps = {
@@ -35,10 +36,12 @@ type BalanceEvolutionChartProps = {
   dailyData: DailySummaryResponseDto | undefined
   dailyMonth: string
   historyRange: BalanceHistoryRange
-  onHistoryRangeChange: (range: BalanceHistoryRange) => void
+  /** When omitted, the period selector is hidden (e.g. dashboard locked to filtered month). */
+  onHistoryRangeChange?: (range: BalanceHistoryRange) => void
   currency?: string
   isLoading: boolean
   className?: string
+  headerActions?: ReactNode
 }
 
 const chartConfig = {
@@ -57,6 +60,7 @@ export function BalanceEvolutionChart({
   currency = 'BRL',
   isLoading,
   className,
+  headerActions,
 }: BalanceEvolutionChartProps) {
   const formatCurrencyAxis = useSensitiveCurrencyFormatter(currency)
   const formatCurrencyText = useSensitiveCurrencyText(currency)
@@ -67,6 +71,7 @@ export function BalanceEvolutionChart({
   const points = isDaily ? dailyPoints : monthlyPoints
   const hasData = points.some((point) => point.hasActivity)
 
+  const showPeriodFilter = Boolean(onHistoryRangeChange)
   const periodLabel = isDaily
     ? formatDashboardMonthLabel(dailyMonth)
     : monthlyData?.from && monthlyData?.to
@@ -76,16 +81,16 @@ export function BalanceEvolutionChart({
   return (
     <div
       className={cn(
-        'glass-subtle flex h-full min-h-0 flex-col rounded-xl p-4 ring-1 ring-foreground/10',
+        'glass-subtle flex h-full min-h-0 flex-col overflow-hidden rounded-xl p-4 ring-1 ring-foreground/10',
         className,
       )}
     >
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+      <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0 space-y-1">
-          <h3 className="font-heading text-sm font-semibold tracking-tight">
+          <h3 className="font-heading text-pretty text-sm font-semibold tracking-tight">
             Evolução do saldo
           </h3>
-          <p className="text-xs text-muted-foreground">
+          <p className="text-sm text-muted-foreground sm:text-xs">
             {isDaily
               ? 'Saldo acumulado dia a dia no mês (receitas − despesas do grupo).'
               : 'Saldo acumulado mês a mês no período (receitas − despesas do grupo).'}
@@ -95,33 +100,43 @@ export function BalanceEvolutionChart({
           )}
         </div>
 
-        <div className="shrink-0 space-y-1.5 sm:w-36">
-          <p className="text-xs font-medium text-muted-foreground">Período</p>
-          <Select
-            value={historyRange}
-            onValueChange={(value) => {
-              if (!value) return
-              onHistoryRangeChange(value as BalanceHistoryRange)
-            }}
-            items={BALANCE_HISTORY_RANGE_OPTIONS.map((option) => ({
-              value: option.value,
-              label: option.label,
-            }))}
-          >
-            <SelectTrigger className="h-9 w-full rounded-xl" aria-label="Meses do relatório">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent className="glass-strong">
-              <SelectGroup>
-                {BALANCE_HISTORY_RANGE_OPTIONS.map((option) => (
-                  <SelectItem key={option.value} value={option.value}>
-                    {option.label}
-                  </SelectItem>
-                ))}
-              </SelectGroup>
-            </SelectContent>
-          </Select>
-        </div>
+        {headerActions || showPeriodFilter ? (
+          <div className="flex w-full min-w-0 shrink-0 flex-col gap-3 sm:w-auto sm:items-end">
+            {headerActions}
+            {showPeriodFilter ? (
+              <div className="w-full min-w-0 space-y-1.5 sm:w-36">
+                <p className="text-xs font-medium text-muted-foreground">Período</p>
+                <Select
+                  value={historyRange}
+                  onValueChange={(value) => {
+                    if (!value) return
+                    onHistoryRangeChange?.(value as BalanceHistoryRange)
+                  }}
+                  items={BALANCE_HISTORY_RANGE_OPTIONS.map((option) => ({
+                    value: option.value,
+                    label: option.label,
+                  }))}
+                >
+                  <SelectTrigger
+                    className="h-11 w-full rounded-xl touch-manipulation sm:h-9"
+                    aria-label="Meses do relatório"
+                  >
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="glass-strong">
+                    <SelectGroup>
+                      {BALANCE_HISTORY_RANGE_OPTIONS.map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
+              </div>
+            ) : null}
+          </div>
+        ) : null}
       </div>
 
       {isLoading ? (

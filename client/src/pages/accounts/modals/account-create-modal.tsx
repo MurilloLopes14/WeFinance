@@ -14,6 +14,7 @@ import {
   FormDialogFooter,
   FormDialogHeader,
 } from '@/components/object/form-dialog-shell'
+import { useAuthSession } from '@/hooks/use-auth-session'
 import { getApiErrorMessage } from '@/lib/get-api-error-message'
 import { AccountFormFields } from '@/pages/accounts/account-form-fields'
 import {
@@ -26,6 +27,7 @@ import {
 } from '@/pages/accounts/account-form-schema'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Loader2 } from 'lucide-react'
+import { useEffect } from 'react'
 import { useForm, type UseFormSetValue } from 'react-hook-form'
 import { toast } from 'sonner'
 import { useQueryClient } from '@tanstack/react-query'
@@ -37,6 +39,12 @@ type AccountCreateModalProps = {
 
 export function AccountCreateModal({ open, onOpenChange }: AccountCreateModalProps) {
   const queryClient = useQueryClient()
+  const { data: currentUser } = useAuthSession()
+
+  const getCreateDefaults = (): AccountFormValues => ({
+    ...defaultAccountFormValues,
+    userId: currentUser?.id ?? '',
+  })
 
   const {
     register,
@@ -47,8 +55,13 @@ export function AccountCreateModal({ open, onOpenChange }: AccountCreateModalPro
     formState: { errors },
   } = useForm<AccountFormValues>({
     resolver: zodResolver(accountFormSchema),
-    defaultValues: defaultAccountFormValues,
+    defaultValues: getCreateDefaults(),
   })
+
+  useEffect(() => {
+    if (!open || !currentUser?.id) return
+    setValue('userId', currentUser.id, { shouldValidate: false })
+  }, [currentUser?.id, open, setValue])
 
   const createMutation = useAccountsControllerCreate({
     mutation: {
@@ -57,7 +70,7 @@ export function AccountCreateModal({ open, onOpenChange }: AccountCreateModalPro
           queryKey: getAccountsControllerFindAllQueryKey(variables.householdId),
         })
         toast.success('Conta criada com sucesso')
-        reset(defaultAccountFormValues)
+        reset(getCreateDefaults())
         onOpenChange(false)
       },
       onError: (error) => {
@@ -74,7 +87,7 @@ export function AccountCreateModal({ open, onOpenChange }: AccountCreateModalPro
       data: {
         name: values.name,
         type: values.type,
-        userId: values.userId || undefined,
+        userId: values.userId,
         institution: values.institution || undefined,
         balanceManual: values.balanceManual,
         color: values.color || undefined,
@@ -86,7 +99,7 @@ export function AccountCreateModal({ open, onOpenChange }: AccountCreateModalPro
 
   const handleOpenChange = (nextOpen: boolean) => {
     if (!nextOpen) {
-      reset(defaultAccountFormValues)
+      reset(getCreateDefaults())
     }
     onOpenChange(nextOpen)
   }

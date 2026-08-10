@@ -334,100 +334,6 @@ export function TransactionFormFields({
         </div>
       </div>
 
-      {showAdvanceInstallmentSection && (
-        <div className="space-y-3 rounded-xl border border-foreground/10 bg-foreground/2 p-4">
-          <div className="flex items-start gap-2">
-            <Checkbox
-              id="transaction-advances-installment"
-              checked={advancesInstallment}
-              disabled={fieldsDisabled || eligibleInstallmentSubscriptions.length === 0}
-              onCheckedChange={(checked) => handleAdvanceInstallmentChange(checked === true)}
-            />
-            <div className="space-y-1">
-              <Label htmlFor="transaction-advances-installment" className="font-normal leading-snug">
-                Antecipar parcela
-              </Label>
-              <p className="text-xs leading-relaxed text-muted-foreground">
-                Registra o pagamento de uma parcela pendente. O valor vem do parcelamento
-                selecionado.
-              </p>
-              {eligibleInstallmentSubscriptions.length === 0 && (
-                <p className="text-xs leading-relaxed text-muted-foreground">
-                  Não há parcelamentos ativos com parcelas pendentes para este tipo.
-                </p>
-              )}
-            </div>
-          </div>
-
-          {advancesInstallment && (
-            <div className="grid min-w-0 gap-4 sm:grid-cols-2">
-              <InstallmentSubscriptionSearchField
-                subscriptions={eligibleInstallmentSubscriptions}
-                value={subscriptionId ?? ''}
-                onValueChange={(nextSubscriptionId) => {
-                  if (!nextSubscriptionId) {
-                    setValue('subscriptionId', '', { shouldValidate: true })
-                    setValue('installmentNumber', undefined, { shouldValidate: true })
-                    return
-                  }
-
-                  applyInstallmentSubscription(nextSubscriptionId)
-                }}
-                disabled={fieldsDisabled}
-                error={errors.subscriptionId?.message}
-              />
-
-              <div className="space-y-2">
-                <Label htmlFor="transaction-installment-number">Parcela</Label>
-                <Select
-                  value={installmentNumber ? String(installmentNumber) : ''}
-                  disabled={fieldsDisabled || !subscriptionId || advancableInstallmentNumbers.length === 0}
-                  modal={false}
-                  onValueChange={(value) => {
-                    if (!value) return
-                    setValue('installmentNumber', Number(value), { shouldValidate: true })
-                  }}
-                  items={advancableInstallmentNumbers.map((number) => ({
-                    value: String(number),
-                    label: `Parcela ${number}`,
-                  }))}
-                >
-                  <SelectTrigger id="transaction-installment-number" className="w-full rounded-xl">
-                    <SelectValue placeholder="Selecione a parcela…" />
-                  </SelectTrigger>
-                  <SelectContent align="start" sideOffset={4}>
-                    <SelectGroup>
-                      {advancableInstallmentNumbers.map((number) => (
-                        <SelectItem key={number} value={String(number)}>
-                          Parcela {number}
-                          {selectedInstallmentSubscription?.installmentTotal
-                            ? ` de ${selectedInstallmentSubscription.installmentTotal}`
-                            : ''}
-                        </SelectItem>
-                      ))}
-                    </SelectGroup>
-                  </SelectContent>
-                </Select>
-                {errors.installmentNumber && (
-                  <p className="text-sm text-destructive">{errors.installmentNumber.message}</p>
-                )}
-              </div>
-
-              {selectedInstallmentSubscription && (
-                <div className="sm:col-span-2">
-                  <p className="text-sm text-muted-foreground">
-                    Valor da parcela:{' '}
-                    <span className="font-medium tabular-nums text-foreground">
-                      {formatAccountBalance(selectedInstallmentSubscription.amount)}
-                    </span>
-                  </p>
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-      )}
-
       <div className={cn('grid min-w-0 gap-4', showAmountField && 'sm:grid-cols-2')}>
         <div className="space-y-2">
           <Label htmlFor="transaction-account">
@@ -527,28 +433,25 @@ export function TransactionFormFields({
 
       {!isTransfer && !advancesInstallment && (
         <div className="space-y-2">
-          <Label htmlFor="transaction-category">Categoria (opcional)</Label>
+          <Label htmlFor="transaction-category">Categoria</Label>
           <Select
             value={watch('categoryId')}
             disabled={fieldsDisabled}
             modal={false}
             onValueChange={(value) => {
-              setValue('categoryId', value ?? '', { shouldValidate: true })
+              if (!value) return
+              setValue('categoryId', value, { shouldValidate: true })
             }}
-            items={[
-              { value: '', label: 'Sem categoria' },
-              ...filteredCategories.map((category) => ({
-                value: category.id,
-                label: category.name,
-              })),
-            ]}
+            items={filteredCategories.map((category) => ({
+              value: category.id,
+              label: category.name,
+            }))}
           >
             <SelectTrigger id="transaction-category" className="w-full rounded-xl">
               <SelectValue placeholder="Selecione a categoria" />
             </SelectTrigger>
             <SelectContent align="start" sideOffset={4}>
               <SelectGroup>
-                <SelectItem value="">Sem categoria</SelectItem>
                 {filteredCategories.map((category) => (
                   <SelectItem key={category.id} value={category.id}>
                     {category.name}
@@ -557,6 +460,9 @@ export function TransactionFormFields({
               </SelectGroup>
             </SelectContent>
           </Select>
+          {errors.categoryId && (
+            <p className="text-sm text-destructive">{errors.categoryId.message}</p>
+          )}
         </div>
       )}
 
@@ -627,6 +533,100 @@ export function TransactionFormFields({
               error={errors.payeeName?.message ?? errors.payeeId?.message}
               label={`Buscar ${getPayeePartyLabel(type)}`}
             />
+          )}
+        </div>
+      )}
+
+      {showAdvanceInstallmentSection && (
+        <div className="space-y-3 rounded-xl border border-foreground/10 bg-foreground/2 p-4">
+          <div className="flex items-start gap-2">
+            <Checkbox
+              id="transaction-advances-installment"
+              checked={advancesInstallment}
+              disabled={fieldsDisabled || eligibleInstallmentSubscriptions.length === 0}
+              onCheckedChange={(checked) => handleAdvanceInstallmentChange(checked === true)}
+            />
+            <div className="space-y-1">
+              <Label htmlFor="transaction-advances-installment" className="font-normal leading-snug">
+                Antecipar parcela
+              </Label>
+              <p className="text-xs leading-relaxed text-muted-foreground">
+                Registra o pagamento de uma parcela pendente. O valor vem do parcelamento
+                selecionado.
+              </p>
+              {eligibleInstallmentSubscriptions.length === 0 && (
+                <p className="text-xs leading-relaxed text-muted-foreground">
+                  Não há parcelamentos ativos com parcelas pendentes para este tipo.
+                </p>
+              )}
+            </div>
+          </div>
+
+          {advancesInstallment && (
+            <div className="grid min-w-0 gap-4 sm:grid-cols-2">
+              <InstallmentSubscriptionSearchField
+                subscriptions={eligibleInstallmentSubscriptions}
+                value={subscriptionId ?? ''}
+                onValueChange={(nextSubscriptionId) => {
+                  if (!nextSubscriptionId) {
+                    setValue('subscriptionId', '', { shouldValidate: true })
+                    setValue('installmentNumber', undefined, { shouldValidate: true })
+                    return
+                  }
+
+                  applyInstallmentSubscription(nextSubscriptionId)
+                }}
+                disabled={fieldsDisabled}
+                error={errors.subscriptionId?.message}
+              />
+
+              <div className="space-y-2">
+                <Label htmlFor="transaction-installment-number">Parcela</Label>
+                <Select
+                  value={installmentNumber ? String(installmentNumber) : ''}
+                  disabled={fieldsDisabled || !subscriptionId || advancableInstallmentNumbers.length === 0}
+                  modal={false}
+                  onValueChange={(value) => {
+                    if (!value) return
+                    setValue('installmentNumber', Number(value), { shouldValidate: true })
+                  }}
+                  items={advancableInstallmentNumbers.map((number) => ({
+                    value: String(number),
+                    label: `Parcela ${number}`,
+                  }))}
+                >
+                  <SelectTrigger id="transaction-installment-number" className="w-full rounded-xl">
+                    <SelectValue placeholder="Selecione a parcela…" />
+                  </SelectTrigger>
+                  <SelectContent align="start" sideOffset={4}>
+                    <SelectGroup>
+                      {advancableInstallmentNumbers.map((number) => (
+                        <SelectItem key={number} value={String(number)}>
+                          Parcela {number}
+                          {selectedInstallmentSubscription?.installmentTotal
+                            ? ` de ${selectedInstallmentSubscription.installmentTotal}`
+                            : ''}
+                        </SelectItem>
+                      ))}
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
+                {errors.installmentNumber && (
+                  <p className="text-sm text-destructive">{errors.installmentNumber.message}</p>
+                )}
+              </div>
+
+              {selectedInstallmentSubscription && (
+                <div className="sm:col-span-2">
+                  <p className="text-sm text-muted-foreground">
+                    Valor da parcela:{' '}
+                    <span className="font-medium tabular-nums text-foreground">
+                      {formatAccountBalance(selectedInstallmentSubscription.amount)}
+                    </span>
+                  </p>
+                </div>
+              )}
+            </div>
           )}
         </div>
       )}

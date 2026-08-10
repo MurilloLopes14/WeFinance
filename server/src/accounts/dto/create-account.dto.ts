@@ -23,12 +23,11 @@ export class CreateAccountDto {
   @IsEnum(['checking', 'savings', 'credit', 'cash', 'investment'])
   type: 'checking' | 'savings' | 'credit' | 'cash' | 'investment';
 
-  @ApiPropertyOptional({
+  @ApiProperty({
     description: 'UUID of the household member who owns this account',
   })
-  @IsOptional()
   @IsUUID()
-  userId?: string;
+  userId: string;
 
   @ApiPropertyOptional({ example: 'Nubank' })
   @IsOptional()

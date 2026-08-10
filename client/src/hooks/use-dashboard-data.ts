@@ -28,10 +28,13 @@ function useMonthReportQuery<T>(
   })
 }
 
+export type DashboardDataPerspective = 'personal' | 'household'
+
 export function useDashboardData(
   householdId: string,
   month: string,
   historyRange: BalanceHistoryRange = 'current',
+  perspective: DashboardDataPerspective = 'personal',
 ) {
   const enabled = Boolean(householdId)
   const isDailyChart = isDailyBalanceHistoryRange(historyRange)
@@ -62,7 +65,7 @@ export function useDashboardData(
         undefined,
         signal,
       ),
-    enabled,
+    enabled && perspective === 'household',
   )
 
   const personalBreakdown = useMonthReportQuery(
@@ -74,7 +77,7 @@ export function useDashboardData(
         undefined,
         signal,
       ),
-    enabled,
+    enabled && perspective === 'personal',
   )
 
   const dailySummary = useMonthReportQuery(

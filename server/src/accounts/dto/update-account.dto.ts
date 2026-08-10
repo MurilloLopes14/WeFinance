@@ -25,10 +25,13 @@ export class UpdateAccountDto {
   @IsEnum(['checking', 'savings', 'credit', 'cash', 'investment'])
   type?: 'checking' | 'savings' | 'credit' | 'cash' | 'investment';
 
-  @ApiPropertyOptional({ type: String, nullable: true })
+  @ApiPropertyOptional({
+    type: String,
+    description: 'UUID of the household member who owns this account',
+  })
   @IsOptional()
   @IsUUID()
-  userId?: string | null;
+  userId?: string;
 
   @ApiPropertyOptional({ type: String, example: 'Nubank', nullable: true })
   @IsOptional()

@@ -15,15 +15,14 @@ import {
 } from '@/components/ui/select'
 import { CreateAccountDtoType } from '@/api/generated/models/createAccountDtoType'
 import { colorPickerInputClassName } from '@/lib/color-helpers'
-import { formatCurrencyInputFromDigits } from '@/lib/currency-input-helpers'
-import { yieldGranularityFormOptions } from '@/lib/account-helpers'
-import { cn } from '@/lib/utils'
 import {
   accountTypeFormOptions,
   defaultAccountFormValues,
   type AccountEditFormValues,
   type AccountFormValues,
 } from '@/pages/accounts/account-form-schema'
+import { AccountCreditFields } from '@/pages/accounts/account-credit-fields'
+import { AccountInvestmentFields } from '@/pages/accounts/account-investment-fields'
 import type { FieldErrors, UseFormRegister, UseFormSetValue, UseFormWatch } from 'react-hook-form'
 import { useEffect, useRef } from 'react'
 
@@ -53,9 +52,6 @@ export function AccountFormFields({
   const fieldsDisabled = !householdId
   const isInvestment = type === CreateAccountDtoType.investment
   const isCredit = type === CreateAccountDtoType.credit
-
-  const budgetNumberInputClassName =
-    '[appearance:textfield] [-moz-appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none'
 
   const {
     data: members = [],
@@ -105,6 +101,7 @@ export function AccountFormFields({
         error={errors.userId?.message}
         id="account-owner"
         label="Dono da Conta"
+        required
       />
 
       <div className="space-y-2">
@@ -209,147 +206,25 @@ export function AccountFormFields({
         </div>
       )}
 
-      {isCredit && (
-        <div className="space-y-4 rounded-xl border border-border/60 bg-muted/20 p-4">
-          <div>
-            <p className="text-sm font-medium">Cartão de crédito</p>
-            <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-              Configure o limite e o ciclo da fatura para acompanhar gastos e receber lembretes.
-            </p>
-          </div>
+      {isCredit ? (
+        <AccountCreditFields
+          register={register}
+          errors={errors}
+          setValue={setValue}
+          creditLimit={creditLimit}
+          disabled={fieldsDisabled}
+        />
+      ) : null}
 
-          <div className="space-y-2">
-            <Label htmlFor="account-credit-limit">Limite de crédito</Label>
-            <Input
-              id="account-credit-limit"
-              inputMode="decimal"
-              placeholder="5.000,00"
-              autoComplete="off"
-              spellCheck={false}
-              className={cn('rounded-xl tabular-nums', budgetNumberInputClassName)}
-              disabled={fieldsDisabled}
-              value={creditLimit ?? ''}
-              onChange={(event) => {
-                const digits = event.target.value.replace(/\D/g, '')
-                setValue('creditLimit', formatCurrencyInputFromDigits(digits), {
-                  shouldValidate: true,
-                })
-              }}
-            />
-            {errors.creditLimit && (
-              <p className="text-sm text-destructive">{errors.creditLimit.message}</p>
-            )}
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="account-invoice-closing-day">Dia de fechamento</Label>
-            <Input
-              id="account-invoice-closing-day"
-              type="number"
-              inputMode="numeric"
-              min={1}
-              max={28}
-              placeholder="Ex.: 5"
-              className={cn('rounded-xl tabular-nums', budgetNumberInputClassName)}
-              disabled={fieldsDisabled}
-              {...register('invoiceClosingDay')}
-            />
-            {errors.invoiceClosingDay && (
-              <p className="text-sm text-destructive">
-                {errors.invoiceClosingDay.message}
-              </p>
-            )}
-            <p className="text-xs leading-relaxed text-muted-foreground">
-              O vencimento é calculado automaticamente como fechamento + 7 dias.
-            </p>
-          </div>
-        </div>
-      )}
-
-      {isInvestment && (
-        <div className="space-y-4 rounded-xl border border-border/60 bg-muted/20 p-4">
-          <div>
-            <p className="text-sm font-medium">Rendimento do investimento</p>
-            <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-              Usado para projeções e insights de vencimento.
-            </p>
-          </div>
-
-          <div className="grid min-w-0 gap-4 sm:grid-cols-2">
-            <div className="space-y-2">
-              <Label htmlFor="account-yield-percent">Rendimento estimado (%)</Label>
-              <Input
-                id="account-yield-percent"
-                type="number"
-                inputMode="decimal"
-                min={0.01}
-                step={0.01}
-                placeholder="13,5…"
-                autoComplete="off"
-                spellCheck={false}
-                className={cn('rounded-xl tabular-nums', budgetNumberInputClassName)}
-                disabled={fieldsDisabled}
-                {...register('yieldPercent')}
-              />
-              {errors.yieldPercent && (
-                <p className="text-sm text-destructive">{errors.yieldPercent.message}</p>
-              )}
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="account-yield-granularity">Granularidade</Label>
-              <Select
-                value={yieldGranularity || undefined}
-                disabled={fieldsDisabled}
-                onValueChange={(value) => {
-                  if (!value) return
-                  setValue(
-                    'yieldGranularity',
-                    value as AccountFormValues['yieldGranularity'],
-                    { shouldValidate: true },
-                  )
-                }}
-                items={yieldGranularityFormOptions.map((option) => ({
-                  value: option.value,
-                  label: option.label,
-                }))}
-              >
-                <SelectTrigger id="account-yield-granularity" className="w-full rounded-xl">
-                  <SelectValue placeholder="Selecione a granularidade" />
-                </SelectTrigger>
-                <SelectContent className="glass-strong">
-                  <SelectGroup>
-                    {yieldGranularityFormOptions.map((option) => (
-                      <SelectItem key={option.value} value={option.value}>
-                        {option.label}
-                      </SelectItem>
-                    ))}
-                  </SelectGroup>
-                </SelectContent>
-              </Select>
-              {errors.yieldGranularity && (
-                <p className="text-sm text-destructive">
-                  {errors.yieldGranularity.message}
-                </p>
-              )}
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="account-maturity-date">Data de vencimento</Label>
-            <Input
-              id="account-maturity-date"
-              type="date"
-              className="rounded-xl"
-              disabled={fieldsDisabled}
-              {...register('maturityDate')}
-            />
-            {errors.maturityDate && (
-              <p className="text-sm text-destructive">{errors.maturityDate.message}</p>
-            )}
-          </div>
-        </div>
-      )}
+      {isInvestment ? (
+        <AccountInvestmentFields
+          register={register}
+          errors={errors}
+          setValue={setValue}
+          yieldGranularity={yieldGranularity}
+          disabled={fieldsDisabled}
+        />
+      ) : null}
 
       <div className="space-y-2">
         <Label htmlFor="account-color">Cor</Label>

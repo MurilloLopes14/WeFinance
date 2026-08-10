@@ -38,6 +38,11 @@ export interface TransactionResponseDto {
   owner: TransactionOwnerDto;
   createdAt: string;
   updatedAt: string;
+  /**
+   * Cor da categoria para exibir badge
+   * @nullable
+   */
+  categoryColor?: string | null;
   splits: TransactionSplitResponseDto[];
   /** @nullable */
   splitPreview?: TransactionResponseDtoSplitPreview;

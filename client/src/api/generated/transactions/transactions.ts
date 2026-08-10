@@ -27,18 +27,24 @@ import type {
 import type {
   BalanceHistoryResponseDto,
   CategoryBreakdownResponseDto,
+  CategoryTimelineResponseDto,
   CreateTransactionDto,
   DailySummaryResponseDto,
   PaginatedTransactionsResponseDto,
   PersonalSummaryResponseDto,
+  SplitFairnessResponseDto,
+  TopPayeesResponseDto,
   TransactionResponseDto,
   TransactionSummaryResponseDto,
   TransactionsControllerExportCsvParams,
   TransactionsControllerFindAllParams,
   TransactionsControllerGetBalanceHistoryParams,
   TransactionsControllerGetCategoryBreakdownParams,
+  TransactionsControllerGetCategoryTimelineParams,
   TransactionsControllerGetPersonalSummaryParams,
+  TransactionsControllerGetSplitFairnessParams,
   TransactionsControllerGetSummaryParams,
+  TransactionsControllerGetTopPayeesParams,
   UpdateTransactionDto
 } from '.././models';
 
@@ -697,6 +703,306 @@ export function useTransactionsControllerExportCsv<TData = Awaited<ReturnType<ty
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = useTransactionsControllerExportCsvQueryOptions(householdId,params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
+ * @summary Ranking de favorecidos por valor gasto no período
+ */
+export const transactionsControllerGetTopPayees = (
+    householdId: string,
+    params?: TransactionsControllerGetTopPayeesParams,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<TopPayeesResponseDto>(
+      {url: `/api/v1/households/${householdId}/transactions/report/top-payees`, method: 'GET',
+        params, signal
+    },
+      options);
+    }
+  
+
+
+
+export const getTransactionsControllerGetTopPayeesQueryKey = (householdId?: string,
+    params?: TransactionsControllerGetTopPayeesParams,) => {
+    return [
+    `/api/v1/households/${householdId}/transactions/report/top-payees`, ...(params ? [params]: [])
+    ] as const;
+    }
+
+    
+export const useTransactionsControllerGetTopPayeesQueryOptions = <TData = Awaited<ReturnType<typeof transactionsControllerGetTopPayees>>, TError = ErrorType<unknown>>(householdId: string,
+    params?: TransactionsControllerGetTopPayeesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof transactionsControllerGetTopPayees>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getTransactionsControllerGetTopPayeesQueryKey(householdId,params);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof transactionsControllerGetTopPayees>>> = ({ signal }) => transactionsControllerGetTopPayees(householdId,params, requestOptions, signal);
+
+      
+
+      const customOptions = defaultQueryOptions({...queryOptions, queryKey, queryFn});
+
+   return  customOptions as UseQueryOptions<Awaited<ReturnType<typeof transactionsControllerGetTopPayees>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type TransactionsControllerGetTopPayeesQueryResult = NonNullable<Awaited<ReturnType<typeof transactionsControllerGetTopPayees>>>
+export type TransactionsControllerGetTopPayeesQueryError = ErrorType<unknown>
+
+
+export function useTransactionsControllerGetTopPayees<TData = Awaited<ReturnType<typeof transactionsControllerGetTopPayees>>, TError = ErrorType<unknown>>(
+ householdId: string,
+    params: undefined |  TransactionsControllerGetTopPayeesParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof transactionsControllerGetTopPayees>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof transactionsControllerGetTopPayees>>,
+          TError,
+          Awaited<ReturnType<typeof transactionsControllerGetTopPayees>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useTransactionsControllerGetTopPayees<TData = Awaited<ReturnType<typeof transactionsControllerGetTopPayees>>, TError = ErrorType<unknown>>(
+ householdId: string,
+    params?: TransactionsControllerGetTopPayeesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof transactionsControllerGetTopPayees>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof transactionsControllerGetTopPayees>>,
+          TError,
+          Awaited<ReturnType<typeof transactionsControllerGetTopPayees>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useTransactionsControllerGetTopPayees<TData = Awaited<ReturnType<typeof transactionsControllerGetTopPayees>>, TError = ErrorType<unknown>>(
+ householdId: string,
+    params?: TransactionsControllerGetTopPayeesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof transactionsControllerGetTopPayees>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Ranking de favorecidos por valor gasto no período
+ */
+
+export function useTransactionsControllerGetTopPayees<TData = Awaited<ReturnType<typeof transactionsControllerGetTopPayees>>, TError = ErrorType<unknown>>(
+ householdId: string,
+    params?: TransactionsControllerGetTopPayeesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof transactionsControllerGetTopPayees>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = useTransactionsControllerGetTopPayeesQueryOptions(householdId,params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
+ * @summary Evolução de gastos por categoria ao longo do tempo
+ */
+export const transactionsControllerGetCategoryTimeline = (
+    householdId: string,
+    params?: TransactionsControllerGetCategoryTimelineParams,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<CategoryTimelineResponseDto>(
+      {url: `/api/v1/households/${householdId}/transactions/report/category-timeline`, method: 'GET',
+        params, signal
+    },
+      options);
+    }
+  
+
+
+
+export const getTransactionsControllerGetCategoryTimelineQueryKey = (householdId?: string,
+    params?: TransactionsControllerGetCategoryTimelineParams,) => {
+    return [
+    `/api/v1/households/${householdId}/transactions/report/category-timeline`, ...(params ? [params]: [])
+    ] as const;
+    }
+
+    
+export const useTransactionsControllerGetCategoryTimelineQueryOptions = <TData = Awaited<ReturnType<typeof transactionsControllerGetCategoryTimeline>>, TError = ErrorType<unknown>>(householdId: string,
+    params?: TransactionsControllerGetCategoryTimelineParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof transactionsControllerGetCategoryTimeline>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getTransactionsControllerGetCategoryTimelineQueryKey(householdId,params);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof transactionsControllerGetCategoryTimeline>>> = ({ signal }) => transactionsControllerGetCategoryTimeline(householdId,params, requestOptions, signal);
+
+      
+
+      const customOptions = defaultQueryOptions({...queryOptions, queryKey, queryFn});
+
+   return  customOptions as UseQueryOptions<Awaited<ReturnType<typeof transactionsControllerGetCategoryTimeline>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type TransactionsControllerGetCategoryTimelineQueryResult = NonNullable<Awaited<ReturnType<typeof transactionsControllerGetCategoryTimeline>>>
+export type TransactionsControllerGetCategoryTimelineQueryError = ErrorType<unknown>
+
+
+export function useTransactionsControllerGetCategoryTimeline<TData = Awaited<ReturnType<typeof transactionsControllerGetCategoryTimeline>>, TError = ErrorType<unknown>>(
+ householdId: string,
+    params: undefined |  TransactionsControllerGetCategoryTimelineParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof transactionsControllerGetCategoryTimeline>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof transactionsControllerGetCategoryTimeline>>,
+          TError,
+          Awaited<ReturnType<typeof transactionsControllerGetCategoryTimeline>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useTransactionsControllerGetCategoryTimeline<TData = Awaited<ReturnType<typeof transactionsControllerGetCategoryTimeline>>, TError = ErrorType<unknown>>(
+ householdId: string,
+    params?: TransactionsControllerGetCategoryTimelineParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof transactionsControllerGetCategoryTimeline>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof transactionsControllerGetCategoryTimeline>>,
+          TError,
+          Awaited<ReturnType<typeof transactionsControllerGetCategoryTimeline>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useTransactionsControllerGetCategoryTimeline<TData = Awaited<ReturnType<typeof transactionsControllerGetCategoryTimeline>>, TError = ErrorType<unknown>>(
+ householdId: string,
+    params?: TransactionsControllerGetCategoryTimelineParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof transactionsControllerGetCategoryTimeline>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Evolução de gastos por categoria ao longo do tempo
+ */
+
+export function useTransactionsControllerGetCategoryTimeline<TData = Awaited<ReturnType<typeof transactionsControllerGetCategoryTimeline>>, TError = ErrorType<unknown>>(
+ householdId: string,
+    params?: TransactionsControllerGetCategoryTimelineParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof transactionsControllerGetCategoryTimeline>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = useTransactionsControllerGetCategoryTimelineQueryOptions(householdId,params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+/**
+ * @summary Relatório de equidade de divisão entre membros do grupo
+ */
+export const transactionsControllerGetSplitFairness = (
+    householdId: string,
+    params?: TransactionsControllerGetSplitFairnessParams,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<SplitFairnessResponseDto>(
+      {url: `/api/v1/households/${householdId}/transactions/report/split-fairness`, method: 'GET',
+        params, signal
+    },
+      options);
+    }
+  
+
+
+
+export const getTransactionsControllerGetSplitFairnessQueryKey = (householdId?: string,
+    params?: TransactionsControllerGetSplitFairnessParams,) => {
+    return [
+    `/api/v1/households/${householdId}/transactions/report/split-fairness`, ...(params ? [params]: [])
+    ] as const;
+    }
+
+    
+export const useTransactionsControllerGetSplitFairnessQueryOptions = <TData = Awaited<ReturnType<typeof transactionsControllerGetSplitFairness>>, TError = ErrorType<unknown>>(householdId: string,
+    params?: TransactionsControllerGetSplitFairnessParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof transactionsControllerGetSplitFairness>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getTransactionsControllerGetSplitFairnessQueryKey(householdId,params);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof transactionsControllerGetSplitFairness>>> = ({ signal }) => transactionsControllerGetSplitFairness(householdId,params, requestOptions, signal);
+
+      
+
+      const customOptions = defaultQueryOptions({...queryOptions, queryKey, queryFn});
+
+   return  customOptions as UseQueryOptions<Awaited<ReturnType<typeof transactionsControllerGetSplitFairness>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type TransactionsControllerGetSplitFairnessQueryResult = NonNullable<Awaited<ReturnType<typeof transactionsControllerGetSplitFairness>>>
+export type TransactionsControllerGetSplitFairnessQueryError = ErrorType<unknown>
+
+
+export function useTransactionsControllerGetSplitFairness<TData = Awaited<ReturnType<typeof transactionsControllerGetSplitFairness>>, TError = ErrorType<unknown>>(
+ householdId: string,
+    params: undefined |  TransactionsControllerGetSplitFairnessParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof transactionsControllerGetSplitFairness>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof transactionsControllerGetSplitFairness>>,
+          TError,
+          Awaited<ReturnType<typeof transactionsControllerGetSplitFairness>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useTransactionsControllerGetSplitFairness<TData = Awaited<ReturnType<typeof transactionsControllerGetSplitFairness>>, TError = ErrorType<unknown>>(
+ householdId: string,
+    params?: TransactionsControllerGetSplitFairnessParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof transactionsControllerGetSplitFairness>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof transactionsControllerGetSplitFairness>>,
+          TError,
+          Awaited<ReturnType<typeof transactionsControllerGetSplitFairness>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useTransactionsControllerGetSplitFairness<TData = Awaited<ReturnType<typeof transactionsControllerGetSplitFairness>>, TError = ErrorType<unknown>>(
+ householdId: string,
+    params?: TransactionsControllerGetSplitFairnessParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof transactionsControllerGetSplitFairness>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Relatório de equidade de divisão entre membros do grupo
+ */
+
+export function useTransactionsControllerGetSplitFairness<TData = Awaited<ReturnType<typeof transactionsControllerGetSplitFairness>>, TError = ErrorType<unknown>>(
+ householdId: string,
+    params?: TransactionsControllerGetSplitFairnessParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof transactionsControllerGetSplitFairness>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = useTransactionsControllerGetSplitFairnessQueryOptions(householdId,params,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 

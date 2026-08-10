@@ -12,8 +12,7 @@ import type { AccountResponseDtoYieldGranularity } from './accountResponseDtoYie
 export interface AccountResponseDto {
   id: string;
   householdId: string;
-  /** @nullable */
-  user?: AccountResponseDtoUser;
+  user: AccountResponseDtoUser;
   name: string;
   type: AccountResponseDtoType;
   /** @nullable */

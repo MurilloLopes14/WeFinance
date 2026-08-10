@@ -33,15 +33,13 @@ export class AccountsService {
   ): Promise<AccountResponseDto> {
     await this.householdsService.assertAtLeastModerator(householdId, requesterId);
 
-    if (dto.userId) {
-      await this.assertUserIsMember(householdId, dto.userId);
-    }
+    await this.assertUserIsMember(householdId, dto.userId);
 
     const [account] = await this.db
       .insert(accounts)
       .values({
         householdId,
-        userId: dto.userId ?? null,
+        userId: dto.userId,
         name: dto.name,
         type: dto.type,
         institution: dto.institution ?? null,
@@ -72,15 +70,16 @@ export class AccountsService {
         ownerUserId: users.id,
       })
       .from(accounts)
-      .leftJoin(users, eq(accounts.userId, users.id))
+      .innerJoin(users, eq(accounts.userId, users.id))
       .where(eq(accounts.householdId, householdId));
 
-    return rows.map((row) => {
-      const userObj: AccountOwnerDto | null = row.ownerUserId
-        ? { id: row.ownerUserId, name: row.ownerName!, email: row.ownerEmail! }
-        : null;
-      return this.format(row, userObj);
-    });
+    return rows.map((row) =>
+      this.format(row, {
+        id: row.ownerUserId,
+        name: row.ownerName,
+        email: row.ownerEmail,
+      }),
+    );
   }
 
   async findOne(
@@ -102,7 +101,7 @@ export class AccountsService {
     await this.householdsService.assertAtLeastModerator(householdId, requesterId);
     await this.findAccount(householdId, accountId);
 
-    if (dto.userId !== undefined && dto.userId !== null) {
+    if (dto.userId !== undefined) {
       await this.assertUserIsMember(householdId, dto.userId);
     }
 
@@ -244,19 +243,22 @@ export class AccountsService {
   }
 
   private async formatWithUser(account: Account): Promise<AccountResponseDto> {
-    let userObj: AccountOwnerDto | null = null;
-    if (account.userId) {
-      const [u] = await this.db
-        .select({ id: users.id, name: users.name, email: users.email })
-        .from(users)
-        .where(eq(users.id, account.userId))
-        .limit(1);
-      if (u) userObj = u;
+    const [u] = await this.db
+      .select({ id: users.id, name: users.name, email: users.email })
+      .from(users)
+      .where(eq(users.id, account.userId))
+      .limit(1);
+
+    if (!u) {
+      throw new NotFoundException(
+        `Dono da conta "${account.id}" não encontrado`,
+      );
     }
-    return this.format(account, userObj);
+
+    return this.format(account, u);
   }
 
-  private format(account: Account, user: AccountOwnerDto | null = null): AccountResponseDto {
+  private format(account: Account, user: AccountOwnerDto): AccountResponseDto {
     return {
       id: account.id,
       householdId: account.householdId,

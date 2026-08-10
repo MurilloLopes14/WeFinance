@@ -707,6 +707,22 @@
     transform: translateY(0);
   }
 
+  .account-balance-glow-positive {
+    text-shadow:
+      0 0 1px currentColor,
+      0 0 6px oklch(from var(--glow-success) l c h / 70%),
+      0 0 14px oklch(from var(--glow-success) l c h / 45%),
+      0 0 24px oklch(from var(--glow-success) l c h / 25%);
+  }
+
+  .account-balance-glow-negative {
+    text-shadow:
+      0 0 1px currentColor,
+      0 0 6px oklch(from var(--glow-danger) l c h / 70%),
+      0 0 14px oklch(from var(--glow-danger) l c h / 45%),
+      0 0 24px oklch(from var(--glow-danger) l c h / 25%);
+  }
+
   .subscription-card-glow {
     transition:
       border-color 0.3s ease,

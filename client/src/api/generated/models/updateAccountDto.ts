@@ -11,8 +11,8 @@ import type { UpdateAccountDtoYieldGranularity } from './updateAccountDtoYieldGr
 export interface UpdateAccountDto {
   name?: string;
   type?: UpdateAccountDtoType;
-  /** @nullable */
-  userId?: string | null;
+  /** UUID of the household member who owns this account */
+  userId?: string;
   /** @nullable */
   institution?: string | null;
   balanceManual?: number;

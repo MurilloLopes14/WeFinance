@@ -1,5 +1,5 @@
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
-import { and, eq, gte, lt, ne } from 'drizzle-orm';
+import { and, eq, gte, inArray, lt, ne, sum } from 'drizzle-orm';
 import { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import { DRIZZLE } from '../database/database.constants';
 import * as schema from '../database/schema';
@@ -13,6 +13,7 @@ import {
   transactionSplits,
   transactions,
 } from '../database/schema';
+import { creditCycleStart } from '../common/utils/credit.utils';
 import { monthDateRange, previousMonth } from './insights.helpers';
 import {
   BudgetMetrics,
@@ -65,7 +66,7 @@ export class InsightsContextBuilder {
       throw new NotFoundException('Grupo familiar não encontrado');
     }
 
-    const [currentTxRows, prevTxRows, subscriptionRows, householdBudgetRows, categoryBudgetRows] =
+    const [currentTxRows, prevTxRows, subscriptionRows, householdBudgetRows, categoryBudgetRows, investmentRows] =
       await Promise.all([
         this.fetchTxRows(householdId, currentRange.startDate, currentRange.endDate),
         this.fetchTxRows(householdId, prevRange.startDate, prevRange.endDate),
@@ -102,6 +103,17 @@ export class InsightsContextBuilder {
               eq(categoryBudgets.month, month),
             ),
           ),
+        this.db
+          .select({
+            id: accounts.id,
+            name: accounts.name,
+            balance: accounts.balanceManual,
+            yieldPercent: accounts.yieldPercent,
+            yieldGranularity: accounts.yieldGranularity,
+            maturityDate: accounts.maturityDate,
+          })
+          .from(accounts)
+          .where(and(eq(accounts.householdId, householdId), eq(accounts.type, 'investment'))),
       ]);
 
     const subscriptionList: SubscriptionRow[] = subscriptionRows.map((s) => ({
@@ -174,18 +186,6 @@ export class InsightsContextBuilder {
       categorySum: parseFloat(catBudgetItems.reduce((s, b) => s + b.amount, 0).toFixed(2)),
     };
 
-    const investmentRows = await this.db
-      .select({
-        id: accounts.id,
-        name: accounts.name,
-        balance: accounts.balanceManual,
-        yieldPercent: accounts.yieldPercent,
-        yieldGranularity: accounts.yieldGranularity,
-        maturityDate: accounts.maturityDate,
-      })
-      .from(accounts)
-      .where(and(eq(accounts.householdId, householdId), eq(accounts.type, 'investment')));
-
     const investmentAccounts: InvestmentAccountItem[] = investmentRows
       .filter((r) => r.yieldPercent != null && r.yieldGranularity != null)
       .map((r) => ({
@@ -207,14 +207,39 @@ export class InsightsContextBuilder {
       .from(accounts)
       .where(and(eq(accounts.householdId, householdId), eq(accounts.type, 'credit')));
 
-    const creditAccounts: CreditAccountItem[] = creditRows
-      .filter((r) => r.creditLimit != null && r.invoiceClosingDay != null)
-      .map((r) => ({
-        id: r.id,
-        name: r.name,
-        creditLimit: parseFloat(r.creditLimit!),
-        invoiceClosingDay: r.invoiceClosingDay!,
-      }));
+    const activeCreditRows = creditRows.filter(
+      (r) => r.creditLimit != null && r.invoiceClosingDay != null,
+    );
+
+    let cycleSpentMap = new Map<string, number>();
+    if (activeCreditRows.length > 0) {
+      const earliestCycleStart = activeCreditRows
+        .map((r) => creditCycleStart(r.invoiceClosingDay!))
+        .sort()[0];
+
+      const cycleExpenses = await this.db
+        .select({ accountId: transactions.accountId, total: sum(transactions.amount) })
+        .from(transactions)
+        .where(
+          and(
+            inArray(transactions.accountId, activeCreditRows.map((r) => r.id)),
+            gte(transactions.date, earliestCycleStart),
+            eq(transactions.type, 'expense'),
+            ne(transactions.status, 'draft'),
+          ),
+        )
+        .groupBy(transactions.accountId);
+
+      cycleSpentMap = new Map(cycleExpenses.map((r) => [r.accountId, parseFloat(r.total ?? '0')]));
+    }
+
+    const creditAccounts: CreditAccountItem[] = activeCreditRows.map((r) => ({
+      id: r.id,
+      name: r.name,
+      creditLimit: parseFloat(r.creditLimit!),
+      invoiceClosingDay: r.invoiceClosingDay!,
+      toBeSpent: cycleSpentMap.get(r.id) ?? 0,
+    }));
 
     return {
       householdId,
@@ -322,6 +347,33 @@ export class InsightsContextBuilder {
     return map;
   }
 
+  private accumulateBucket(
+    map: Map<string, { name: string; isFixed: boolean; amount: number; categoryId: string | null }>,
+    key: string,
+    categoryId: string | null,
+    name: string,
+    isFixed: boolean,
+    amount: number,
+  ): void {
+    const existing = map.get(key);
+    if (existing) {
+      existing.amount += amount;
+    } else {
+      map.set(key, { name, isFixed, amount, categoryId });
+    }
+  }
+
+  private bucketsToCategoryBuckets(
+    map: Map<string, { name: string; isFixed: boolean; amount: number; categoryId: string | null }>,
+  ): CategoryBucket[] {
+    return Array.from(map.values()).map((c) => ({
+      categoryId: c.categoryId,
+      categoryName: c.name,
+      amount: parseFloat(c.amount.toFixed(2)),
+      isFixed: c.isFixed,
+    }));
+  }
+
   private computeHouseholdMetrics(
     txRows: TxRow[],
     subscriptionCategoryIds: Set<string>,
@@ -339,27 +391,18 @@ export class InsightsContextBuilder {
         totalIncome += amount;
       } else if (tx.type === 'expense') {
         totalExpenses += amount;
-        const key = tx.categoryId ?? 'uncategorized';
-        const existing = categoryAmounts.get(key);
-        if (existing) {
-          existing.amount += amount;
-        } else {
-          categoryAmounts.set(key, {
-            name: tx.categoryName ?? 'Sem categoria',
-            isFixed: tx.isFixed ?? false,
-            amount,
-            categoryId: tx.categoryId,
-          });
-        }
+        this.accumulateBucket(
+          categoryAmounts,
+          tx.categoryId ?? 'uncategorized',
+          tx.categoryId,
+          tx.categoryName ?? 'Sem categoria',
+          tx.isFixed ?? false,
+          amount,
+        );
       }
     }
 
-    const expensesByCategory: CategoryBucket[] = Array.from(categoryAmounts.values()).map((c) => ({
-      categoryId: c.categoryId,
-      categoryName: c.name,
-      amount: parseFloat(c.amount.toFixed(2)),
-      isFixed: c.isFixed,
-    }));
+    const expensesByCategory = this.bucketsToCategoryBuckets(categoryAmounts);
 
     let subscriptionSpent = 0;
     let commonSpent = 0;
@@ -407,56 +450,43 @@ export class InsightsContextBuilder {
     for (const s of splitRows) {
       const amount = parseFloat(s.share);
       const effectiveCategoryId = s.splitCategoryId ?? s.txCategoryId;
-      const key = effectiveCategoryId ?? 'uncategorized';
       const catInfo = effectiveCategoryId ? categoryInfoMap.get(effectiveCategoryId) : undefined;
 
       if (s.txType === 'income') {
         totalIncome += amount;
       } else if (s.txType === 'expense') {
         totalExpenses += amount;
-        const existing = categoryAmounts.get(key);
-        if (existing) {
-          existing.amount += amount;
-        } else {
-          categoryAmounts.set(key, {
-            name: catInfo?.name ?? 'Sem categoria',
-            isFixed: catInfo?.isFixed ?? false,
-            amount,
-            categoryId: effectiveCategoryId,
-          });
-        }
+        this.accumulateBucket(
+          categoryAmounts,
+          effectiveCategoryId ?? 'uncategorized',
+          effectiveCategoryId,
+          catInfo?.name ?? 'Sem categoria',
+          catInfo?.isFixed ?? false,
+          amount,
+        );
       }
     }
 
     for (const tx of noSplitTxs) {
       const amount = parseFloat(tx.amount);
-      const key = tx.categoryId ?? 'uncategorized';
       const catInfo = tx.categoryId ? categoryInfoMap.get(tx.categoryId) : undefined;
 
       if (tx.type === 'income') {
         totalIncome += amount;
       } else if (tx.type === 'expense') {
         totalExpenses += amount;
-        const existing = categoryAmounts.get(key);
-        if (existing) {
-          existing.amount += amount;
-        } else {
-          categoryAmounts.set(key, {
-            name: tx.categoryName ?? catInfo?.name ?? 'Sem categoria',
-            isFixed: catInfo?.isFixed ?? false,
-            amount,
-            categoryId: tx.categoryId,
-          });
-        }
+        this.accumulateBucket(
+          categoryAmounts,
+          tx.categoryId ?? 'uncategorized',
+          tx.categoryId,
+          tx.categoryName ?? catInfo?.name ?? 'Sem categoria',
+          catInfo?.isFixed ?? false,
+          amount,
+        );
       }
     }
 
-    const expensesByCategory: CategoryBucket[] = Array.from(categoryAmounts.values()).map((c) => ({
-      categoryId: c.categoryId,
-      categoryName: c.name,
-      amount: parseFloat(c.amount.toFixed(2)),
-      isFixed: c.isFixed,
-    }));
+    const expensesByCategory = this.bucketsToCategoryBuckets(categoryAmounts);
 
     return {
       totalIncome: parseFloat(totalIncome.toFixed(2)),

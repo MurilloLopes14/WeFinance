@@ -63,6 +63,7 @@ export interface CreditAccountItem {
   name: string;
   creditLimit: number;
   invoiceClosingDay: number;
+  toBeSpent: number;
 }
 
 export interface InsightsContext {

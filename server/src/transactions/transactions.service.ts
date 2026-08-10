@@ -246,9 +246,11 @@ export class TransactionsService {
           ownerName: users.name,
           ownerEmail: users.email,
           ownerAvatarUrl: users.avatarUrl,
+          categoryColor: categories.color,
         })
         .from(transactions)
         .leftJoin(users, eq(transactions.createdById, users.id))
+        .leftJoin(categories, eq(transactions.categoryId, categories.id))
         .where(where)
         .limit(limit)
         .offset(offset)
@@ -268,12 +270,7 @@ export class TransactionsService {
 
     return {
       data: rows.map((row) =>
-        this.format(row, splitsByTxId[row.id] ?? [], {
-          id: row.createdById,
-          name: row.ownerName ?? '',
-          email: row.ownerEmail ?? '',
-          avatarUrl: row.ownerAvatarUrl ?? null,
-        }, splitUserMap),
+        this.format(row, splitsByTxId[row.id] ?? [], this.ownerFromRow(row), splitUserMap, row.categoryColor ?? null),
       ),
       total: Number(total),
       page,
@@ -501,8 +498,6 @@ export class TransactionsService {
 
   // ─── Private — edit / delete guard ───────────────────────────────────────
 
-  // ─── Private — edit / delete guard ───────────────────────────────────────
-
   private assertEditable(tx: Transaction, requesterId: string, verb: string): void {
     if (tx.status === 'reconciled') {
       throw new ForbiddenException(`Transações conciliadas não podem ser ${verb}`);
@@ -634,9 +629,11 @@ export class TransactionsService {
         ownerName: users.name,
         ownerEmail: users.email,
         ownerAvatarUrl: users.avatarUrl,
+        categoryColor: categories.color,
       })
       .from(transactions)
       .leftJoin(users, eq(transactions.createdById, users.id))
+      .leftJoin(categories, eq(transactions.categoryId, categories.id))
       .where(and(...conditions))
       .limit(1);
 
@@ -651,12 +648,7 @@ export class TransactionsService {
 
     const splitUserMap = await this.loadSplitUserMap(splits.map((s) => s.userId));
 
-    return this.format(row, splits, {
-      id: row.createdById,
-      name: row.ownerName ?? '',
-      email: row.ownerEmail ?? '',
-      avatarUrl: row.ownerAvatarUrl ?? null,
-    }, splitUserMap);
+    return this.format(row, splits, this.ownerFromRow(row), splitUserMap, row.categoryColor ?? null);
   }
 
   private async validateAndNormalizeSplits(
@@ -801,11 +793,26 @@ export class TransactionsService {
     return new Map(rows.map((u) => [u.id, { id: u.id, name: u.name, avatarUrl: u.avatarUrl ?? null }]));
   }
 
+  private ownerFromRow(row: {
+    createdById: string;
+    ownerName: string | null;
+    ownerEmail: string | null;
+    ownerAvatarUrl: string | null;
+  }): TransactionOwnerDto {
+    return {
+      id: row.createdById,
+      name: row.ownerName ?? '',
+      email: row.ownerEmail ?? '',
+      avatarUrl: row.ownerAvatarUrl ?? null,
+    };
+  }
+
   private format(
     tx: Transaction,
     splits: TransactionSplit[],
     owner: TransactionOwnerDto,
     splitUserMap: Map<string, SplitMemberPreviewDto> = new Map(),
+    categoryColor: string | null = null,
   ): TransactionResponseDto {
     const splitPreview = splits.length
       ? {
@@ -835,6 +842,7 @@ export class TransactionsService {
       owner,
       createdAt: tx.createdAt,
       updatedAt: tx.updatedAt,
+      categoryColor,
       splits: splits.map(this.formatSplit),
       splitPreview,
     };

@@ -40,7 +40,10 @@ import {
   DailySummaryResponseDto,
   PersonalSummaryResponseDto,
 } from './dto/dashboard-response.dto';
-import { FilterBalanceHistoryDto, FilterCategoryBreakdownDto, FilterExportDto } from './dto/filter-report.dto';
+import { FilterBalanceHistoryDto, FilterCategoryBreakdownDto, FilterCategoryTimelineDto, FilterExportDto, FilterSplitFairnessDto, FilterTopPayeesDto } from './dto/filter-report.dto';
+import { SplitFairnessResponseDto } from './dto/split-fairness-response.dto';
+import { CategoryTimelineResponseDto } from './dto/category-timeline-response.dto';
+import { TopPayeesResponseDto } from './dto/top-payees-response.dto';
 import { TransactionsService } from './transactions.service';
 import { TransactionReportsService } from './transactions-reports.service';
 
@@ -146,6 +149,39 @@ export class TransactionsController {
     res.setHeader('Content-Type', 'text/csv; charset=utf-8');
     res.setHeader('Content-Disposition', `attachment; filename="transacoes-${datePart}.csv"`);
     return new StreamableFile(Buffer.from('﻿' + csv, 'utf-8'));
+  }
+
+  @Get('report/top-payees')
+  @ApiOperation({ summary: 'Ranking de favorecidos por valor gasto no período' })
+  @ApiResponse({ status: 200, type: TopPayeesResponseDto })
+  getTopPayees(
+    @Param('householdId', ParseUUIDPipe) householdId: string,
+    @Query() query: FilterTopPayeesDto,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    return this.reportsService.getTopPayees(householdId, user.id, query);
+  }
+
+  @Get('report/category-timeline')
+  @ApiOperation({ summary: 'Evolução de gastos por categoria ao longo do tempo' })
+  @ApiResponse({ status: 200, type: CategoryTimelineResponseDto })
+  getCategoryTimeline(
+    @Param('householdId', ParseUUIDPipe) householdId: string,
+    @Query() query: FilterCategoryTimelineDto,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    return this.reportsService.getCategoryTimeline(householdId, user.id, query);
+  }
+
+  @Get('report/split-fairness')
+  @ApiOperation({ summary: 'Relatório de equidade de divisão entre membros do grupo' })
+  @ApiResponse({ status: 200, type: SplitFairnessResponseDto })
+  getSplitFairness(
+    @Param('householdId', ParseUUIDPipe) householdId: string,
+    @Query() query: FilterSplitFairnessDto,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    return this.reportsService.getSplitFairness(householdId, user.id, query);
   }
 
   @Get('report/balance-history')

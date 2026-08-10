@@ -296,6 +296,15 @@ export const HELP: HelpModule[] = [
       'Contas representam onde o dinheiro do grupo está alocado. Cada transação está vinculada a uma ou mais contas, e os saldos são calculados automaticamente com base nas movimentações registradas.',
     sections: [
       {
+        title: 'Dono da conta',
+        body: 'Toda conta precisa ter um dono — um membro do grupo responsável por ela.',
+        bullets: [
+          'O dono é obrigatório na criação e na edição.',
+          'No Dashboard (aba Você), cartões de crédito e o card A pagar consideram só as contas do usuário logado.',
+          'Contas sem dono antigas são atribuídas automaticamente ao proprietário do grupo na migração.',
+        ],
+      },
+      {
         title: 'Tipos de conta',
         body: 'O tipo da conta define como ela aparece nos KPIs do Dashboard:',
         bullets: [

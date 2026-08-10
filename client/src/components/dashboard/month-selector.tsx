@@ -6,35 +6,53 @@ import {
   isMonthAfterCurrent,
 } from '@/lib/dashboard-helpers'
 import { getCurrentMonthParam } from '@/lib/transaction-helpers'
+import { cn } from '@/lib/utils'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 
 type MonthSelectorProps = {
   month: string
   onChange: (month: string) => void
   tourAnchor?: string
+  /** Destaca o mês (ex.: override independente no gráfico). */
+  emphasized?: boolean
+  className?: string
 }
 
-export function MonthSelector({ month, onChange, tourAnchor }: MonthSelectorProps) {
+export function MonthSelector({
+  month,
+  onChange,
+  tourAnchor,
+  emphasized = false,
+  className,
+}: MonthSelectorProps) {
   const currentMonth = getCurrentMonthParam()
   const canGoForward = compareMonthParams(month, currentMonth) < 0
 
   return (
     <div
-      className="flex items-center justify-center gap-1 sm:justify-start"
+      className={cn(
+        'flex w-full items-center justify-between gap-2 sm:w-auto sm:justify-start sm:gap-1',
+        className,
+      )}
       {...(tourAnchor ? { 'data-tour': tourAnchor } : {})}
     >
       <Button
         type="button"
         variant="outline"
         size="icon"
-        className="size-9 rounded-xl"
+        className="size-11 shrink-0 rounded-xl touch-manipulation sm:size-9"
         aria-label="Mês anterior"
         onClick={() => onChange(addMonthsToParam(month, -1))}
       >
-        <ChevronLeft className="size-4" />
+        <ChevronLeft className="size-4" aria-hidden="true" />
       </Button>
 
-      <p className="min-w-[10rem] text-center font-heading text-sm font-semibold tracking-tight sm:min-w-[11rem] sm:text-base">
+      <p
+        className={cn(
+          'min-w-0 flex-1 text-center font-heading text-sm font-semibold tracking-tight text-pretty tabular-nums sm:min-w-44 sm:flex-none sm:text-base',
+          emphasized && 'text-primary',
+        )}
+      >
         {formatDashboardMonthLabel(month)}
       </p>
 
@@ -42,7 +60,7 @@ export function MonthSelector({ month, onChange, tourAnchor }: MonthSelectorProp
         type="button"
         variant="outline"
         size="icon"
-        className="size-9 rounded-xl"
+        className="size-11 shrink-0 rounded-xl touch-manipulation sm:size-9"
         aria-label="Próximo mês"
         disabled={!canGoForward || isMonthAfterCurrent(addMonthsToParam(month, 1))}
         onClick={() => {
@@ -52,7 +70,7 @@ export function MonthSelector({ month, onChange, tourAnchor }: MonthSelectorProp
           }
         }}
       >
-        <ChevronRight className="size-4" />
+        <ChevronRight className="size-4" aria-hidden="true" />
       </Button>
     </div>
   )
