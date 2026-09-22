@@ -1,10 +1,8 @@
-import { Injectable, OnModuleDestroy } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { randomUUID } from 'crypto';
 import type { Request, Response } from 'express';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
-import { isInitializeRequest } from '@modelcontextprotocol/sdk/types.js';
 import { AccountsService } from '../accounts/accounts.service';
 import { BudgetsService } from '../budgets/budgets.service';
 import { CategoriesService } from '../categories/categories.service';
@@ -21,14 +19,18 @@ import { registerPayeeTools } from './tools/payees.tools';
 import { registerSubscriptionTools } from './tools/subscriptions.tools';
 import { registerTransactionTools } from './tools/transactions.tools';
 
-interface McpSession {
-  transport: StreamableHTTPServerTransport;
-  ctx: McpToolContext;
-}
-
+/**
+ * Stateless MCP over Streamable HTTP: a fresh McpServer + transport is built
+ * for every request instead of keeping an in-memory session map. This is the
+ * SDK's documented pattern for serverless deployments (e.g. Vercel functions),
+ * where each invocation may run on a different instance with no shared memory —
+ * an in-memory `Map<sessionId, transport>` would only ever be hit on the
+ * instance that created it, causing "No valid session" errors on every other one.
+ * The tradeoff: no server-initiated notifications and no resumable SSE streams,
+ * neither of which these tools use.
+ */
 @Injectable()
-export class McpService implements OnModuleDestroy {
-  private readonly sessions = new Map<string, McpSession>();
+export class McpService {
   private readonly userId: string;
 
   constructor(
@@ -49,64 +51,35 @@ export class McpService implements OnModuleDestroy {
   }
 
   async handleRequest(req: Request, res: Response): Promise<void> {
-    const sessionId = req.headers['mcp-session-id'] as string | undefined;
-    // Claude Desktop's custom connector UI only allows a fixed allowlist of
-    // header names, so the household is passed via query string instead
-    // (e.g. https://.../api/v1/mcp?household=<uuid>), set once in the connector URL.
-    const householdIdParam = firstQueryValue(req.query.household);
-
-    const session = sessionId ? this.sessions.get(sessionId) : undefined;
-    if (session && householdIdParam) {
-      session.ctx.householdId = householdIdParam;
-    }
-
-    let transport = session?.transport;
-
-    if (!transport) {
-      if (req.method !== 'POST' || !isInitializeRequest(req.body)) {
-        res.status(400).json({
-          jsonrpc: '2.0',
-          error: {
-            code: -32000,
-            message: 'No valid session. Send an initialize request first.',
-          },
-          id: null,
-        });
-        return;
-      }
-
-      const ctx: McpToolContext = {
-        userId: this.userId,
-        householdId: householdIdParam,
-      };
-      const server = this.buildServer(ctx);
-      transport = new StreamableHTTPServerTransport({
-        sessionIdGenerator: () => randomUUID(),
-        onsessioninitialized: (id) => {
-          this.sessions.set(id, {
-            transport: transport as StreamableHTTPServerTransport,
-            ctx,
-          });
+    if (req.method !== 'POST') {
+      res.status(405).json({
+        jsonrpc: '2.0',
+        error: {
+          code: -32000,
+          message: 'Method not allowed in stateless mode.',
         },
+        id: null,
       });
-
-      transport.onclose = () => {
-        if (transport?.sessionId) {
-          this.sessions.delete(transport.sessionId);
-        }
-      };
-
-      await server.connect(transport);
+      return;
     }
 
+    const ctx: McpToolContext = {
+      userId: this.userId,
+      householdId: firstQueryValue(req.query.household),
+    };
+
+    const server = this.buildServer(ctx);
+    const transport = new StreamableHTTPServerTransport({
+      sessionIdGenerator: undefined,
+    });
+
+    res.on('close', () => {
+      void transport.close();
+      void server.close();
+    });
+
+    await server.connect(transport);
     await transport.handleRequest(req, res, req.body);
-  }
-
-  async onModuleDestroy(): Promise<void> {
-    for (const { transport } of this.sessions.values()) {
-      await transport.close();
-    }
-    this.sessions.clear();
   }
 
   private buildServer(ctx: McpToolContext): McpServer {
