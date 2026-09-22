@@ -56,4 +56,10 @@ export default () => ({
     rateLimitTtl: parseInt(process.env.RATE_LIMIT_TTL || '60', 10),
     rateLimitMax: parseInt(process.env.RATE_LIMIT_MAX || '100', 10),
   },
+
+  // MCP Configuration (Claude Desktop access)
+  mcp: {
+    apiKey: process.env.MCP_SERVICE_API_KEY || '',
+    userId: process.env.MCP_USER_ID || '',
+  },
 });

@@ -8,6 +8,15 @@ const INSECURE_JWT_SECRETS = new Set([
 export function validateEnvironment(configService: ConfigService): void {
   const nodeEnv = configService.get<string>('nodeEnv');
 
+  const mcpApiKey = configService.get<string>('mcp.apiKey');
+  const mcpUserId = configService.get<string>('mcp.userId');
+
+  if ((mcpApiKey && !mcpUserId) || (!mcpApiKey && mcpUserId)) {
+    throw new Error(
+      'MCP_SERVICE_API_KEY and MCP_USER_ID must both be set to enable the MCP module',
+    );
+  }
+
   if (nodeEnv !== 'production') {
     return;
   }

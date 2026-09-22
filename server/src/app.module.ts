@@ -13,6 +13,7 @@ import { EventsModule } from './events/events.module';
 import { HouseholdsModule } from './households/households.module';
 import { ImportsModule } from './imports/imports.module';
 import { InsightsModule } from './insights/insights.module';
+import { McpModule } from './mcp/mcp.module';
 import { ReleaseNotesModule } from './release-notes/release-notes.module';
 import { PayeesModule } from './payees/payees.module';
 import { SubscriptionsModule } from './subscriptions/subscriptions.module';
@@ -45,6 +46,8 @@ import { UsersModule } from './users/users.module';
     ImportsModule,
     InsightsModule,
     ReleaseNotesModule,
+    // Only wired up when MCP_SERVICE_API_KEY is set, so the app boots normally without it.
+    ...(process.env.MCP_SERVICE_API_KEY ? [McpModule] : []),
   ],
   controllers: [AppController],
   providers: [AppService],
