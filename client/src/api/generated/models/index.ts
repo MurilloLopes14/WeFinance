@@ -12,7 +12,6 @@ export * from './accountProjectionDtoGranularity';
 export * from './accountProjectionDtoMaturityDate';
 export * from './accountResponseDto';
 export * from './accountResponseDtoType';
-export * from './accountResponseDtoUser';
 export * from './accountResponseDtoYieldGranularity';
 export * from './accountsControllerGetProjectionParams';
 export * from './authResponseDto';

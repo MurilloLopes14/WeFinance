@@ -8,6 +8,6 @@ import { TransactionReportsService } from './transactions-reports.service';
   imports: [HouseholdsModule],
   controllers: [TransactionsController],
   providers: [TransactionsService, TransactionReportsService],
-  exports: [TransactionsService],
+  exports: [TransactionsService, TransactionReportsService],
 })
 export class TransactionsModule {}

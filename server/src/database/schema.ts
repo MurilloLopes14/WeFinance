@@ -13,7 +13,7 @@ import {
   pgEnum,
   unique,
 } from 'drizzle-orm/pg-core';
-import { relations } from 'drizzle-orm';
+import { relations, sql } from 'drizzle-orm';
 
 // ─── Enums ───────────────────────────────────────────────────────────────────
 
@@ -61,6 +61,7 @@ export const transactionStatusEnum = pgEnum('transaction_status', [
   'cleared',
   'reconciled',
 ]);
+export const tokenTypeEnum = pgEnum('token_type', ['mcp', 'app']);
 
 // ─── Users ───────────────────────────────────────────────────────────────────
 
@@ -340,6 +341,24 @@ export const releaseNotes = pgTable('release_notes', {
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
 
+// ─── Access Tokens ───────────────────────────────────────────────────────────
+// Generic bearer-token auth, reusable across integrations (MCP today, app PATs later).
+// `accessToken` stores a SHA-256 hex digest, never the raw token.
+
+export const accessTokens = pgTable('access_tokens', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id')
+    .references(() => users.id, { onDelete: 'cascade' })
+    .notNull(),
+  accessToken: varchar('access_token', { length: 64 }).notNull().unique(),
+  tokenType: tokenTypeEnum('token_type').notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+  expiresAt: timestamp('expires_at')
+    .default(sql`(now() + interval '5 years')`)
+    .notNull(),
+});
+
 // ─── Relations ───────────────────────────────────────────────────────────────
 
 export const usersRelations = relations(users, ({ many }) => ({
@@ -347,6 +366,7 @@ export const usersRelations = relations(users, ({ many }) => ({
   accounts: many(accounts),
   transactions: many(transactions),
   transactionSplits: many(transactionSplits),
+  accessTokens: many(accessTokens),
 }));
 
 export const householdsRelations = relations(households, ({ many }) => ({
@@ -513,5 +533,12 @@ export const transactionSplitsRelations = relations(transactionSplits, ({ one })
   category: one(categories, {
     fields: [transactionSplits.categoryId],
     references: [categories.id],
+  }),
+}));
+
+export const accessTokensRelations = relations(accessTokens, ({ one }) => ({
+  user: one(users, {
+    fields: [accessTokens.userId],
+    references: [users.id],
   }),
 }));

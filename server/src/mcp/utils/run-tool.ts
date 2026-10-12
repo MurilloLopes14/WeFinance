@@ -11,14 +11,13 @@ export async function runTool(
 ): Promise<CallToolResult> {
   try {
     const data = await fn();
-    return {
-      content: [
-        {
-          type: 'text',
-          text: data === undefined ? 'OK' : JSON.stringify(data, null, 2),
-        },
-      ],
-    };
+    const text =
+      data === undefined
+        ? 'OK'
+        : typeof data === 'string'
+          ? data
+          : JSON.stringify(data, null, 2);
+    return { content: [{ type: 'text', text }] };
   } catch (error) {
     const message =
       error instanceof HttpException ? error.message : (error as Error).message;

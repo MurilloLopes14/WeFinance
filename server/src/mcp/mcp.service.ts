@@ -1,21 +1,25 @@
-import { Injectable } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
+﻿import { Injectable, UnauthorizedException } from '@nestjs/common';
 import type { Request, Response } from 'express';
+import { getMcpUserId } from '../common/guards/api-key.guard';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
 import { AccountsService } from '../accounts/accounts.service';
 import { BudgetsService } from '../budgets/budgets.service';
 import { CategoriesService } from '../categories/categories.service';
 import { HouseholdsService } from '../households/households.service';
+import { InsightsService } from '../insights/insights.service';
 import { PayeesService } from '../payees/payees.service';
 import { SubscriptionsService } from '../subscriptions/subscriptions.service';
+import { TransactionReportsService } from '../transactions/transactions-reports.service';
 import { TransactionsService } from '../transactions/transactions.service';
 import { McpToolContext } from './tool-context.type';
 import { registerAccountTools } from './tools/accounts.tools';
 import { registerBudgetTools } from './tools/budgets.tools';
 import { registerCategoryTools } from './tools/categories.tools';
 import { registerHouseholdTools } from './tools/households.tools';
+import { registerInsightTools } from './tools/insights.tools';
 import { registerPayeeTools } from './tools/payees.tools';
+import { registerReportTools } from './tools/reports.tools';
 import { registerSubscriptionTools } from './tools/subscriptions.tools';
 import { registerTransactionTools } from './tools/transactions.tools';
 
@@ -31,24 +35,17 @@ import { registerTransactionTools } from './tools/transactions.tools';
  */
 @Injectable()
 export class McpService {
-  private readonly userId: string;
-
   constructor(
-    configService: ConfigService,
     private readonly householdsService: HouseholdsService,
     private readonly accountsService: AccountsService,
     private readonly categoriesService: CategoriesService,
     private readonly payeesService: PayeesService,
     private readonly transactionsService: TransactionsService,
+    private readonly transactionReportsService: TransactionReportsService,
     private readonly budgetsService: BudgetsService,
     private readonly subscriptionsService: SubscriptionsService,
-  ) {
-    const userId = configService.get<string>('mcp.userId');
-    if (!userId) {
-      throw new Error('MCP_USER_ID must be set to use the MCP module');
-    }
-    this.userId = userId;
-  }
+    private readonly insightsService: InsightsService,
+  ) {}
 
   async handleRequest(req: Request, res: Response): Promise<void> {
     if (req.method !== 'POST') {
@@ -63,8 +60,13 @@ export class McpService {
       return;
     }
 
+    const userId = getMcpUserId(req);
+    if (!userId) {
+      throw new UnauthorizedException('Token de acesso inválido');
+    }
+
     const ctx: McpToolContext = {
-      userId: this.userId,
+      userId,
       householdId: firstQueryValue(req.query.household),
     };
 
@@ -90,8 +92,10 @@ export class McpService {
     registerCategoryTools(server, this.categoriesService, ctx);
     registerPayeeTools(server, this.payeesService, ctx);
     registerTransactionTools(server, this.transactionsService, ctx);
+    registerReportTools(server, this.transactionReportsService, ctx);
     registerBudgetTools(server, this.budgetsService, ctx);
     registerSubscriptionTools(server, this.subscriptionsService, ctx);
+    registerInsightTools(server, this.insightsService, ctx);
 
     return server;
   }

@@ -11,12 +11,6 @@ export type TransactionsControllerGetSplitFairnessParams = {
  * Mês de referência (YYYY-MM). Mutuamente exclusivo com from/to.
  */
 month?: string;
-/**
- * Data inicial inclusiva (YYYY-MM-DD).
- */
 from?: string;
-/**
- * Data final inclusiva (YYYY-MM-DD).
- */
 to?: string;
 };

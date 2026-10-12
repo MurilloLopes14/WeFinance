@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+﻿import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { ScheduleModule } from '@nestjs/schedule';
 import { AppController } from './app.controller';
@@ -46,8 +46,7 @@ import { UsersModule } from './users/users.module';
     ImportsModule,
     InsightsModule,
     ReleaseNotesModule,
-    // Only wired up when MCP_SERVICE_API_KEY is set, so the app boots normally without it.
-    ...(process.env.MCP_SERVICE_API_KEY ? [McpModule] : []),
+    McpModule,
   ],
   controllers: [AppController],
   providers: [AppService],

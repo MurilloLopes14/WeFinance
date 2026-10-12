@@ -1,4 +1,4 @@
-import {
+﻿import {
   BadRequestException,
   Body,
   Controller,
@@ -29,6 +29,11 @@ import { Roles } from '../common/decorators/roles.decorator';
 import { RolesGuard } from '../common/guards/roles.guard';
 import type { AuthenticatedUser } from '../common/types/jwt-payload.type';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
+import { AccessTokensService } from '../access-tokens/access-tokens.service';
+import {
+  AccessTokenResponseDto,
+  CreatedAccessTokenResponseDto,
+} from '../access-tokens/dto/access-token-response.dto';
 import { CreateUserDto } from './dto/create-user.dto';
 import { FilterUsersDto } from './dto/filter-users.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -48,7 +53,10 @@ const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('users')
 export class UsersController {
-  constructor(private readonly usersService: UsersService) {}
+  constructor(
+    private readonly usersService: UsersService,
+    private readonly accessTokensService: AccessTokensService,
+  ) {}
 
   @Post()
   @Roles('admin')
@@ -89,6 +97,33 @@ export class UsersController {
     @Body() dto: UpdateOnboardingDto,
   ) {
     return this.usersService.updateOnboarding(user.id, dto);
+  }
+
+  @Get('me/access-tokens')
+  @ApiOperation({ summary: 'Lista tokens MCP ativos do usuário autenticado' })
+  @ApiResponse({ status: 200, type: [AccessTokenResponseDto] })
+  listMyAccessTokens(@CurrentUser() user: AuthenticatedUser) {
+    return this.accessTokensService.listMine(user.id, 'mcp');
+  }
+
+  @Post('me/access-tokens')
+  @ApiOperation({
+    summary: 'Gera um token MCP. O valor puro só é retornado nesta resposta.',
+  })
+  @ApiResponse({ status: 201, type: CreatedAccessTokenResponseDto })
+  createMyAccessToken(@CurrentUser() user: AuthenticatedUser) {
+    return this.accessTokensService.createMcpToken(user.id);
+  }
+
+  @Delete('me/access-tokens/:tokenId')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({ summary: 'Revoga um token MCP do usuário autenticado' })
+  @ApiResponse({ status: 204 })
+  async revokeMyAccessToken(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('tokenId', ParseUUIDPipe) tokenId: string,
+  ) {
+    await this.accessTokensService.revokeMine(user.id, tokenId);
   }
 
   @Post('me/avatar')

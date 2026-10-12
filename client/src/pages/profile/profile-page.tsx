@@ -1,9 +1,10 @@
-import { Badge } from '@/components/ui/badge'
+﻿import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { ObjectPageLayout } from '@/components/object/object-page-layout'
 import { useAuthSession } from '@/hooks/use-auth-session'
 import { ProfileAvatarSection } from '@/pages/profile/profile-avatar-section'
 import { ProfileBasicInfoForm } from '@/pages/profile/profile-basic-info-form'
+import { ProfileMcpTokenSection } from '@/pages/profile/profile-mcp-token-section'
 import { ProfilePasswordForm } from '@/pages/profile/profile-password-form'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
@@ -47,7 +48,7 @@ export function ProfilePage() {
           Perfil
         </h1>
         <p className="max-w-3xl text-sm leading-relaxed text-muted-foreground">
-          Gerencie sua foto, dados pessoais e senha de acesso.
+          Gerencie sua foto, dados pessoais, senha e tokens de conexão com agentes.
         </p>
       </header>
 
@@ -107,6 +108,16 @@ export function ProfilePage() {
             description="Informe e confirme a nova senha para substituir a atual. Por enquanto não há recuperação por e-mail — a troca é feita aqui no perfil."
           >
             <ProfilePasswordForm userId={user.id} />
+          </ProfileSection>
+
+          <Separator />
+
+          <ProfileSection
+            title="Agentes e sistemas"
+            tourAnchor="profile-mcp-token"
+            description="Crie um token pessoal para um agente consultar e registrar dados no WeFinance em seu nome."
+          >
+            <ProfileMcpTokenSection />
           </ProfileSection>
         </div>
       )}
